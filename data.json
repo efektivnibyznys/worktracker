@@ -1,0 +1,325 @@
+{
+  "settings": {
+    "defaultHourlyRate": 850,
+    "currency": "Kč"
+  },
+  "clients": [
+    {
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Anna Marešová",
+      "hourlyRate": 850,
+      "note": "E-shop Shopify - designers",
+      "createdAt": "2025-10-20T00:00:00Z"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-1-uuid-0000-0001",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Část 1 - Základní nastavení a struktura",
+      "description": "Základní nastavení obchodu, vytvoření struktury stránek, footer, showroom",
+      "hourlyRate": null,
+      "status": "completed",
+      "createdAt": "2025-10-20T00:00:00Z"
+    },
+    {
+      "id": "phase-2-uuid-0000-0002",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Část 2 - E-shop a produkty",
+      "description": "Konfigurace e-shopu, produkty, doprava, finální úpravy",
+      "hourlyRate": null,
+      "status": "active",
+      "createdAt": "2025-11-12T00:00:00Z"
+    }
+  ],
+  "entries": [
+    {
+      "id": "entry-001",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-20",
+      "startTime": "09:00",
+      "endTime": "09:45",
+      "durationMinutes": 45,
+      "description": "Základní nastavení obchody - záloha šablony, trhy: EU region + Kypr, doprava a doručování, navigace",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-20T09:00:00Z"
+    },
+    {
+      "id": "entry-002",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-21",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "durationMinutes": 60,
+      "description": "Vytvoření struktury Homepage + stránky v navigaci",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-21T10:00:00Z"
+    },
+    {
+      "id": "entry-003",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-23",
+      "startTime": "14:00",
+      "endTime": "14:45",
+      "durationMinutes": 45,
+      "description": "JS + CSS pro \"animační efekt\" scrollování na Homepage sekce s textem pod obrázky",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-23T14:00:00Z"
+    },
+    {
+      "id": "entry-004",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-24",
+      "startTime": "09:00",
+      "endTime": "10:15",
+      "durationMinutes": 75,
+      "description": "Vytvoření stránek v projektu, napojení šablon na jednotlivé stránky, rozpracovaná část footer",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-24T09:00:00Z"
+    },
+    {
+      "id": "entry-005",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-30",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "durationMinutes": 60,
+      "description": "Synchro schůzka - definování práce, update ticketů",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-30T09:00:00Z"
+    },
+    {
+      "id": "entry-006",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-10-30",
+      "startTime": "10:30",
+      "endTime": "11:30",
+      "durationMinutes": 60,
+      "description": "Úprava HomePage, vytvoření nových sekcí pro zobrazení fullscreen obrázků a sekce Showroom & Contact",
+      "hourlyRate": 850,
+      "createdAt": "2025-10-30T10:30:00Z"
+    },
+    {
+      "id": "entry-007",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-01",
+      "startTime": "14:00",
+      "endTime": "14:30",
+      "durationMinutes": 30,
+      "description": "Začátek práce na Footer, úpravy v Markets, měny, cel a daní v Shopify.",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-01T14:00:00Z"
+    },
+    {
+      "id": "entry-008",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-03",
+      "startTime": "10:00",
+      "endTime": "11:15",
+      "durationMinutes": 75,
+      "description": "Vytvoření nové sekce pro Showroom a Contact. Přidané země do Markets a nastavení Cookie lišty.",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-03T10:00:00Z"
+    },
+    {
+      "id": "entry-009",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-06",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "durationMinutes": 30,
+      "description": "Pravidelná schůzka",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-06T09:00:00Z"
+    },
+    {
+      "id": "entry-010",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-07",
+      "startTime": "13:00",
+      "endTime": "15:00",
+      "durationMinutes": 120,
+      "description": "Nová sekce pro Footer, doladění Hero sekce s obrázky na Fullscreen desktop",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-07T13:00:00Z"
+    },
+    {
+      "id": "entry-011",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-10",
+      "startTime": "10:00",
+      "endTime": "10:45",
+      "durationMinutes": 45,
+      "description": "Sjednocení stylů pro Footer + přidání možnosti měnit background.",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-10T10:00:00Z"
+    },
+    {
+      "id": "entry-012",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-1-uuid-0000-0001",
+      "date": "2025-11-11",
+      "startTime": "14:00",
+      "endTime": "14:45",
+      "durationMinutes": 45,
+      "description": "Sjednocené styly v sekci Media with text (Showroom & Contact) + dokončení pro mobilní rozlišení",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-11T14:00:00Z"
+    },
+    {
+      "id": "entry-013",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-11-12",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "durationMinutes": 30,
+      "description": "Pravidelná schůzka",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-12T09:00:00Z"
+    },
+    {
+      "id": "entry-014",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-11-18",
+      "startTime": "10:00",
+      "endTime": "11:30",
+      "durationMinutes": 90,
+      "description": "Vytvoření produktů a kolekce + konfigurace stránky Shop",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-18T10:00:00Z"
+    },
+    {
+      "id": "entry-015",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-11-21",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "durationMinutes": 60,
+      "description": "Doplnění produktů + přidání právních dokumentů",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-21T09:00:00Z"
+    },
+    {
+      "id": "entry-016",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-11-21",
+      "startTime": "10:30",
+      "endTime": "11:15",
+      "durationMinutes": 45,
+      "description": "Pravidelná schůzka",
+      "hourlyRate": 850,
+      "createdAt": "2025-11-21T10:30:00Z"
+    },
+    {
+      "id": "entry-017",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-01",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "durationMinutes": 30,
+      "description": "Pravidelná schůzka",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-01T09:00:00Z"
+    },
+    {
+      "id": "entry-018",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-01",
+      "startTime": "10:00",
+      "endTime": "11:15",
+      "durationMinutes": 75,
+      "description": "Vytvoření struktury stránek projektu a úprava kódu pro Koláže fotek - přidaná možnost zarovnání v rámci gridu, přidaná změna textu barev.",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-01T10:00:00Z"
+    },
+    {
+      "id": "entry-019",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-02",
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "durationMinutes": 60,
+      "description": "Hero banner bylo nutné upravit o víceřádkový text a margin + oprava zobrazování obrázků v koláži na telefonu",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-02T14:00:00Z"
+    },
+    {
+      "id": "entry-020",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-04",
+      "startTime": "09:00",
+      "endTime": "11:30",
+      "durationMinutes": 150,
+      "description": "Úprava kódu patičky, stránky projektu (včetně About a Loved by others), Responzivní úpravy e-shopu",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-04T09:00:00Z"
+    },
+    {
+      "id": "entry-021",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-05",
+      "startTime": "10:00",
+      "endTime": "11:15",
+      "durationMinutes": 75,
+      "description": "Úprava kódu Hero text sekce na Homepage - ladění responzivity a testování",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-05T10:00:00Z"
+    },
+    {
+      "id": "entry-022",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-08",
+      "startTime": "09:00",
+      "endTime": "09:30",
+      "durationMinutes": 30,
+      "description": "Pravidelná schůzka",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-08T09:00:00Z"
+    },
+    {
+      "id": "entry-023",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-08",
+      "startTime": "10:00",
+      "endTime": "10:30",
+      "durationMinutes": 30,
+      "description": "Nastavení dopravy a doručování",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-08T10:00:00Z"
+    },
+    {
+      "id": "entry-024",
+      "clientId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "phaseId": "phase-2-uuid-0000-0002",
+      "date": "2025-12-10",
+      "startTime": "13:00",
+      "endTime": "14:30",
+      "durationMinutes": 90,
+      "description": "Úpravy sjednocení zarovnání textových bloků (použití lateral padding) napříč šablonou, úprava koláže pro zobrazení na telefonu. Přidá funkce Expandable text do Loved by others.",
+      "hourlyRate": 850,
+      "createdAt": "2025-12-10T13:00:00Z"
+    }
+  ]
+}

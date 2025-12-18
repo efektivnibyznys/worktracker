@@ -2,18 +2,18 @@
 
 **Start date:** 18. prosince 2025
 **Status:** 🟢 In Progress
-**Current Phase:** Phase 1 - Completed ✅
+**Current Phase:** Phase 2 - Completed ✅
 
 ---
 
 ## 📊 Overall Progress
 
 ```
-[██████░░░░░░░░░░░░░░] 30% Complete
+[████████████░░░░░░░░] 60% Complete
 
 Phase 0: Preparation           ████████████████████ 100% ✅
 Phase 1: Next.js Setup         ████████████████████ 100% ✅
-Phase 2: Core Infrastructure   ░░░░░░░░░░░░░░░░░░░░   0%
+Phase 2: Core Infrastructure   ████████████████████ 100% ✅
 Phase 3: Time Tracking Module  ░░░░░░░░░░░░░░░░░░░░   0%
 Phase 4: Testing & Polish      ░░░░░░░░░░░░░░░░░░░░   0%
 Phase 5: Deployment            ░░░░░░░░░░░░░░░░░░░░   0%
@@ -227,13 +227,165 @@ Phase 5: Deployment            ░░░░░░░░░░░░░░░░�
 
 ---
 
+## ✅ Phase 2: Core Infrastructure (COMPLETED)
+
+**Date:** 18. prosince 2025
+**Duration:** ~3 hours
+**Status:** ✅ Completed
+
+### Completed Tasks
+
+#### 2.1 Supabase Setup ✅
+- [x] **Created Supabase client** (`lib/supabase/client.ts`)
+  - Browser-side client using @supabase/ssr
+  - Type-safe with Database types
+
+- [x] **Created server-side client** (`lib/supabase/server.ts`)
+  - Server Components and Route Handlers support
+  - Cookie-based authentication
+
+- [x] **Generated database types** (`types/database.ts`)
+  - Manual creation based on SQL schema
+  - Complete type definitions for all tables (clients, phases, entries, settings)
+
+- [x] **Created BaseService abstract class** (`lib/supabase/services/baseService.ts`)
+  - Generic CRUD operations
+  - Type-safe service layer
+  - Reusable for all entities
+
+#### 2.2 Authentication ✅
+- [x] **Auth store** (`lib/stores/authStore.ts`)
+  - Zustand store for global auth state
+  - User state management
+
+- [x] **useAuth hook** (`lib/hooks/useAuth.ts`)
+  - signIn, signUp, signOut functions
+  - Client-side auth operations
+
+- [x] **Login page** (`app/(auth)/login/page.tsx`)
+  - Email + password login
+  - Error handling
+  - Link to register
+
+- [x] **Register page** (`app/(auth)/register/page.tsx`)
+  - Email + password registration
+  - Email verification notice
+  - Success state handling
+
+- [x] **Middleware** (`middleware.ts`)
+  - Protected routes (redirect to /login if not authenticated)
+  - Auth pages redirect (redirect to / if authenticated)
+  - Session refresh
+
+- [x] **AuthProvider** (`components/providers/AuthProvider.tsx`)
+  - Global auth state initialization
+  - Auth state change listener
+  - Integrated into root layout
+
+#### 2.3 Layout Components ✅
+- [x] **Header** (`components/layout/Header.tsx`)
+  - App title
+  - User email display
+  - Logout button
+
+- [x] **Navigation** (`components/layout/Navigation.tsx`)
+  - Tab navigation (Dashboard, Klienti, Záznamy, Reporty, Nastavení)
+  - Active state indication
+  - Client-side routing
+
+- [x] **Dashboard layout** (`app/(dashboard)/layout.tsx`)
+  - Shared layout for dashboard pages
+  - Includes Header + Navigation
+  - Content wrapper
+
+#### 2.4 Base UI Components ✅
+- [x] **shadcn/ui components installed**
+  - Button (`components/ui/button.tsx`)
+  - Card (`components/ui/card.tsx`)
+  - Input (`components/ui/input.tsx`)
+  - Label (`components/ui/label.tsx`)
+  - Select (`components/ui/select.tsx`)
+  - Textarea (`components/ui/textarea.tsx`)
+  - Dialog (`components/ui/dialog.tsx`)
+  - Badge (`components/ui/badge.tsx`)
+
+#### 2.5 Utilities & Helpers ✅
+- [x] **Date utils** (`lib/utils/date.ts`)
+  - formatDate() - Czech format (dd.MM.yyyy)
+  - getTodayDate() - ISO format
+  - getWeekStart() - Monday of current week
+  - getMonthStart() - First day of month
+
+- [x] **Currency utils** (`lib/utils/currency.ts`)
+  - formatCurrency() - Czech number format with currency
+
+- [x] **Time utils** (`lib/utils/time.ts`)
+  - formatTime() - Minutes to "X h Y min"
+  - calculateDuration() - From start/end time
+
+- [x] **Calculations** (`lib/utils/calculations.ts`)
+  - calculateStats() - Sum hours, amount from entries
+  - determineHourlyRate() - Priority logic
+
+### Deliverables
+
+1. ✅ Complete Supabase integration (client, server, types, services)
+2. ✅ Working authentication system (login, register, middleware, protected routes)
+3. ✅ Layout system with Header and Navigation
+4. ✅ 8 reusable UI components from shadcn/ui
+5. ✅ Complete utility library (date, currency, time, calculations)
+6. ✅ TypeScript strict mode ✅ No errors
+7. ✅ Project structure follows MODERNIZATION_PLAN.md
+
+### Issues & Notes
+
+**No issues encountered** - All tasks completed smoothly
+
+### Key Decisions
+
+1. **Database types:** Manual creation instead of Supabase CLI (no access token needed)
+2. **UI library:** shadcn/ui chosen for full control over components
+3. **Auth flow:** Middleware-based protection (edge runtime)
+4. **Route structure:** (auth) and (dashboard) route groups
+
+### Time Spent
+
+- Supabase setup: 45 min
+- Authentication: 1h 15 min
+- Layout components: 30 min
+- Base UI components: 15 min
+- Utilities: 30 min
+- **Total:** ~3 hours
+
+### Build Validation
+
+```bash
+✅ npm run type-check - No errors
+✅ TypeScript strict mode enabled
+✅ All imports resolve correctly
+```
+
+### Next Steps
+
+1. 🔜 Begin Phase 3: Time Tracking Module
+2. 🔜 Implement Clients Management (3.1)
+3. 🔜 Implement Phases Management (3.2)
+4. 🔜 Implement Time Entries (3.3)
+
+### Dependencies
+
+- Phase 0: ✅ Complete
+- Phase 1: ✅ Complete
+
+---
+
 ## 📋 Phases Overview
 
 | Phase | Name | Status | Start | End | Duration | Progress |
 |-------|------|--------|-------|-----|----------|----------|
 | 0 | Preparation | ✅ Complete | 18.12.2025 | 18.12.2025 | 1h | 100% |
-| 1 | Next.js Setup | ⏳ Pending | - | - | - | 0% |
-| 2 | Core Infrastructure | ⏳ Pending | - | - | - | 0% |
+| 1 | Next.js Setup | ✅ Complete | 18.12.2025 | 18.12.2025 | 2.5h | 100% |
+| 2 | Core Infrastructure | ✅ Complete | 18.12.2025 | 18.12.2025 | 3h | 100% |
 | 3 | Time Tracking Module | ⏳ Pending | - | - | - | 0% |
 | 4 | Testing & Polish | ⏳ Pending | - | - | - | 0% |
 | 5 | Deployment | ⏳ Pending | - | - | - | 0% |
@@ -360,6 +512,8 @@ Week 3
 | Date | Phase | Update | Author |
 |------|-------|--------|--------|
 | 18.12.2025 | 0 | Initial log created, Phase 0 completed | Claude |
+| 18.12.2025 | 1 | Phase 1 completed - Next.js Setup | Claude |
+| 18.12.2025 | 2 | Phase 2 completed - Core Infrastructure | Claude |
 
 ---
 
