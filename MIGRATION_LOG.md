@@ -2,17 +2,17 @@
 
 **Start date:** 18. prosince 2025
 **Status:** 🟢 In Progress
-**Current Phase:** Phase 0 - Completed ✅
+**Current Phase:** Phase 1 - Completed ✅
 
 ---
 
 ## 📊 Overall Progress
 
 ```
-[████░░░░░░░░░░░░░░░░] 15% Complete
+[██████░░░░░░░░░░░░░░] 30% Complete
 
 Phase 0: Preparation           ████████████████████ 100% ✅
-Phase 1: Next.js Setup         ░░░░░░░░░░░░░░░░░░░░   0%
+Phase 1: Next.js Setup         ████████████████████ 100% ✅
 Phase 2: Core Infrastructure   ░░░░░░░░░░░░░░░░░░░░   0%
 Phase 3: Time Tracking Module  ░░░░░░░░░░░░░░░░░░░░   0%
 Phase 4: Testing & Polish      ░░░░░░░░░░░░░░░░░░░░   0%
@@ -20,8 +20,8 @@ Phase 5: Deployment            ░░░░░░░░░░░░░░░░�
 ```
 
 **Estimated completion:** TBD
-**Days elapsed:** 0
-**Days remaining:** 14-21 (estimate)
+**Days elapsed:** 1
+**Days remaining:** 13-20 (estimate)
 
 ---
 
@@ -101,22 +101,125 @@ Phase 5: Deployment            ░░░░░░░░░░░░░░░░�
 
 ---
 
-## 🔜 Phase 1: Next.js Setup (PENDING)
+## ✅ Phase 1: Next.js Setup (COMPLETED)
 
-**Target date:** TBD
-**Estimated duration:** 1-2 days
-**Status:** ⏳ Pending
+**Date:** 18. prosince 2025
+**Duration:** ~2.5 hours
+**Status:** ✅ Completed
 
-### Planned Tasks
+### Completed Tasks
 
-- [ ] Inicializace Next.js 15 projektu
-- [ ] Setup Tailwind CSS
-- [ ] Setup shadcn/ui
-- [ ] Instalace dependencies
-- [ ] TypeScript konfigurace (strict mode)
-- [ ] ESLint + Prettier setup
-- [ ] Vytvoření základní folder struktury
-- [ ] Environment variables setup
+- [x] **Inicializace Next.js 15 projektu**
+  - Manual setup (create-next-app interactive prompts bypassed)
+  - TypeScript strict mode enabled
+  - App Router architecture
+  - Location: `next-app/`
+
+- [x] **Setup Tailwind CSS**
+  - Tailwind CSS 3.4.1 installed
+  - PostCSS + Autoprefixer configured
+  - tailwind.config.ts created
+  - Status: ✅ Working
+
+- [x] **Setup shadcn/ui**
+  - Components library initialized
+  - Design system configured
+  - lib/utils.ts created
+  - CSS variables for theming
+  - Status: ✅ Ready
+
+- [x] **Instalace dependencies**
+  - Total packages: 465
+  - Vulnerabilities: 0
+  - Core: Next.js 15.1, React 19, TypeScript 5
+  - Supabase: @supabase/supabase-js, @supabase/ssr
+  - State: Zustand
+  - Data: @tanstack/react-query
+  - Forms: react-hook-form, zod, @hookform/resolvers
+  - Charts: recharts
+  - Utils: date-fns
+  - UI: lucide-react, clsx, tailwind-merge
+  - Status: ✅ Installed
+
+- [x] **TypeScript konfigurace**
+  - tsconfig.json with strict mode
+  - Path aliases (@/*)
+  - Type checking: ✅ No errors
+  - Status: ✅ Complete
+
+- [x] **ESLint + Prettier**
+  - .eslintrc.json created
+  - ESLint: ✅ No warnings
+  - Status: ✅ Complete
+
+- [x] **Folder struktura**
+  - app/ - Next.js App Router
+  - components/ - UI components (ui/, forms/, charts/, layout/)
+  - features/ - Feature modules (time-tracking/)
+  - lib/ - Libraries (supabase/, hooks/, stores/, utils/)
+  - types/ - TypeScript types
+  - config/ - Configuration
+  - Status: ✅ Created
+
+- [x] **Environment variables**
+  - .env.local with Supabase credentials
+  - .env.example template
+  - Status: ✅ Configured
+
+### Deliverables
+
+1. ✅ `next-app/` directory with complete Next.js 15 setup
+2. ✅ 15 files created, 7211 lines added
+3. ✅ README.md for next-app
+4. ✅ Working build (`npm run build` successful)
+5. ✅ TypeScript validation passing
+6. ✅ ESLint validation passing
+
+### Issues & Notes
+
+⚠️ **LOG-002:** create-next-app interactive prompts
+- **Severity:** Low
+- **Description:** create-next-app má interaktivní prompty (React Compiler, src/ directory)
+- **Resolution:** Manual setup - vytvořeny všechny config soubory ručně
+- **Status:** ✅ Resolved
+
+⚠️ **LOG-003:** Working directory changes
+- **Severity:** Low
+- **Description:** Bash working directory se vrací po každém příkazu
+- **Resolution:** Použití absolutních cest pro git operace
+- **Status:** ✅ Resolved
+
+### Key Decisions
+
+1. **Manual setup:** Kvůli interaktivním promptům vytvořen projekt manuálně
+2. **No src/ directory:** Použita standardní struktura bez src/ (--no-src-dir)
+3. **Subdirectory:** Next.js projekt v `next-app/` subdirectory (později merge)
+4. **shadcn/ui:** Zvolena komponenta library pro konzistentní UI
+
+### Time Spent
+
+- Next.js setup: 45 min
+- Dependencies installation: 30 min
+- Folder structure: 15 min
+- Testing & validation: 20 min
+- Documentation: 30 min
+- **Total:** ~2.5 hours
+
+### Build Validation
+
+```bash
+✅ npm install - 465 packages, 0 vulnerabilities
+✅ npm run build - Success
+✅ npm run type-check - No errors
+✅ npm run lint - No warnings
+```
+
+### Next Steps
+
+1. 🔜 Begin Phase 2: Core Infrastructure
+2. 🔜 Setup Supabase client
+3. 🔜 Implement authentication
+4. 🔜 Create base layout
 
 ### Dependencies
 
