@@ -1,0 +1,24 @@
+# Vercel
+.vercel
+
+# macOS
+.DS_Store
+
+# Backups
+*.backup
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables (pokud budeš mít)
+.env.local
+.env
+
+# Build files
+dist/
+build/
