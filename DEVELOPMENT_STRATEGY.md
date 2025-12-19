@@ -272,29 +272,39 @@ recentEntriesEl.innerHTML = `<p>${escapeHtml(client.name)}</p>`
 
 ## 📝 Akční plán - Zbývající úkoly
 
-### ✅ Dokončeno (2/16)
-1. ✅ Externalizace credentials
-2. ✅ Oprava XSS zranitelností
-3. ✅ Error boundaries v Next.js
+### ✅ Dokončeno (11/16) - 69% hotovo
 
-### ⏳ V průběhu
+**Bezpečnost & Infrastructure:**
+1. ✅ Externalizace credentials
+2. ✅ Oprava XSS zranitelností (8+ míst)
+3. ✅ Error boundaries v Next.js
+4. ✅ Archivace HTML verze do archive-html/
+
+**Výkon & Optimalizace:**
+5. ✅ Konsolidovat DB queries v useEntries (3→1)
+6. ✅ Memoizace service instances (5 hooks)
+7. ✅ Přidat useMemo/useCallback (22 optimalizací)
+
+**Type Safety & DX:**
+8. ✅ Implementovat logger utility
+9. ✅ Odstranit console.error (11 míst)
+10. ✅ Opravit TypeScript any types (9 míst)
+11. ✅ Odstranit as any assertions z baseService
+
+### ⏳ V průběhu (5/16 zbývá)
 
 #### 🔴 Kritické (0/0 zbývá)
 Všechny kritické problémy vyřešeny! ✅
 
-#### 🟠 Vysoké priority (4/4 zbývá)
-4. ⏳ Odstranit inline onclick handlery z HTML
-5. ⏳ Implementovat logger utility + odstranit console.log
-6. ⏳ Přidat useMemo/useCallback do Next.js
-7. ⏳ Konsolidovat DB queries v useEntries
+#### 🟠 Vysoké priority (0/4 zbývá)
+Všechny vysoké priority dokončeny! ✅
 
-#### 🟡 Střední priority (6/6 zbývá)
-8. ⏳ Přidat security headers (CSP, HSTS)
-9. ⏳ Přidat databázové indexy
-10. ⏳ Přidat check constraints do DB
-11. ⏳ Optimalizovat filtrování v HTML
-12. ⏳ Opravit TypeScript any types
-13. ⏳ Nastavit testing framework
+#### 🟡 Střední priority (5/6 zbývá)
+12. ⏳ Přidat security headers (CSP, HSTS)
+13. ⏳ Přidat databázové indexy
+14. ⏳ Přidat check constraints do DB
+15. ⏳ Optimalizovat N+1 queries v clientService
+16. ⏳ Nastavit testing framework
 
 #### 🟢 Nízké priority (3/3 zbývá)
 14. ⏳ Code splitting pro recharts

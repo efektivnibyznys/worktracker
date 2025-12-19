@@ -161,8 +161,17 @@ Viz **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** pro detaily.
 - [x] Security audit a opravy
 - [x] Error boundaries
 
-### 🚧 V průběhu (Fáze 5)
-- [ ] Výkonnostní optimalizace
+### 🚧 V průběhu (Fáze 5: Performance & Security)
+- [x] **Výkonnostní optimalizace** (73% dokončeno - 8/11 úkolů)
+  - [x] Konsolidace DB dotazů (3→1 queries)
+  - [x] Memoizace service instances (5 hooks)
+  - [x] useMemo pro výpočty (7 optimalizací)
+  - [x] useCallback pro handlery (15 optimalizací)
+  - [x] Type safety (odstranění any types)
+  - [x] Logger utility (11 console.error nahrazeno)
+  - [ ] N+1 query optimalizace
+  - [ ] Databázové indexy
+  - [ ] Check constraints
 - [ ] Testing setup (Vitest)
 - [ ] Security headers (CSP, HSTS)
 - [ ] Deployment na Vercel
