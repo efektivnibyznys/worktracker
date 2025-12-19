@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -7,10 +8,10 @@ export function Header() {
   const { user, signOut } = useAuth()
   const router = useRouter()
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut()
     router.push('/login')
-  }
+  }, [signOut, router])
 
   return (
     <header className="bg-white shadow">

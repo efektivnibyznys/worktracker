@@ -19,7 +19,7 @@ const clientSchema = z.object({
   note: z.string().optional(),
 })
 
-type ClientFormData = z.infer<typeof clientSchema>
+export type ClientFormData = z.infer<typeof clientSchema>
 
 interface ClientFormProps {
   client?: Client

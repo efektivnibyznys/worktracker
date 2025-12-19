@@ -22,8 +22,9 @@ export function useAuth() {
       if (error) throw error
       setUser(data.user)
       return { user: data.user, error: null }
-    } catch (error: any) {
-      return { user: null, error: error.message }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred during sign in'
+      return { user: null, error: message }
     } finally {
       setLoading(false)
     }
@@ -42,8 +43,9 @@ export function useAuth() {
 
       if (error) throw error
       return { user: data.user, error: null }
-    } catch (error: any) {
-      return { user: null, error: error.message }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred during sign up'
+      return { user: null, error: message }
     } finally {
       setLoading(false)
     }
@@ -59,8 +61,9 @@ export function useAuth() {
       if (error) throw error
       clearUser()
       return { error: null }
-    } catch (error: any) {
-      return { error: error.message }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred during sign out'
+      return { error: message }
     } finally {
       setLoading(false)
     }

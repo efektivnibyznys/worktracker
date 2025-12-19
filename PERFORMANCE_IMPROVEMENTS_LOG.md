@@ -10,12 +10,12 @@
 | Fáze | Status | Problémy opraveno | Čas |
 |------|--------|-------------------|-----|
 | **Fáze 1: Kritické** | ✅ Hotovo | 2/2 | ~30 min |
-| **Fáze 2: React optimalizace** | ⏳ Pending | 0/2 | ~2-3h |
-| **Fáze 3: Type safety** | ⏳ Pending | 0/2 | ~1-2h |
+| **Fáze 2: React optimalizace** | ✅ Hotovo | 2/2 | ~1h |
+| **Fáze 3: Type safety** | 🔄 Probíhá | 1/2 | ~45min |
 | **Fáze 4: DX** | ⏳ Pending | 0/2 | ~1h |
 | **Fáze 5: DB & Security** | ⏳ Pending | 0/3 | ~1h |
 
-**Celkový progress:** 2/11 (18%)
+**Celkový progress:** 5/11 (45%)
 
 ---
 
@@ -115,72 +115,150 @@ export function useEntries(filters?: EntryFilters) {
 
 ---
 
-## ⏳ FÁZE 2: REACT OPTIMALIZACE (PENDING)
+## ✅ FÁZE 2: REACT OPTIMALIZACE (HOTOVO)
 
-**Očekávaný čas:** 2-3 hodiny
-**Problémy k opravě:** 2
+**Datum dokončení:** 19. prosince 2025
+**Čas strávený:** ~1 hodina
+**Problémy opraveno:** 2/2
 
-### Problém 3: Chybějící useMemo pro výpočty
+### Problém 3: Chybějící useMemo pro výpočty ✅
 
-**Postižené komponenty:** 10+ míst
-
-**Dashboard (`app/(dashboard)/page.tsx`):**
-- ❌ Řádky 26-29: Stats výpočty (3x calculateStats)
-- ❌ Řádky 45-51: Sorting a slicing recentEntries
-
-**Entries (`app/(dashboard)/entries/page.tsx`):**
-- ❌ Řádky 75-79: Reduce total minutes & amount
-
-**Reports (`app/(dashboard)/reports/page.tsx`):**
-- ❌ Řádek 76: calculateStats
-
-**Clients/Phases pages:**
-- Podobné problémy
-
-**Plánované řešení:**
-- Obalit všechny výpočty do `useMemo` s correct dependencies
-
----
-
-### Problém 4: Chybějící useCallback pro handlery
-
-**Postižené komponenty:** 15+ handler funkcí
-
-**Handler funkce napříč komponentami:**
-- `page.tsx:31` - handleQuickAdd
-- `clients/page.tsx:36,51,70` - handleCreate, Update, Delete
-- `entries/page.tsx:40,53,58` - handlers
-- `clients/[id]/page.tsx:38,54,73` - handlers
-- `Header.tsx:10` - handleSignOut
-
-**Plánované řešení:**
-- Obalit handlery do `useCallback` s correct dependencies
-- Stabilizovat reference pro child components
-
----
-
-## ⏳ FÁZE 3: TYPE SAFETY (PENDING)
-
-**Očekávaný čas:** 1-2 hodiny
-**Problémy k opravě:** 2
-
-### Problém 5: TypeScript 'any' types (9 výskytů)
-
-**Handler funkce:**
+**Před:**
 ```typescript
-// ❌ Špatně
-const handleQuickAdd = async (data: any) => { ... }
+// ❌ Přepočítává se při každém renderu!
+const todayStats = calculateStats(todayEntries)
+const weekStats = calculateStats(weekEntries)
+const monthStats = calculateStats(monthEntries)
 
-// ✅ Správně
-const handleQuickAdd = async (data: TimeEntryFormData) => { ... }
+const totalMinutes = entries.reduce((sum, e) => sum + e.duration_minutes, 0)
 ```
 
-**Lokace:**
-- `app/(dashboard)/page.tsx:31`
-- `app/(dashboard)/clients/page.tsx:36,51`
-- `features/time-tracking/components/QuickAddForm.tsx:53`
-- `app/(dashboard)/clients/[id]/page.tsx:38,54`
-- `lib/hooks/useAuth.ts:25,45,62` (error handling)
+**Po:**
+```typescript
+// ✅ Memoizované - počítá se jen když se změní data
+const todayStats = useMemo(() => calculateStats(todayEntries), [todayEntries])
+const weekStats = useMemo(() => calculateStats(weekEntries), [weekEntries])
+const monthStats = useMemo(() => calculateStats(monthEntries), [monthEntries])
+
+const totalMinutes = useMemo(
+  () => entries.reduce((sum, e) => sum + e.duration_minutes, 0),
+  [entries]
+)
+```
+
+**Výsledky:**
+- ✅ **7 useMemo optimalizací přidáno**
+  - Dashboard: 4 (todayStats, weekStats, monthStats, recentEntries)
+  - Entries: 2 (totalMinutes, totalAmount)
+  - Reports: 1 (stats)
+- ✅ **Eliminace zbytečných přepočtů**
+- ✅ **Lepší performance při re-renderech**
+
+**Soubory změněny:**
+- `app/(dashboard)/page.tsx`
+- `app/(dashboard)/entries/page.tsx`
+- `app/(dashboard)/reports/page.tsx`
+
+---
+
+### Problém 4: Chybějící useCallback pro handlery ✅
+
+**Před:**
+```typescript
+// ❌ Nová funkce při každém renderu -> child re-renders!
+const handleQuickAdd = async (data: any) => {
+  await createEntry.mutateAsync({ ...data })
+}
+```
+
+**Po:**
+```typescript
+// ✅ Stabilní reference - child komponenty se nepřerenderují zbytečně
+const handleQuickAdd = useCallback(async (data: any) => {
+  await createEntry.mutateAsync({ ...data })
+}, [createEntry, user])
+```
+
+**Výsledky:**
+- ✅ **15 useCallback optimalizací přidáno**
+  - Dashboard: 1 handler
+  - Clients: 3 handlers
+  - Entries: 3 handlers
+  - Reports: 3 handlers
+  - Settings: 1 handler
+  - Client detail: 3 handlers
+  - Header: 1 handler
+- ✅ **Stabilní funkce reference**
+- ✅ **Prevence zbytečných child re-renders**
+
+**Soubory změněny:**
+- `app/(dashboard)/page.tsx`
+- `app/(dashboard)/clients/page.tsx`
+- `app/(dashboard)/entries/page.tsx`
+- `app/(dashboard)/reports/page.tsx`
+- `app/(dashboard)/settings/page.tsx`
+- `app/(dashboard)/clients/[id]/page.tsx`
+- `components/layout/Header.tsx`
+
+---
+
+## 🔄 FÁZE 3: TYPE SAFETY (PROBÍHÁ)
+
+**Datum zahájení:** 19. prosince 2025
+**Problémy opraveno:** 1/2
+
+### Problém 5: TypeScript 'any' types (9 výskytů) ✅
+
+**Před:**
+```typescript
+// ❌ Any types všude!
+const handleQuickAdd = async (data: any) => { ... }
+
+interface QuickAddFormProps {
+  onSubmit: (data: any) => void | Promise<void>
+}
+
+catch (error: any) {
+  return { user: null, error: error.message }
+}
+```
+
+**Po:**
+```typescript
+// ✅ Správné typy
+export type QuickAddSubmitData = Omit<QuickAddFormData, 'hourly_rate'> & {
+  duration_minutes: number
+  hourly_rate: number
+  phase_id: string | null
+}
+
+const handleQuickAdd = async (data: QuickAddSubmitData) => { ... }
+
+catch (error) {
+  const message = error instanceof Error ? error.message : 'An error occurred'
+  return { user: null, error: message }
+}
+```
+
+**Výsledky:**
+- ✅ **9 any types nahrazeno správnými typy**
+  - Form handlers: 5 (Dashboard, Clients 2x, Client detail 2x)
+  - Form components: 1 (QuickAddForm onSubmit prop)
+  - Error handling: 3 (useAuth: signIn, signUp, signOut)
+- ✅ **Exportované typy z form komponent**
+  - `QuickAddSubmitData` z QuickAddForm
+  - `ClientFormData` z ClientForm
+  - `PhaseFormData` z PhaseForm
+- ✅ **Bezpečnější error handling** (unknown → Error check)
+
+**Soubory změněny:**
+- `app/(dashboard)/page.tsx`
+- `app/(dashboard)/clients/page.tsx`
+- `app/(dashboard)/clients/[id]/page.tsx`
+- `features/time-tracking/components/QuickAddForm.tsx`
+- `features/time-tracking/components/ClientForm.tsx`
+- `features/time-tracking/components/PhaseForm.tsx`
+- `lib/hooks/useAuth.ts`
 
 ---
 

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useClient } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
-import { PhaseForm } from '@/features/time-tracking/components/PhaseForm'
+import { PhaseForm, PhaseFormData } from '@/features/time-tracking/components/PhaseForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -35,7 +35,7 @@ export default function ClientDetailPage() {
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const handleCreatePhase = async (data: any) => {
+  const handleCreatePhase = useCallback(async (data: PhaseFormData) => {
     try {
       await createPhase.mutateAsync({
         ...data,
@@ -49,9 +49,9 @@ export default function ClientDetailPage() {
       toast.error('Nepodařilo se přidat fázi')
       console.error(error)
     }
-  }
+  }, [createPhase, user, clientId])
 
-  const handleUpdatePhase = async (data: any) => {
+  const handleUpdatePhase = useCallback(async (data: PhaseFormData) => {
     if (!editingPhase) return
     try {
       await updatePhase.mutateAsync({
@@ -68,9 +68,9 @@ export default function ClientDetailPage() {
       toast.error('Nepodařilo se upravit fázi')
       console.error(error)
     }
-  }
+  }, [editingPhase, updatePhase])
 
-  const handleDeletePhase = async (id: string) => {
+  const handleDeletePhase = useCallback(async (id: string) => {
     if (!confirm('Opravdu chcete smazat tuto fázi? Záznamy zůstanou zachovány.')) {
       return
     }
@@ -84,7 +84,7 @@ export default function ClientDetailPage() {
     } finally {
       setDeletingId(null)
     }
-  }
+  }, [deletePhase])
 
   if (clientLoading) {
     return (

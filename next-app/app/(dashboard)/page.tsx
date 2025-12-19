@@ -1,7 +1,8 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
-import { QuickAddForm } from '@/features/time-tracking/components/QuickAddForm'
+import { QuickAddForm, QuickAddSubmitData } from '@/features/time-tracking/components/QuickAddForm'
 import { useDashboardEntries } from '@/features/time-tracking/hooks/useEntries'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -23,12 +24,12 @@ export default function DashboardPage() {
   const { todayEntries, weekEntries, monthEntries } = useDashboardEntries()
   const { createEntry } = useEntries()
 
-  // Calculate stats
-  const todayStats = calculateStats(todayEntries)
-  const weekStats = calculateStats(weekEntries)
-  const monthStats = calculateStats(monthEntries)
+  // Calculate stats - memoized to avoid recalculation on every render
+  const todayStats = useMemo(() => calculateStats(todayEntries), [todayEntries])
+  const weekStats = useMemo(() => calculateStats(weekEntries), [weekEntries])
+  const monthStats = useMemo(() => calculateStats(monthEntries), [monthEntries])
 
-  const handleQuickAdd = async (data: any) => {
+  const handleQuickAdd = useCallback(async (data: QuickAddSubmitData) => {
     try {
       await createEntry.mutateAsync({
         ...data,
@@ -39,16 +40,19 @@ export default function DashboardPage() {
       toast.error('Nepodařilo se přidat záznam')
       console.error(error)
     }
-  }
+  }, [createEntry, user])
 
-  // Get recent entries (last 5)
-  const recentEntries = [...monthEntries]
-    .sort((a, b) => {
-      const dateCompare = b.date.localeCompare(a.date)
-      if (dateCompare !== 0) return dateCompare
-      return b.start_time.localeCompare(a.start_time)
-    })
-    .slice(0, 5)
+  // Get recent entries (last 5) - memoized to avoid re-sorting on every render
+  const recentEntries = useMemo(() =>
+    [...monthEntries]
+      .sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date)
+        if (dateCompare !== 0) return dateCompare
+        return b.start_time.localeCompare(a.start_time)
+      })
+      .slice(0, 5),
+    [monthEntries]
+  )
 
   return (
     <div>

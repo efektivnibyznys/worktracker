@@ -27,7 +27,7 @@ const phaseSchema = z.object({
   status: z.enum(['active', 'completed', 'paused']),
 })
 
-type PhaseFormData = z.infer<typeof phaseSchema>
+export type PhaseFormData = z.infer<typeof phaseSchema>
 
 interface PhaseFormProps {
   phase?: Phase

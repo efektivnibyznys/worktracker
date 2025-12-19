@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 const settingsSchema = z.object({
@@ -56,7 +56,7 @@ export default function SettingsPage() {
     }
   }, [settings, reset])
 
-  const onSubmit = async (data: SettingsFormData) => {
+  const onSubmit = useCallback(async (data: SettingsFormData) => {
     if (!user) return
 
     try {
@@ -72,7 +72,7 @@ export default function SettingsPage() {
       toast.error('Nepodařilo se uložit nastavení')
       console.error(error)
     }
-  }
+  }, [user, updateSettings])
 
   if (isLoading) {
     return (

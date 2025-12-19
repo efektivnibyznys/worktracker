@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
-import { ClientForm } from '@/features/time-tracking/components/ClientForm'
+import { ClientForm, ClientFormData } from '@/features/time-tracking/components/ClientForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -33,7 +33,7 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = useCallback(async (data: ClientFormData) => {
     try {
       await createClient.mutateAsync({
         ...data,
@@ -46,9 +46,9 @@ export default function ClientsPage() {
       toast.error('Nepodařilo se přidat klienta')
       console.error(error)
     }
-  }
+  }, [createClient, user])
 
-  const handleUpdate = async (data: any) => {
+  const handleUpdate = useCallback(async (data: ClientFormData) => {
     if (!editingClient) return
     try {
       await updateClient.mutateAsync({
@@ -65,9 +65,9 @@ export default function ClientsPage() {
       toast.error('Nepodařilo se upravit klienta')
       console.error(error)
     }
-  }
+  }, [editingClient, updateClient])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Opravdu chcete smazat tohoto klienta? Budou smazány i všechny jeho fáze a záznamy.')) {
       return
     }
@@ -81,7 +81,7 @@ export default function ClientsPage() {
     } finally {
       setDeletingId(null)
     }
-  }
+  }, [deleteClient])
 
   if (isLoading) {
     return (

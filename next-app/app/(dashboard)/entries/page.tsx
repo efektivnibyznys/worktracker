@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
@@ -37,7 +37,7 @@ export default function EntriesPage() {
   const { entries, isLoading, deleteEntry } = useEntries(filters)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const handleFilterChange = (key: keyof EntryFilters, value: string) => {
+  const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined,
@@ -48,14 +48,14 @@ export default function EntriesPage() {
       // Reset phase filter when client changes
       setFilters(prev => ({ ...prev, phaseId: undefined }))
     }
-  }
+  }, [])
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({})
     setSelectedClientId('')
-  }
+  }, [])
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Opravdu chcete smazat tento záznam?')) {
       return
     }
@@ -69,14 +69,20 @@ export default function EntriesPage() {
     } finally {
       setDeletingId(null)
     }
-  }
+  }, [deleteEntry])
 
-  // Calculate totals
-  const totalMinutes = entries.reduce((sum, e) => sum + e.duration_minutes, 0)
-  const totalAmount = entries.reduce((sum, e) => {
-    const hours = e.duration_minutes / 60
-    return sum + (hours * e.hourly_rate)
-  }, 0)
+  // Calculate totals - memoized to avoid recalculation on every render
+  const totalMinutes = useMemo(
+    () => entries.reduce((sum, e) => sum + e.duration_minutes, 0),
+    [entries]
+  )
+  const totalAmount = useMemo(
+    () => entries.reduce((sum, e) => {
+      const hours = e.duration_minutes / 60
+      return sum + (hours * e.hourly_rate)
+    }, 0),
+    [entries]
+  )
 
   if (isLoading) {
     return (

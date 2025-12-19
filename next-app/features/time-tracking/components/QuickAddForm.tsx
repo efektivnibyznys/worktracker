@@ -49,8 +49,15 @@ const quickAddSchema = z.object({
 
 type QuickAddFormData = z.infer<typeof quickAddSchema>
 
+// Type for data passed to onSubmit - contains form data plus calculated fields
+export type QuickAddSubmitData = Omit<QuickAddFormData, 'hourly_rate'> & {
+  duration_minutes: number
+  hourly_rate: number
+  phase_id: string | null
+}
+
 interface QuickAddFormProps {
-  onSubmit: (data: any) => void | Promise<void>
+  onSubmit: (data: QuickAddSubmitData) => void | Promise<void>
   isLoading?: boolean
 }
 

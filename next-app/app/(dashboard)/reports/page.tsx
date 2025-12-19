@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { Button } from '@/components/ui/button'
@@ -33,18 +33,18 @@ export default function ReportsPage() {
   const { clients } = useClients()
   const { entries, isLoading } = useEntries(filters)
 
-  const handleFilterChange = (key: keyof EntryFilters, value: string) => {
+  const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined,
     }))
-  }
+  }, [])
 
-  const generateReport = () => {
+  const generateReport = useCallback(() => {
     setShowReport(true)
-  }
+  }, [])
 
-  const exportToNotion = () => {
+  const exportToNotion = useCallback(() => {
     const stats = calculateStats(entries)
 
     let notionText = '# 📊 Report odpracované doby\n\n'
@@ -71,9 +71,10 @@ export default function ReportsPage() {
     // Copy to clipboard
     navigator.clipboard.writeText(notionText)
     alert('Report zkopírován do schránky! Můžete ho vložit do Notionu.')
-  }
+  }, [entries, filters, clients])
 
-  const stats = calculateStats(entries)
+  // Calculate stats - memoized to avoid recalculation on every render
+  const stats = useMemo(() => calculateStats(entries), [entries])
 
   return (
     <div>
