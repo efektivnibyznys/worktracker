@@ -250,7 +250,7 @@ export default function EntriesPage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-bold text-gray-900">
                       {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                     </div>
                     <Button

@@ -126,7 +126,7 @@ export default function ClientDetailPage() {
       case 'active':
         return <Badge className="bg-green-500">✅ Aktivní</Badge>
       case 'completed':
-        return <Badge className="bg-blue-500">☑️ Dokončeno</Badge>
+        return <Badge className="bg-gray-500">☑️ Dokončeno</Badge>
       case 'paused':
         return <Badge className="bg-yellow-500">⏸️ Pozastaveno</Badge>
       default:
@@ -138,7 +138,7 @@ export default function ClientDetailPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <Link href="/clients" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
+        <Link href="/clients" className="text-sm text-gray-900 hover:text-primary hover:underline mb-2 inline-block">
           ← Zpět na seznam klientů
         </Link>
         <h2 className="text-2xl font-bold text-gray-900">{client.name}</h2>

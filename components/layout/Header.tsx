@@ -14,12 +14,17 @@ export function Header() {
   }, [signOut, router])
 
   return (
-    <header className="bg-white shadow">
+    <header className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            ⏱️ Work Tracker
-          </h1>
+          <div className="flex items-center gap-2">
+            <div className="bg-black text-white px-2 py-1 font-bold text-sm">
+              WORK
+            </div>
+            <div className="bg-black text-white px-2 py-1 font-bold text-sm">
+              TRACKER
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             {user && (
               <>
@@ -28,7 +33,7 @@ export function Header() {
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-900 border border-gray-900 hover:bg-gray-50 rounded-md transition-colors"
                 >
                   Odhlásit se
                 </button>

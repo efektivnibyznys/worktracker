@@ -137,7 +137,7 @@ export default function ClientsPage() {
                     <CardTitle className="text-lg">
                       <Link
                         href={`/clients/${client.id}`}
-                        className="hover:text-blue-600 transition-colors"
+                        className="hover:text-primary transition-colors"
                       >
                         {client.name}
                       </Link>
