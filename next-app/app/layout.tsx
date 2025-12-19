@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 export const metadata: Metadata = {
   title: 'Work Tracker',
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="cs">
       <body className="antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
