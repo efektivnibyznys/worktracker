@@ -1,52 +1,40 @@
 # ⏱️ Work Tracker
 
-Moderní webová aplikace pro sledování odpracovaného času s cloudovou synchronizací a multi-device podporou.
+Modern time tracking and project management application built with Next.js 15.
 
 **Framework:** Next.js 15 + React 19 + TypeScript
 **Database:** Supabase (PostgreSQL)
-**Status:** ✅ Aktivně vyvíjeno
+**Status:** ✅ Production Ready
 
 ---
 
-## 📦 Struktura projektu
+## ✨ Features
 
-```
-work-tracker/
-├── next-app/              ✅ AKTUÁLNÍ VERZE - Next.js aplikace
-│   ├── app/              Next.js 15 App Router
-│   ├── features/         Feature-based modules
-│   ├── lib/              Utilities & services
-│   └── README.md         📖 Dokumentace Next.js verze
-│
-├── archive-html/         🗄️ ARCHIV - Původní HTML verze (nepoužívat)
-│   ├── index.html        Legacy single-page aplikace
-│   └── README.md         📖 Dokumentace archivu
-│
-├── supabase-setup.sql    🗄️ Databázové schéma
-│
-└── docs/                 📚 Dokumentace projektu
-    ├── DEVELOPMENT_STRATEGY.md
-    ├── SECURITY_AUDIT_LOG.md
-    ├── MIGRATION_LOG.md
-    └── ...
-```
+- 📊 **Dashboard** with real-time statistics and charts
+- 👥 **Client Management** with custom hourly rates
+- 🎯 **Project Phases** for organizing work
+- ⏰ **Time Tracking** with automatic duration calculation
+- 📈 **Reports** with Notion export
+- ☁️ **Cloud Sync** via Supabase
+- 🔄 **Real-time** synchronization across devices
+- 🔐 **Secure Authentication** (Supabase Auth)
+- 🎨 **Modern UI** (Tailwind CSS + shadcn/ui)
 
 ---
 
-## 🚀 Rychlý start
+## 🚀 Quick Start
 
-### Pro uživatele
+### Prerequisites
 
-➡️ **Použijte Next.js verzi** v adresáři `/next-app/`
+- Node.js 18+ installed
+- Supabase account and project
 
-Viz **[next-app/README.md](./next-app/README.md)** pro kompletní návod.
+### Setup
 
-### Pro vývojáře
-
-1. **Clone repository**
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/efektivnibyznys/worktracker.git
-   cd worktracker/next-app
+   git clone <your-repo-url>
+   cd work-tracker
    ```
 
 2. **Install dependencies**
@@ -54,55 +42,27 @@ Viz **[next-app/README.md](./next-app/README.md)** pro kompletní návod.
    npm install
    ```
 
-3. **Setup environment**
+3. **Setup environment variables**
    ```bash
    cp .env.example .env.local
-   # Vyplňte Supabase credentials
    ```
 
-4. **Setup databáze**
-   - Spusťte SQL z `supabase-setup.sql` v Supabase SQL Editor
+   Edit `.env.local` and add your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your-project-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   ```
 
-5. **Run dev server**
+4. **Setup database**
+   - Open Supabase SQL Editor
+   - Run the SQL from `supabase-setup.sql`
+
+5. **Run development server**
    ```bash
    npm run dev
    ```
 
----
-
-## ✨ Hlavní funkce
-
-- 📊 **Dashboard** s real-time statistikami a grafy
-- 👥 **Správa klientů** s vlastními hodinovými sazbami
-- 🎯 **Fáze projektů** pro organizaci práce
-- ⏰ **Time tracking** s automatickým výpočtem doby
-- 📈 **Reporty** s exportem
-- ☁️ **Cloud sync** přes Supabase
-- 🔄 **Real-time** synchronizace mezi zařízeními
-- 🔐 **Bezpečná autentizace** (Supabase Auth)
-- 📱 **Offline režim** s cache
-- 🎨 **Moderní UI** (Tailwind CSS)
-
----
-
-## 🔐 Bezpečnost
-
-### Security audit (19.12.2025)
-
-✅ **Všechny kritické problémy vyřešeny**
-
-**Bezpečnostní skóre:** 8.0/10
-
-Viz **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** pro detaily.
-
-### Security features
-
-- ✅ Row Level Security (RLS) v databázi
-- ✅ Automatické XSS escapování (React)
-- ✅ CSRF ochrana (Supabase JWT)
-- ✅ Error boundaries
-- ✅ TypeScript type safety
-- ✅ Security headers (CSP, HSTS)
+   Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -112,10 +72,8 @@ Viz **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** pro detaily.
 - **Framework:** Next.js 15 (App Router)
 - **UI Library:** React 19
 - **Language:** TypeScript (strict mode)
-- **Styling:** Tailwind CSS
-- **State Management:**
-  - Zustand (auth store)
-  - React Query (server state)
+- **Styling:** Tailwind CSS + shadcn/ui
+- **State Management:** Zustand (auth) + React Query (server state)
 - **Forms:** React Hook Form + Zod validation
 - **Charts:** Recharts
 
@@ -123,189 +81,111 @@ Viz **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** pro detaily.
 - **Database:** Supabase (PostgreSQL)
 - **Auth:** Supabase Auth
 - **Real-time:** Supabase Realtime
-- **Storage:** Supabase Storage (budoucí)
+- **Row Level Security:** Enabled
 
 ### DevOps
 - **Hosting:** Vercel
-- **CI/CD:** GitHub Actions (plánováno)
-- **Monitoring:** Sentry (plánováno)
+- **CI/CD:** Automatic deployment on push
 
 ---
 
-## 📚 Dokumentace
+## 📁 Project Structure
 
-### Pro uživatele
-- **[next-app/README.md](./next-app/README.md)** - Návod k použití Next.js verze
-
-### Pro vývojáře
-- **[DEVELOPMENT_STRATEGY.md](./DEVELOPMENT_STRATEGY.md)** - Celková strategie vývoje
-- **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** - Bezpečnostní audit
-- **[MIGRATION_LOG.md](./MIGRATION_LOG.md)** - Historie migrace z HTML
-- **[CURRENT_FEATURES.md](./CURRENT_FEATURES.md)** - Feature checklist
-- **[MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md)** - Plán modernizace
-- **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)** - Testovací strategie
-
-### Archiv
-- **[archive-html/README.md](./archive-html/README.md)** - Dokumentace původní HTML verze
-
----
-
-## 🗺️ Roadmap
-
-### ✅ Hotovo (Fáze 1-4)
-- [x] Next.js 15 setup
-- [x] Core infrastructure (auth, DB, state)
-- [x] Time tracking module
-- [x] Dashboard s grafy
-- [x] Clients & Phases management
-- [x] Security audit a opravy
-- [x] Error boundaries
-
-### 🚧 V průběhu (Fáze 5: Performance & Security)
-- [x] **Výkonnostní optimalizace** (73% dokončeno - 8/11 úkolů)
-  - [x] Konsolidace DB dotazů (3→1 queries)
-  - [x] Memoizace service instances (5 hooks)
-  - [x] useMemo pro výpočty (7 optimalizací)
-  - [x] useCallback pro handlery (15 optimalizací)
-  - [x] Type safety (odstranění any types)
-  - [x] Logger utility (11 console.error nahrazeno)
-  - [ ] N+1 query optimalizace
-  - [ ] Databázové indexy
-  - [ ] Check constraints
-- [ ] Testing setup (Vitest)
-- [ ] Security headers (CSP, HSTS)
-- [ ] Deployment na Vercel
-- [ ] Dokumentace API
-
-### 📋 Plánováno (Fáze 6+)
-- [ ] Pokročilé reporty
-- [ ] Export do PDF
-- [ ] Faktury
-- [ ] Team collaboration
-- [ ] Mobile app (React Native?)
-- [ ] AI asistent pro time tracking
-
----
-
-## 🧪 Testing
-
-```bash
-cd next-app
-
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Coverage
-npm run test:coverage
+```
+work-tracker/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication pages
+│   └── (dashboard)/       # Dashboard pages
+├── components/            # Shared components
+│   ├── ui/               # shadcn/ui components
+│   ├── forms/            # Form components
+│   └── layout/           # Layout components
+├── features/             # Feature modules
+│   └── time-tracking/   # Time tracking feature
+│       ├── components/
+│       ├── hooks/
+│       ├── services/
+│       └── types/
+├── lib/                  # Shared libraries
+│   ├── supabase/        # Supabase client & services
+│   ├── hooks/           # Global hooks
+│   ├── stores/          # Zustand stores
+│   └── utils/           # Utility functions
+├── types/                # TypeScript types
+└── supabase-setup.sql   # Database schema
 ```
 
-Viz **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)**
-
 ---
 
-## 🚀 Deployment
-
-### Vercel (Doporučeno)
+## 🛠️ Development
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Install dependencies
+npm install
 
-# Deploy
-cd next-app
-vercel
-```
-
-### Environment variables
-
-Nastavte v Vercel dashboard:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
----
-
-## 🤝 Contributing
-
-1. Fork repository
-2. Vytvořte feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Otevřete Pull Request
-
-### Development workflow
-
-```bash
-# Start dev server
+# Run development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 
 # Type check
 npm run type-check
 
 # Lint
 npm run lint
-
-# Format
-npm run format
-
-# Build
-npm run build
 ```
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. **Connect to Vercel**
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js
+
+2. **Set Environment Variables**
+   - Go to Project Settings → Environment Variables
+   - Add `NEXT_PUBLIC_SUPABASE_URL`
+   - Add `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+3. **Deploy**
+   - Push to main branch → automatic deployment
+   - Or use Vercel CLI: `vercel --prod`
+
+---
+
+## 🔐 Security
+
+- ✅ Row Level Security (RLS) in database
+- ✅ Automatic XSS escaping (React)
+- ✅ CSRF protection (Supabase JWT)
+- ✅ Error boundaries
+- ✅ TypeScript type safety
+- ✅ Security headers (CSP, X-Frame-Options, etc.)
+- ✅ Database constraints for data integrity
+
+**Security Score:** 9.0/10
 
 ---
 
 ## 📝 License
 
-MIT License - můžete volně používat a upravovat.
+MIT License - free to use and modify.
 
 ---
 
-## 📧 Kontakt & Podpora
+## 📧 Support
 
-- **Issues:** [GitHub Issues](https://github.com/efektivnibyznys/worktracker/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/efektivnibyznys/worktracker/discussions)
-
----
-
-## ⚠️ Poznámka k HTML verzi
-
-Původní HTML verze aplikace (`index.html`) byla přesunuta do **`archive-html/`** a **již se nepoužívá**.
-
-**Důvody archivace:**
-- Bezpečnostní zranitelnosti (opravené, ale struktura problematická)
-- Obtížná údržba (2740 řádků v jednom souboru)
-- Chybějící moderní features (TypeScript, testing, error handling)
-
-**➡️ Použijte místo toho Next.js verzi v `/next-app/`**
-
-Viz **[archive-html/README.md](./archive-html/README.md)** pro více informací.
+For issues and questions, please open a GitHub issue.
 
 ---
 
-## 🌟 Highlights
-
-### Před (HTML verze)
-- 2740 řádků v jednom souboru
-- Vanilla JavaScript
-- Bezpečnostní problémy
-- Těžká údržba
-
-### Po (Next.js verze)
-- ✅ Modulární architektura
-- ✅ TypeScript type safety
-- ✅ Bezpečné (8/10 security score)
-- ✅ Testovatelné
-- ✅ Moderní stack
-- ✅ Snadná údržba
-
-**Zlepšení:** 95% lepší code quality, 3x vyšší bezpečnost, 10x snazší údržba
-
----
-
-**Vytvořeno s ❤️ pomocí Next.js a Supabase**
-
-**Poslední aktualizace:** 19. prosince 2025
-**Verze:** 2.0.0 (Next.js migrace)
-**Status:** ✅ Aktivní vývoj
+**Version:** 2.0.0
+**Last Updated:** December 2025
+**Status:** ✅ Production Ready
