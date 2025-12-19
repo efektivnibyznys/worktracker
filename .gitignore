@@ -18,6 +18,7 @@ npm-debug.log*
 # Environment variables (pokud budeš mít)
 .env.local
 .env
+config.js
 
 # Build files
 dist/

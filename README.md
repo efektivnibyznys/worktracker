@@ -51,8 +51,12 @@ Moderní webová aplikace pro sledování odpracovaného času s cloudovou synch
 
 ### 4. Konfigurace aplikace
 
-1. Otevři soubor `index.html`
-2. Najdi řádky s konfigurací Supabase (cca řádek 666-667):
+1. Zkopíruj soubor `config.example.js` a přejmenuj ho na `config.js`:
+   ```bash
+   cp config.example.js config.js
+   ```
+
+2. Otevři soubor `config.js` a nastav své API klíče:
 
 ```javascript
 const SUPABASE_URL = 'https://your-project.supabase.co'
@@ -60,6 +64,8 @@ const SUPABASE_ANON_KEY = 'your-anon-key-here'
 ```
 
 3. Nahraď hodnoty svými skutečnými údaji z kroku 3
+
+⚠️ **DŮLEŽITÉ:** Soubor `config.js` obsahuje citlivé údaje a NESMÍ být commitnut do gitu. Je již přidán v `.gitignore`.
 
 ### 5. Spuštění aplikace
 

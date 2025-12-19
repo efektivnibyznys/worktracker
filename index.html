@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -667,8 +668,8 @@
         // ============================================
         // SUPABASE CONFIGURATION
         // ============================================
-        const SUPABASE_URL = 'https://tdgxfhoymdjszrsctcxh.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkZ3hmaG95bWRqc3pyc2N0Y3hoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNDAxOTgsImV4cCI6MjA4MTYxNjE5OH0.wLFk32NNaVgbh72iSw4pbjqxf0lBNzTTB02DMbKfMhM'
+        // Configuration is loaded from config.js file
+        // Copy config.example.js to config.js and fill in your credentials
 
         // Inicializace Supabase klienta
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
