@@ -1,5 +1,6 @@
-// This file exists to satisfy Next.js routing requirements
-// The actual dashboard is in app/(dashboard)/page.tsx
+import { redirect } from 'next/navigation'
+
+// Redirect root to dashboard
 export default function RootPage() {
-  return null
+  redirect('/clients')
 }
