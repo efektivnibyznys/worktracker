@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
@@ -65,7 +66,11 @@ export default function EntriesPage() {
       toast.success('Záznam byl úspěšně smazán')
     } catch (error) {
       toast.error('Nepodařilo se smazat záznam')
-      console.error(error)
+      logger.error('Failed to delete entry', error, {
+        component: 'EntriesPage',
+        action: 'handleDelete',
+        metadata: { entryId: id },
+      })
     } finally {
       setDeletingId(null)
     }

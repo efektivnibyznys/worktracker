@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 import { useClient } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { PhaseForm, PhaseFormData } from '@/features/time-tracking/components/PhaseForm'
@@ -47,7 +48,11 @@ export default function ClientDetailPage() {
       toast.success('Fáze byla úspěšně přidána')
     } catch (error) {
       toast.error('Nepodařilo se přidat fázi')
-      console.error(error)
+      logger.error('Failed to create phase', error, {
+        component: 'ClientDetailPage',
+        action: 'handleCreatePhase',
+        metadata: { clientId },
+      })
     }
   }, [createPhase, user, clientId])
 
@@ -66,7 +71,11 @@ export default function ClientDetailPage() {
       toast.success('Fáze byla úspěšně upravena')
     } catch (error) {
       toast.error('Nepodařilo se upravit fázi')
-      console.error(error)
+      logger.error('Failed to update phase', error, {
+        component: 'ClientDetailPage',
+        action: 'handleUpdatePhase',
+        metadata: { phaseId: editingPhase?.id },
+      })
     }
   }, [editingPhase, updatePhase])
 
@@ -80,7 +89,11 @@ export default function ClientDetailPage() {
       toast.success('Fáze byla úspěšně smazána')
     } catch (error) {
       toast.error('Nepodařilo se smazat fázi')
-      console.error(error)
+      logger.error('Failed to delete phase', error, {
+        component: 'ClientDetailPage',
+        action: 'handleDeletePhase',
+        metadata: { phaseId: id },
+      })
     } finally {
       setDeletingId(null)
     }

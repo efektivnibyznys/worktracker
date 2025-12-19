@@ -2,6 +2,7 @@
 
 import { useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 import { QuickAddForm, QuickAddSubmitData } from '@/features/time-tracking/components/QuickAddForm'
 import { useDashboardEntries } from '@/features/time-tracking/hooks/useEntries'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,7 +39,10 @@ export default function DashboardPage() {
       toast.success('Záznam byl úspěšně přidán')
     } catch (error) {
       toast.error('Nepodařilo se přidat záznam')
-      console.error(error)
+      logger.error('Failed to create time entry', error, {
+        component: 'Dashboard',
+        action: 'handleQuickAdd',
+      })
     }
   }, [createEntry, user])
 

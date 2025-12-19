@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { ClientForm, ClientFormData } from '@/features/time-tracking/components/ClientForm'
 import { Button } from '@/components/ui/button'
@@ -44,7 +45,10 @@ export default function ClientsPage() {
       toast.success('Klient byl úspěšně přidán')
     } catch (error) {
       toast.error('Nepodařilo se přidat klienta')
-      console.error(error)
+      logger.error('Failed to create client', error, {
+        component: 'ClientsPage',
+        action: 'handleCreate',
+      })
     }
   }, [createClient, user])
 
@@ -63,7 +67,11 @@ export default function ClientsPage() {
       toast.success('Klient byl úspěšně upraven')
     } catch (error) {
       toast.error('Nepodařilo se upravit klienta')
-      console.error(error)
+      logger.error('Failed to update client', error, {
+        component: 'ClientsPage',
+        action: 'handleUpdate',
+        metadata: { clientId: editingClient?.id },
+      })
     }
   }, [editingClient, updateClient])
 
@@ -77,7 +85,11 @@ export default function ClientsPage() {
       toast.success('Klient byl úspěšně smazán')
     } catch (error) {
       toast.error('Nepodařilo se smazat klienta')
-      console.error(error)
+      logger.error('Failed to delete client', error, {
+        component: 'ClientsPage',
+        action: 'handleDelete',
+        metadata: { clientId: id },
+      })
     } finally {
       setDeletingId(null)
     }

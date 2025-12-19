@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,7 +71,11 @@ export default function SettingsPage() {
       toast.success('Nastavení bylo úspěšně uloženo')
     } catch (error) {
       toast.error('Nepodařilo se uložit nastavení')
-      console.error(error)
+      logger.error('Failed to update settings', error, {
+        component: 'SettingsPage',
+        action: 'onSubmit',
+        metadata: { userId: user?.id },
+      })
     }
   }, [user, updateSettings])
 

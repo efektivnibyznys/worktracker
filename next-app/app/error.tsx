@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { logger } from '@/lib/utils/logger'
 
 export default function Error({
   error,
@@ -11,7 +12,10 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error('Application error:', error)
+    logger.error('Application error caught by error boundary', error, {
+      component: 'ErrorBoundary',
+      metadata: { digest: error.digest },
+    })
   }, [error])
 
   return (
