@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Output configuration for Vercel
+  output: 'standalone',
+
   // Security headers
   async headers() {
     return [
