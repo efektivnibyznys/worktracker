@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { ClientForm } from '@/features/time-tracking/components/ClientForm'
 import { Button } from '@/components/ui/button'
@@ -18,8 +19,14 @@ import { formatCurrency } from '@/lib/utils/currency'
 import { formatTime } from '@/lib/utils/time'
 import { Client } from '@/features/time-tracking/types/client.types'
 import { useAuthStore } from '@/lib/stores/authStore'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 export default function ClientsPage() {
+  usePageMetadata({
+    title: 'Klienti | Work Tracker',
+    description: 'Správa klientů a projektů'
+  })
+
   const { user } = useAuthStore()
   const { clients, isLoading, createClient, updateClient, deleteClient } = useClients()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -27,25 +34,37 @@ export default function ClientsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleCreate = async (data: any) => {
-    await createClient.mutateAsync({
-      ...data,
-      user_id: user!.id,
-      hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
-    })
-    setIsDialogOpen(false)
+    try {
+      await createClient.mutateAsync({
+        ...data,
+        user_id: user!.id,
+        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      })
+      setIsDialogOpen(false)
+      toast.success('Klient byl úspěšně přidán')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat klienta')
+      console.error(error)
+    }
   }
 
   const handleUpdate = async (data: any) => {
     if (!editingClient) return
-    await updateClient.mutateAsync({
-      id: editingClient.id,
-      data: {
-        ...data,
-        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
-      },
-    })
-    setEditingClient(null)
-    setIsDialogOpen(false)
+    try {
+      await updateClient.mutateAsync({
+        id: editingClient.id,
+        data: {
+          ...data,
+          hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+        },
+      })
+      setEditingClient(null)
+      setIsDialogOpen(false)
+      toast.success('Klient byl úspěšně upraven')
+    } catch (error) {
+      toast.error('Nepodařilo se upravit klienta')
+      console.error(error)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -53,8 +72,15 @@ export default function ClientsPage() {
       return
     }
     setDeletingId(id)
-    await deleteClient.mutateAsync(id)
-    setDeletingId(null)
+    try {
+      await deleteClient.mutateAsync(id)
+      toast.success('Klient byl úspěšně smazán')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat klienta')
+      console.error(error)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (isLoading) {

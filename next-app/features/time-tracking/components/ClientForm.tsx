@@ -11,7 +11,11 @@ import { Client } from '../types/client.types'
 
 const clientSchema = z.object({
   name: z.string().min(1, 'Jméno klienta je povinné'),
-  hourly_rate: z.string().optional(),
+  hourly_rate: z.string()
+    .optional()
+    .refine((val) => !val || parseFloat(val) >= 0, {
+      message: 'Hodinová sazba musí být kladné číslo',
+    }),
   note: z.string().optional(),
 })
 

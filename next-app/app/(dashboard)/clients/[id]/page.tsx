@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { useClient } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { PhaseForm } from '@/features/time-tracking/components/PhaseForm'
@@ -35,26 +36,38 @@ export default function ClientDetailPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleCreatePhase = async (data: any) => {
-    await createPhase.mutateAsync({
-      ...data,
-      user_id: user!.id,
-      client_id: clientId,
-      hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
-    })
-    setIsDialogOpen(false)
+    try {
+      await createPhase.mutateAsync({
+        ...data,
+        user_id: user!.id,
+        client_id: clientId,
+        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      })
+      setIsDialogOpen(false)
+      toast.success('Fáze byla úspěšně přidána')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat fázi')
+      console.error(error)
+    }
   }
 
   const handleUpdatePhase = async (data: any) => {
     if (!editingPhase) return
-    await updatePhase.mutateAsync({
-      id: editingPhase.id,
-      data: {
-        ...data,
-        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
-      },
-    })
-    setEditingPhase(null)
-    setIsDialogOpen(false)
+    try {
+      await updatePhase.mutateAsync({
+        id: editingPhase.id,
+        data: {
+          ...data,
+          hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+        },
+      })
+      setEditingPhase(null)
+      setIsDialogOpen(false)
+      toast.success('Fáze byla úspěšně upravena')
+    } catch (error) {
+      toast.error('Nepodařilo se upravit fázi')
+      console.error(error)
+    }
   }
 
   const handleDeletePhase = async (id: string) => {
@@ -62,8 +75,15 @@ export default function ClientDetailPage() {
       return
     }
     setDeletingId(id)
-    await deletePhase.mutateAsync(id)
-    setDeletingId(null)
+    try {
+      await deletePhase.mutateAsync(id)
+      toast.success('Fáze byla úspěšně smazána')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat fázi')
+      console.error(error)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   if (clientLoading) {

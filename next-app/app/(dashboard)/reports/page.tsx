@@ -19,8 +19,14 @@ import { formatDate } from '@/lib/utils/date'
 import { formatTime } from '@/lib/utils/time'
 import { calculateStats } from '@/lib/utils/calculations'
 import { EntryFilters } from '@/features/time-tracking/types/entry.types'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 export default function ReportsPage() {
+  usePageMetadata({
+    title: 'Reporty | Work Tracker',
+    description: 'Generování reportů a export do Notionu'
+  })
+
   const [filters, setFilters] = useState<EntryFilters>({})
   const [showReport, setShowReport] = useState(false)
 

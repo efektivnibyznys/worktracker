@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { toast } from 'sonner'
 import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,15 +11,25 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useEffect } from 'react'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 const settingsSchema = z.object({
-  default_hourly_rate: z.string().min(1, 'Výchozí sazba je povinná'),
+  default_hourly_rate: z.string()
+    .min(1, 'Výchozí sazba je povinná')
+    .refine((val) => parseFloat(val) >= 0, {
+      message: 'Výchozí sazba musí být kladné číslo',
+    }),
   currency: z.string().min(1, 'Měna je povinná'),
 })
 
 type SettingsFormData = z.infer<typeof settingsSchema>
 
 export default function SettingsPage() {
+  usePageMetadata({
+    title: 'Nastavení | Work Tracker',
+    description: 'Globální nastavení aplikace'
+  })
+
   const { user } = useAuthStore()
   const { settings, isLoading, updateSettings } = useSettings(user?.id)
 
@@ -48,15 +59,19 @@ export default function SettingsPage() {
   const onSubmit = async (data: SettingsFormData) => {
     if (!user) return
 
-    await updateSettings.mutateAsync({
-      userId: user.id,
-      data: {
-        default_hourly_rate: parseFloat(data.default_hourly_rate),
-        currency: data.currency,
-      },
-    })
-
-    alert('Nastavení uloženo!')
+    try {
+      await updateSettings.mutateAsync({
+        userId: user.id,
+        data: {
+          default_hourly_rate: parseFloat(data.default_hourly_rate),
+          currency: data.currency,
+        },
+      })
+      toast.success('Nastavení bylo úspěšně uloženo')
+    } catch (error) {
+      toast.error('Nepodařilo se uložit nastavení')
+      console.error(error)
+    }
   }
 
   if (isLoading) {

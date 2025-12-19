@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Work Tracker',
@@ -19,6 +20,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             {children}
+            <Toaster />
           </AuthProvider>
         </QueryProvider>
       </body>

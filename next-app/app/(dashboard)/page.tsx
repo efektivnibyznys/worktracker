@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import { QuickAddForm } from '@/features/time-tracking/components/QuickAddForm'
 import { useDashboardEntries } from '@/features/time-tracking/hooks/useEntries'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,8 +11,14 @@ import { calculateStats } from '@/lib/utils/calculations'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 export default function DashboardPage() {
+  usePageMetadata({
+    title: 'Dashboard | Work Tracker',
+    description: 'Přehled odpracované doby a rychlé přidání záznamu'
+  })
+
   const { user } = useAuthStore()
   const { todayEntries, weekEntries, monthEntries } = useDashboardEntries()
   const { createEntry } = useEntries()
@@ -22,10 +29,16 @@ export default function DashboardPage() {
   const monthStats = calculateStats(monthEntries)
 
   const handleQuickAdd = async (data: any) => {
-    await createEntry.mutateAsync({
-      ...data,
-      user_id: user!.id,
-    })
+    try {
+      await createEntry.mutateAsync({
+        ...data,
+        user_id: user!.id,
+      })
+      toast.success('Záznam byl úspěšně přidán')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat záznam')
+      console.error(error)
+    }
   }
 
   // Get recent entries (last 5)

@@ -19,7 +19,11 @@ import { Phase, PhaseStatus } from '../types/phase.types'
 const phaseSchema = z.object({
   name: z.string().min(1, 'Název fáze je povinný'),
   description: z.string().optional(),
-  hourly_rate: z.string().optional(),
+  hourly_rate: z.string()
+    .optional()
+    .refine((val) => !val || parseFloat(val) >= 0, {
+      message: 'Hodinová sazba musí být kladné číslo',
+    }),
   status: z.enum(['active', 'completed', 'paused']),
 })
 

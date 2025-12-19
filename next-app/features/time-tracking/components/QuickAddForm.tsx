@@ -30,7 +30,21 @@ const quickAddSchema = z.object({
   start_time: z.string().min(1, 'Čas od je povinný'),
   end_time: z.string().min(1, 'Čas do je povinný'),
   description: z.string().min(1, 'Popis je povinný'),
-  hourly_rate: z.string().optional(),
+  hourly_rate: z.string()
+    .optional()
+    .refine((val) => !val || parseFloat(val) >= 0, {
+      message: 'Hodinová sazba musí být kladné číslo',
+    }),
+}).refine((data) => {
+  if (!data.start_time || !data.end_time) return true
+  const [startHour, startMin] = data.start_time.split(':').map(Number)
+  const [endHour, endMin] = data.end_time.split(':').map(Number)
+  const startMinutes = startHour * 60 + startMin
+  const endMinutes = endHour * 60 + endMin
+  return endMinutes > startMinutes
+}, {
+  message: 'Čas do musí být později než čas od',
+  path: ['end_time'],
 })
 
 type QuickAddFormData = z.infer<typeof quickAddSchema>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
@@ -20,8 +21,14 @@ import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
 import { formatTime } from '@/lib/utils/time'
 import { EntryFilters } from '@/features/time-tracking/types/entry.types'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
 export default function EntriesPage() {
+  usePageMetadata({
+    title: 'Záznamy práce | Work Tracker',
+    description: 'Přehled všech odpracovaných hodin s filtry'
+  })
+
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
 
@@ -53,8 +60,15 @@ export default function EntriesPage() {
       return
     }
     setDeletingId(id)
-    await deleteEntry.mutateAsync(id)
-    setDeletingId(null)
+    try {
+      await deleteEntry.mutateAsync(id)
+      toast.success('Záznam byl úspěšně smazán')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat záznam')
+      console.error(error)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   // Calculate totals
