@@ -96,14 +96,14 @@ export default function ReportsPage() {
             <div>
               <Label htmlFor="client">Klient</Label>
               <Select
-                value={filters.clientId || ''}
-                onValueChange={(value) => handleFilterChange('clientId', value)}
+                value={filters.clientId || 'all'}
+                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Všichni klienti" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Všichni klienti</SelectItem>
+                  <SelectItem value="all">Všichni klienti</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}

@@ -114,14 +114,14 @@ export default function EntriesPage() {
             <div>
               <Label htmlFor="client">Klient</Label>
               <Select
-                value={filters.clientId || ''}
-                onValueChange={(value) => handleFilterChange('clientId', value)}
+                value={filters.clientId || 'all'}
+                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Všichni klienti" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Všichni klienti</SelectItem>
+                  <SelectItem value="all">Všichni klienti</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
@@ -134,15 +134,15 @@ export default function EntriesPage() {
             <div>
               <Label htmlFor="phase">Fáze</Label>
               <Select
-                value={filters.phaseId || ''}
-                onValueChange={(value) => handleFilterChange('phaseId', value)}
+                value={filters.phaseId || 'all'}
+                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? undefined : value)}
                 disabled={!selectedClientId || phases.length === 0}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder={!selectedClientId ? "Nejprve vyberte klienta" : "Všechny fáze"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Všechny fáze</SelectItem>
+                  <SelectItem value="all">Všechny fáze</SelectItem>
                   {phases.map((phase) => (
                     <SelectItem key={phase.id} value={phase.id}>
                       {phase.name}
