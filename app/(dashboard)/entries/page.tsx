@@ -115,7 +115,7 @@ export default function EntriesPage() {
               <Label htmlFor="client">Klient</Label>
               <Select
                 value={filters.clientId || 'all'}
-                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? undefined : value)}
+                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Všichni klienti" />
@@ -135,7 +135,7 @@ export default function EntriesPage() {
               <Label htmlFor="phase">Fáze</Label>
               <Select
                 value={filters.phaseId || 'all'}
-                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? undefined : value)}
+                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
                 disabled={!selectedClientId || phases.length === 0}
               >
                 <SelectTrigger className="mt-1">

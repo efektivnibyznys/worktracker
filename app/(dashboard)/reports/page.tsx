@@ -97,7 +97,7 @@ export default function ReportsPage() {
               <Label htmlFor="client">Klient</Label>
               <Select
                 value={filters.clientId || 'all'}
-                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? undefined : value)}
+                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Všichni klienti" />
