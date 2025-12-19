@@ -1,15 +1,34 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { EntryService } from '../services/entryService'
 import { EntryInsert, EntryUpdate, EntryFilters } from '../types/entry.types'
+import { Entry } from '../types/entry.types'
 
 const ENTRIES_KEY = 'entries'
 
+// Helper functions for client-side filtering
+function filterToday(entries: Entry[]): Entry[] {
+  const today = new Date().toISOString().split('T')[0]
+  return entries.filter(entry => entry.date === today)
+}
+
+function filterThisWeek(entries: Entry[]): Entry[] {
+  const now = new Date()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))
+  const mondayStr = monday.toISOString().split('T')[0]
+  const todayStr = now.toISOString().split('T')[0]
+
+  return entries.filter(entry => entry.date >= mondayStr && entry.date <= todayStr)
+}
+
 export function useEntries(filters?: EntryFilters) {
-  const supabase = createSupabaseClient()
-  const entryService = new EntryService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const entryService = useMemo(() => new EntryService(supabase), [supabase])
   const queryClient = useQueryClient()
 
   // Get all entries with filters
@@ -53,29 +72,32 @@ export function useEntries(filters?: EntryFilters) {
   }
 }
 
-// Hook for dashboard stats
+// Hook for dashboard stats - OPTIMIZED: Single query instead of 3
 export function useDashboardEntries() {
-  const supabase = createSupabaseClient()
-  const entryService = new EntryService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const entryService = useMemo(() => new EntryService(supabase), [supabase])
 
-  const { data: todayEntries } = useQuery({
-    queryKey: [ENTRIES_KEY, 'today'],
-    queryFn: () => entryService.getToday(),
-  })
-
-  const { data: weekEntries } = useQuery({
-    queryKey: [ENTRIES_KEY, 'week'],
-    queryFn: () => entryService.getThisWeek(),
-  })
-
+  // Fetch month entries once (single DB query)
   const { data: monthEntries } = useQuery({
     queryKey: [ENTRIES_KEY, 'month'],
     queryFn: () => entryService.getThisMonth(),
   })
 
+  // Filter on client side (memoized for performance)
+  const todayEntries = useMemo(
+    () => filterToday(monthEntries || []),
+    [monthEntries]
+  )
+
+  const weekEntries = useMemo(
+    () => filterThisWeek(monthEntries || []),
+    [monthEntries]
+  )
+
   return {
-    todayEntries: todayEntries || [],
-    weekEntries: weekEntries || [],
+    todayEntries,
+    weekEntries,
     monthEntries: monthEntries || [],
   }
 }

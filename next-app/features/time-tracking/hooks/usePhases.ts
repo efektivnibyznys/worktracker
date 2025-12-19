@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { PhaseService } from '../services/phaseService'
@@ -8,8 +9,9 @@ import { PhaseInsert, PhaseUpdate } from '../types/phase.types'
 const PHASES_KEY = 'phases'
 
 export function usePhases(clientId?: string) {
-  const supabase = createSupabaseClient()
-  const phaseService = new PhaseService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const phaseService = useMemo(() => new PhaseService(supabase), [supabase])
   const queryClient = useQueryClient()
 
   // Get phases for a specific client with stats

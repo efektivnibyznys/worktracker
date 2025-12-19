@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { SettingsService } from '../services/settingsService'
@@ -8,8 +9,9 @@ import { SettingsUpdate } from '../types/settings.types'
 const SETTINGS_KEY = 'settings'
 
 export function useSettings(userId?: string) {
-  const supabase = createSupabaseClient()
-  const settingsService = new SettingsService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const settingsService = useMemo(() => new SettingsService(supabase), [supabase])
   const queryClient = useQueryClient()
 
   // Get user settings

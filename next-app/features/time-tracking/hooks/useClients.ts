@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { ClientService } from '../services/clientService'
@@ -8,8 +9,9 @@ import { ClientInsert, ClientUpdate } from '../types/client.types'
 const CLIENTS_KEY = 'clients'
 
 export function useClients() {
-  const supabase = createSupabaseClient()
-  const clientService = new ClientService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const clientService = useMemo(() => new ClientService(supabase), [supabase])
   const queryClient = useQueryClient()
 
   // Get all clients with stats
@@ -54,8 +56,9 @@ export function useClients() {
 }
 
 export function useClient(id: string) {
-  const supabase = createSupabaseClient()
-  const clientService = new ClientService(supabase)
+  // Memoize supabase client and service to avoid recreation on every render
+  const supabase = useMemo(() => createSupabaseClient(), [])
+  const clientService = useMemo(() => new ClientService(supabase), [supabase])
 
   const { data: client, isLoading, error } = useQuery({
     queryKey: [CLIENTS_KEY, id],
