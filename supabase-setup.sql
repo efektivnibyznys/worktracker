@@ -54,6 +54,40 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- ============================================
+-- CHECK CONSTRAINTS - Data Integrity
+-- ============================================
+
+-- Zajistit kladnou duration v entries
+ALTER TABLE entries DROP CONSTRAINT IF EXISTS check_positive_duration;
+ALTER TABLE entries ADD CONSTRAINT check_positive_duration
+  CHECK (duration_minutes > 0);
+
+-- Zajistit validní časové rozmezí v entries
+ALTER TABLE entries DROP CONSTRAINT IF EXISTS check_valid_times;
+ALTER TABLE entries ADD CONSTRAINT check_valid_times
+  CHECK (end_time > start_time);
+
+-- Zajistit nezápornou hodinovou sazbu v clients
+ALTER TABLE clients DROP CONSTRAINT IF EXISTS check_positive_rate;
+ALTER TABLE clients ADD CONSTRAINT check_positive_rate
+  CHECK (hourly_rate IS NULL OR hourly_rate >= 0);
+
+-- Zajistit nezápornou hodinovou sazbu v phases
+ALTER TABLE phases DROP CONSTRAINT IF EXISTS check_positive_phase_rate;
+ALTER TABLE phases ADD CONSTRAINT check_positive_phase_rate
+  CHECK (hourly_rate IS NULL OR hourly_rate >= 0);
+
+-- Zajistit nezápornou hodinovou sazbu v entries
+ALTER TABLE entries DROP CONSTRAINT IF EXISTS check_positive_entry_rate;
+ALTER TABLE entries ADD CONSTRAINT check_positive_entry_rate
+  CHECK (hourly_rate >= 0);
+
+-- Zajistit nezápornou default hodinovou sazbu v settings
+ALTER TABLE settings DROP CONSTRAINT IF EXISTS check_positive_default_rate;
+ALTER TABLE settings ADD CONSTRAINT check_positive_default_rate
+  CHECK (default_hourly_rate IS NULL OR default_hourly_rate >= 0);
+
+-- ============================================
 -- INDEXY PRO RYCHLÉ DOTAZY
 -- ============================================
 
@@ -72,6 +106,10 @@ CREATE INDEX IF NOT EXISTS idx_entries_client_id ON entries(client_id);
 CREATE INDEX IF NOT EXISTS idx_entries_phase_id ON entries(phase_id);
 CREATE INDEX IF NOT EXISTS idx_entries_date ON entries(date DESC);
 CREATE INDEX IF NOT EXISTS idx_entries_user_date ON entries(user_id, date DESC);
+
+-- Kompozitní indexy pro optimalizaci častých queries
+CREATE INDEX IF NOT EXISTS idx_entries_client_date ON entries(client_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_entries_phase_date ON entries(phase_id, date DESC) WHERE phase_id IS NOT NULL;
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)
