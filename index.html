@@ -1426,6 +1426,15 @@
         // ============================================
         // UI HELPERS
         // ============================================
+
+        // Escape HTML to prevent XSS attacks
+        const escapeHtml = (text) => {
+            if (text === null || text === undefined) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
         const formatCurrency = (amount) => {
             return new Intl.NumberFormat('cs-CZ').format(Math.round(amount)) + ' Kč';
         };
@@ -1906,8 +1915,8 @@
                             <div class="border-b pb-2">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="font-medium">${client ? client.name : 'Neznámý klient'}</p>
-                                        <p class="text-sm text-gray-600">${entry.description}</p>
+                                        <p class="font-medium">${escapeHtml(client ? client.name : 'Neznámý klient')}</p>
+                                        <p class="text-sm text-gray-600">${escapeHtml(entry.description)}</p>
                                         <p class="text-xs text-gray-500">${formatDate(entry.date)} • ${entry.startTime} - ${entry.endTime}</p>
                                     </div>
                                     <div class="text-right">
@@ -1963,10 +1972,10 @@
                             <div class="flex justify-between items-start mb-2">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-gray-900">${client ? client.name : 'Neznámý klient'}</span>
-                                        ${phase ? `<span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">${phase.name}</span>` : ''}
+                                        <span class="font-semibold text-gray-900">${escapeHtml(client ? client.name : 'Neznámý klient')}</span>
+                                        ${phase ? `<span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">${escapeHtml(phase.name)}</span>` : ''}
                                     </div>
-                                    <p class="text-sm text-gray-700 mb-2">${entry.description}</p>
+                                    <p class="text-sm text-gray-700 mb-2">${escapeHtml(entry.description)}</p>
                                     <div class="flex gap-4 text-xs text-gray-500">
                                         <span>📅 ${formatDate(entry.date)}</span>
                                         <span>🕒 ${entry.startTime} - ${entry.endTime}</span>
@@ -2203,8 +2212,8 @@
                         <div class="card">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 class="text-xl font-bold">${client.name}</h3>
-                                    ${client.note ? `<p class="text-sm text-gray-600 mt-1">${client.note}</p>` : ''}
+                                    <h3 class="text-xl font-bold">${escapeHtml(client.name)}</h3>
+                                    ${client.note ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(client.note)}</p>` : ''}
                                     <p class="text-sm text-gray-500 mt-1">Sazba: ${client.hourlyRate ? formatCurrency(client.hourlyRate) + '/h' : 'Výchozí'}</p>
                                 </div>
                                 <div class="flex gap-2">
@@ -2246,10 +2255,10 @@
                                                     <div class="flex justify-between items-start">
                                                         <div class="flex-1">
                                                             <div class="flex items-center gap-2">
-                                                                <span class="font-medium">${phase.name}</span>
+                                                                <span class="font-medium">${escapeHtml(phase.name)}</span>
                                                                 <span class="status-badge ${statusClass}">${statusText}</span>
                                                             </div>
-                                                            ${phase.description ? `<p class="text-sm text-gray-600 mt-1">${phase.description}</p>` : ''}
+                                                            ${phase.description ? `<p class="text-sm text-gray-600 mt-1">${escapeHtml(phase.description)}</p>` : ''}
                                                             <div class="flex gap-4 mt-2 text-sm text-gray-600">
                                                                 <span>${formatTime(phaseStats.hours, phaseStats.minutes)}</span>
                                                                 <span>${formatCurrency(phaseStats.amount)}</span>
@@ -2311,10 +2320,10 @@
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <h3 class="text-lg font-bold">${client ? client.name : 'Neznámý klient'}</h3>
-                                        ${phase ? `<span class="text-sm text-gray-600">→ ${phase.name}</span>` : ''}
+                                        <h3 class="text-lg font-bold">${escapeHtml(client ? client.name : 'Neznámý klient')}</h3>
+                                        ${phase ? `<span class="text-sm text-gray-600">→ ${escapeHtml(phase.name)}</span>` : ''}
                                     </div>
-                                    <p class="text-gray-700 mb-2">${entry.description}</p>
+                                    <p class="text-gray-700 mb-2">${escapeHtml(entry.description)}</p>
                                     <div class="flex gap-4 text-sm text-gray-600">
                                         <span>📅 ${formatDate(entry.date)}</span>
                                         <span>🕒 ${entry.startTime} - ${entry.endTime}</span>
@@ -2567,9 +2576,9 @@
                                     return `
                                         <tr>
                                             <td class="px-4 py-2">${formatDate(entry.date)}</td>
-                                            <td class="px-4 py-2">${client ? client.name : '-'}</td>
-                                            <td class="px-4 py-2">${phase ? phase.name : '-'}</td>
-                                            <td class="px-4 py-2">${entry.description}</td>
+                                            <td class="px-4 py-2">${escapeHtml(client ? client.name : '-')}</td>
+                                            <td class="px-4 py-2">${escapeHtml(phase ? phase.name : '-')}</td>
+                                            <td class="px-4 py-2">${escapeHtml(entry.description)}</td>
                                             <td class="px-4 py-2 text-right">${formatTime(Math.floor(entry.durationMinutes / 60), entry.durationMinutes % 60)}</td>
                                             <td class="px-4 py-2 text-right font-medium">${formatCurrency(amount)}</td>
                                         </tr>
