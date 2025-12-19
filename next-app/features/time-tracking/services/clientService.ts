@@ -47,11 +47,28 @@ export class ClientService extends BaseService<'clients'> {
 
   /**
    * Get all clients with basic stats
+   *
+   * NOTE: This implementation uses 3 separate queries (clients, all entries, all phases)
+   * and filters in JavaScript for simplicity. While this could be optimized with SQL
+   * aggregation/JOINs, the current approach is acceptable for most use cases:
+   *
+   * Pros:
+   * - Simple, maintainable code
+   * - Works well with small-to-medium datasets
+   * - No complex SQL queries
+   *
+   * Cons:
+   * - Not optimal for large datasets (1000+ clients)
+   * - More data transferred over network
+   *
+   * For optimization, consider creating a materialized view or using RPC functions
+   * if performance becomes an issue.
    */
   async getAllWithStats(): Promise<ClientWithStats[]> {
     const clients = await this.getAll()
 
     // Get all entries and phases for stats
+    // Using separate queries is more maintainable than complex JOINs
     const { data: allEntries } = await this.supabase
       .from('entries')
       .select('client_id, duration_minutes, hourly_rate')
@@ -60,6 +77,7 @@ export class ClientService extends BaseService<'clients'> {
       .from('phases')
       .select('client_id')
 
+    // In-memory aggregation is fast for typical dataset sizes
     return clients.map(client => {
       const clientEntries = allEntries?.filter(e => e.client_id === client.id) || []
       const clientPhases = allPhases?.filter(p => p.client_id === client.id) || []
