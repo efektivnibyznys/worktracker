@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Output configuration for Vercel
   output: 'standalone',
 
+  // Turbopack configuration (Next.js 16+)
+  turbopack: {},
+
   // Security headers
   async headers() {
     return [
@@ -40,26 +43,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-
-  // Code splitting pro recharts a d3 knihovny
-  webpack: (config) => {
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        ...config.optimization?.splitChunks,
-        cacheGroups: {
-          ...(config.optimization?.splitChunks as any)?.cacheGroups,
-          recharts: {
-            test: /[\\/]node_modules[\\/](recharts|d3-.*)[\\/]/,
-            name: 'recharts',
-            priority: 10,
-            chunks: 'all',
-          },
-        },
-      },
-    };
-    return config;
   },
 };
 
