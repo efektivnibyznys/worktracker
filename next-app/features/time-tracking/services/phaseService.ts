@@ -3,7 +3,7 @@ import { Database } from '@/types/database'
 import { BaseService } from '@/lib/supabase/services/baseService'
 import { Phase, PhaseWithStats } from '../types/phase.types'
 
-export class PhaseService extends BaseService<Phase> {
+export class PhaseService extends BaseService<'phases'> {
   protected readonly tableName = 'phases' as const
 
   constructor(supabase: SupabaseClient<Database>) {
