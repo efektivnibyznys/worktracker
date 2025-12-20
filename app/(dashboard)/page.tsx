@@ -121,33 +121,33 @@ export default function DashboardPage() {
   }, [deleteEntry])
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="space-y-8">
+      <h2 className="text-3xl md:text-4xl font-bold mb-6">
         Dashboard
       </h2>
 
       {/* Quick Add Form */}
-      <Card className="mb-8 bg-gray-900">
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
         <CardHeader
-          className="cursor-pointer hover:bg-gray-800 transition-colors"
+          className="cursor-pointer p-0 mb-6"
           onClick={() => setIsQuickAddOpen(!isQuickAddOpen)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white">Rychlé přidání záznamu</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-2xl font-bold">Rychlé přidání záznamu</CardTitle>
+              <CardDescription className="text-gray-700 mt-1">
                 Přidejte nový záznam odpracované doby
               </CardDescription>
             </div>
             {isQuickAddOpen ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-gray-700" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-gray-700" />
             )}
           </div>
         </CardHeader>
         {isQuickAddOpen && (
-          <CardContent className="bg-white">
+          <CardContent className="p-0">
             <QuickAddForm
               onSubmit={handleQuickAdd}
               isLoading={createEntry.isPending}
@@ -157,53 +157,53 @@ export default function DashboardPage() {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Dnes</CardDescription>
+      <div className="grid gap-8 md:grid-cols-3">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Dnes</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
               {formatTime(todayStats.totalMinutes)}
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg text-gray-700 mt-2">
               {formatCurrency(todayStats.amount)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               {todayStats.count} záznamů
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Tento týden</CardDescription>
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Tento týden</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
               {formatTime(weekStats.totalMinutes)}
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg text-gray-700 mt-2">
               {formatCurrency(weekStats.amount)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               {weekStats.count} záznamů
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Tento měsíc</CardDescription>
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Tento měsíc</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
               {formatTime(monthStats.totalMinutes)}
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-lg text-gray-700 mt-2">
               {formatCurrency(monthStats.amount)}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               {monthStats.count} záznamů
             </p>
           </CardContent>
@@ -211,11 +211,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Filtry</CardTitle>
+      <Card className="bg-gray-50 p-8 shadow-md">
+        <CardHeader className="p-0 mb-6">
+          <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="client">Klient</Label>
@@ -292,29 +292,29 @@ export default function DashboardPage() {
       </Card>
 
       {/* Summary for Filtered Entries */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Celkem hodin</div>
-            <div className="text-2xl font-bold mt-1">
+      <div className="grid gap-8 md:grid-cols-3">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
+            <div className="text-3xl font-bold">
               {formatTime(totalMinutes)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Celková částka</div>
-            <div className="text-2xl font-bold mt-1">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celková částka</div>
+            <div className="text-3xl font-bold">
               {formatCurrency(totalAmount)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Počet záznamů</div>
-            <div className="text-2xl font-bold mt-1">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
+            <div className="text-3xl font-bold">
               {entries.length}
             </div>
           </CardContent>
@@ -322,27 +322,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Entries List */}
-      <Card className="bg-gray-900">
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
         <CardHeader
-          className="cursor-pointer hover:bg-gray-800 transition-colors"
+          className="cursor-pointer p-0 mb-6"
           onClick={() => setIsEntriesListOpen(!isEntriesListOpen)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white">Seznam záznamů ({entries.length})</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-2xl font-bold">Seznam záznamů ({entries.length})</CardTitle>
+              <CardDescription className="text-gray-700 mt-1">
                 Všechny záznamy odpovídající filtrům
               </CardDescription>
             </div>
             {isEntriesListOpen ? (
-              <ChevronUp className="h-5 w-5 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-gray-700" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-gray-700" />
             )}
           </div>
         </CardHeader>
         {isEntriesListOpen && (
-          <CardContent className="bg-white">
+          <CardContent className="p-0">
             {entries.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-gray-600">
@@ -354,8 +354,8 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {entries.map((entry) => (
-                  <Card key={entry.id}>
-                    <CardContent className="py-4">
+                  <Card key={entry.id} className="bg-gray-50 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <CardContent className="p-0">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
