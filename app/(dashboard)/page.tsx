@@ -127,27 +127,27 @@ export default function DashboardPage() {
       </h2>
 
       {/* Quick Add Form */}
-      <Card className="mb-8">
+      <Card className="mb-8 bg-gray-900">
         <CardHeader
-          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          className="cursor-pointer hover:bg-gray-800 transition-colors"
           onClick={() => setIsQuickAddOpen(!isQuickAddOpen)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Rychlé přidání záznamu</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Rychlé přidání záznamu</CardTitle>
+              <CardDescription className="text-gray-400">
                 Přidejte nový záznam odpracované doby
               </CardDescription>
             </div>
             {isQuickAddOpen ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
+              <ChevronUp className="h-5 w-5 text-gray-400" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
+              <ChevronDown className="h-5 w-5 text-gray-400" />
             )}
           </div>
         </CardHeader>
         {isQuickAddOpen && (
-          <CardContent>
+          <CardContent className="bg-white">
             <QuickAddForm
               onSubmit={handleQuickAdd}
               isLoading={createEntry.isPending}
@@ -322,27 +322,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Entries List */}
-      <Card>
+      <Card className="bg-gray-900">
         <CardHeader
-          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          className="cursor-pointer hover:bg-gray-800 transition-colors"
           onClick={() => setIsEntriesListOpen(!isEntriesListOpen)}
         >
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Seznam záznamů ({entries.length})</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">Seznam záznamů ({entries.length})</CardTitle>
+              <CardDescription className="text-gray-400">
                 Všechny záznamy odpovídající filtrům
               </CardDescription>
             </div>
             {isEntriesListOpen ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
+              <ChevronUp className="h-5 w-5 text-gray-400" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
+              <ChevronDown className="h-5 w-5 text-gray-400" />
             )}
           </div>
         </CardHeader>
         {isEntriesListOpen && (
-          <CardContent>
+          <CardContent className="bg-white">
             {entries.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-gray-600">
