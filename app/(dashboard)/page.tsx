@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
-  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set())
+  const [isEntriesListOpen, setIsEntriesListOpen] = useState(false)
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
@@ -119,18 +119,6 @@ export default function DashboardPage() {
       setDeletingId(null)
     }
   }, [deleteEntry])
-
-  const toggleEntry = useCallback((id: string) => {
-    setExpandedEntries(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }, [])
 
   return (
     <div>
@@ -334,86 +322,81 @@ export default function DashboardPage() {
       </div>
 
       {/* Entries List */}
-      {entries.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-600">
-              {Object.keys(filters).length > 0
-                ? 'Žádné záznamy pro vybrané filtry'
-                : 'Zatím nemáte žádné záznamy práce'}
-            </p>
+      <Card>
+        <CardHeader
+          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsEntriesListOpen(!isEntriesListOpen)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Seznam záznamů ({entries.length})</CardTitle>
+              <CardDescription>
+                Všechny záznamy odpovídající filtrům
+              </CardDescription>
+            </div>
+            {isEntriesListOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </div>
+        </CardHeader>
+        {isEntriesListOpen && (
+          <CardContent>
+            {entries.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-gray-600">
+                  {Object.keys(filters).length > 0
+                    ? 'Žádné záznamy pro vybrané filtry'
+                    : 'Zatím nemáte žádné záznamy práce'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {entries.map((entry) => (
+                  <Card key={entry.id}>
+                    <CardContent className="py-4">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-lg">
+                              {entry.client?.name || 'Neznámý klient'}
+                            </span>
+                            {entry.phase && (
+                              <Badge variant="secondary">{entry.phase.name}</Badge>
+                            )}
+                          </div>
+                          <p className="text-gray-700 mb-2">{entry.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <span>📅 {formatDate(entry.date)}</span>
+                            <span>🕐 {entry.start_time} - {entry.end_time}</span>
+                            <span>⏱️ {formatTime(entry.duration_minutes)}</span>
+                            <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(entry.id)}
+                            disabled={deletingId === entry.id}
+                          >
+                            {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {entries.map((entry) => {
-            const isExpanded = expandedEntries.has(entry.id)
-            return (
-              <Card key={entry.id}>
-                <CardContent className="py-4">
-                  {/* Collapsed View - Always Visible */}
-                  <div
-                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors p-2 -m-2 rounded"
-                    onClick={() => toggleEntry(entry.id)}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <div>
-                        {isExpanded ? (
-                          <ChevronUp className="h-5 w-5 text-gray-500" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-500" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-lg">
-                            {entry.client?.name || 'Neznámý klient'}
-                          </span>
-                          {entry.phase && (
-                            <Badge variant="secondary">{entry.phase.name}</Badge>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {formatDate(entry.date)} • {formatTime(entry.duration_minutes)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xl font-bold text-gray-900">
-                      {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
-                    </div>
-                  </div>
-
-                  {/* Expanded View - Details */}
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <p className="text-gray-700 mb-3">{entry.description}</p>
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                        <span>🕐 {entry.start_time} - {entry.end_time}</span>
-                        <span>⏱️ {formatTime(entry.duration_minutes)}</span>
-                        <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
-                      </div>
-                      <div className="flex justify-end">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(entry.id)
-                          }}
-                          disabled={deletingId === entry.id}
-                        >
-                          {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      )}
+        )}
+      </Card>
     </div>
   )
 }
