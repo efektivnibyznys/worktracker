@@ -81,28 +81,28 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Načítám nastavení...</p>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-700 text-lg">Načítám nastavení...</p>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Nastavení</h2>
-        <p className="text-gray-600 mt-1">Spravujte globální nastavení aplikace</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">Nastavení</h2>
+        <p className="text-lg text-gray-700">Spravujte globální nastavení aplikace</p>
       </div>
 
       <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Základní nastavení</CardTitle>
-            <CardDescription>
+        <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-6">
+            <CardTitle className="text-2xl font-bold">Základní nastavení</CardTitle>
+            <CardDescription className="text-gray-700 mt-1">
               Výchozí hodnoty pro nové záznamy
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <Label htmlFor="default_hourly_rate">
@@ -116,7 +116,7 @@ export default function SettingsPage() {
                   placeholder="850"
                   className="mt-1"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   Použije se když není nastavena sazba na záznamu, fázi nebo klientovi
                 </p>
                 {errors.default_hourly_rate && (

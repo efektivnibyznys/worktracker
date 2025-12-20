@@ -97,18 +97,18 @@ export default function ClientsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Načítám klienty...</p>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-700 text-lg">Načítám klienty...</p>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Klienti</h2>
-          <p className="text-gray-600 mt-1">Správa klientů a projektů</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-2">Klienti</h2>
+          <p className="text-lg text-gray-700">Správa klientů a projektů</p>
         </div>
         <Button onClick={() => {
           setEditingClient(null)
@@ -119,22 +119,22 @@ export default function ClientsPage() {
       </div>
 
       {clients.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-600 mb-4">Zatím nemáte žádné klienty</p>
+        <Card className="bg-white p-8 shadow-md">
+          <CardContent className="p-0 py-8 text-center">
+            <p className="text-gray-700 text-lg mb-4">Zatím nemáte žádné klienty</p>
             <Button onClick={() => setIsDialogOpen(true)}>
               Přidat prvního klienta
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {clients.map((client) => (
-            <Card key={client.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <Card key={client.id} className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-0 mb-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">
+                    <CardTitle className="text-xl font-bold mb-1">
                       <Link
                         href={`/clients/${client.id}`}
                         className="hover:text-primary transition-colors"
@@ -143,24 +143,24 @@ export default function ClientsPage() {
                       </Link>
                     </CardTitle>
                     {client.hourly_rate && (
-                      <CardDescription className="mt-1">
-                        Sazba: {formatCurrency(client.hourly_rate)}
+                      <CardDescription className="text-gray-700">
+                        Sazba: {formatCurrency(client.hourly_rate)}/h
                       </CardDescription>
                     )}
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Odpracováno:</span>
-                    <span className="font-medium">
+                    <span className="font-semibold text-gray-900">
                       {formatTime(client.totalHours * 60)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Celkem:</span>
-                    <span className="font-medium">
+                    <span className="font-semibold text-gray-900">
                       {formatCurrency(client.totalAmount)}
                     </span>
                   </div>
@@ -173,12 +173,12 @@ export default function ClientsPage() {
                     </Badge>
                   </div>
                   {client.note && (
-                    <p className="text-gray-600 text-xs mt-3 line-clamp-2">
+                    <p className="text-gray-700 text-xs mt-3 line-clamp-2">
                       {client.note}
                     </p>
                   )}
                 </div>
-                <div className="flex gap-2 mt-4 pt-4 border-t">
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
                   <Button
                     variant="outline"
                     size="sm"

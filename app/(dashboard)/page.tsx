@@ -28,6 +28,14 @@ import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { EntryFilters } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { TimelineChart } from '@/features/time-tracking/components/charts/TimelineChart'
+import { DistributionChart } from '@/features/time-tracking/components/charts/DistributionChart'
+import {
+  prepareTimelineData,
+  prepareDistributionData,
+  enrichDistributionDataWithNames,
+  determineTimelineGrouping
+} from '@/lib/utils/chartData'
 
 export default function DashboardPage() {
   usePageMetadata({
@@ -65,6 +73,35 @@ export default function DashboardPage() {
     }, 0),
     [entries]
   )
+
+  // Prepare chart data
+  const timelineGrouping = useMemo(
+    () => determineTimelineGrouping(filters.dateFrom, filters.dateTo),
+    [filters.dateFrom, filters.dateTo]
+  )
+
+  const timelineData = useMemo(
+    () => prepareTimelineData(entries, timelineGrouping, filters.dateFrom, filters.dateTo),
+    [entries, timelineGrouping, filters.dateFrom, filters.dateTo]
+  )
+
+  const distributionData = useMemo(() => {
+    // Pokud je vybraný klient, zobrazíme fáze, jinak klienty
+    const groupBy = filters.clientId ? 'phase' : 'client'
+    const rawData = prepareDistributionData(entries, groupBy)
+
+    // Vytvoříme mapu ID -> jméno
+    const nameMap = new Map<string, string>()
+
+    if (groupBy === 'client') {
+      clients.forEach(client => nameMap.set(client.id, client.name))
+    } else {
+      phases.forEach(phase => nameMap.set(phase.id, phase.name))
+      nameMap.set('no-phase', 'Bez fáze')
+    }
+
+    return enrichDistributionDataWithNames(rawData, nameMap)
+  }, [entries, filters.clientId, clients, phases])
 
   const handleQuickAdd = useCallback(async (data: QuickAddSubmitData) => {
     try {
@@ -211,7 +248,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-gray-50 p-8 shadow-md">
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
         <CardHeader className="p-0 mb-6">
           <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
         </CardHeader>
@@ -319,6 +356,23 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="space-y-8">
+        {/* Timeline Chart - Full Width */}
+        <TimelineChart
+          data={timelineData}
+          title="Hodiny a výnosy v čase"
+          description={`Zobrazení podle ${timelineGrouping === 'day' ? 'dnů' : timelineGrouping === 'week' ? 'týdnů' : 'měsíců'}`}
+        />
+
+        {/* Distribution Chart */}
+        <DistributionChart
+          data={distributionData}
+          title={filters.clientId ? 'Rozdělení práce podle fází' : 'Rozdělení práce podle klientů'}
+          description={filters.clientId ? 'Jak se práce rozděluje mezi jednotlivé fáze' : 'Jak se práce rozděluje mezi jednotlivé klienty'}
+        />
       </div>
 
       {/* Entries List */}

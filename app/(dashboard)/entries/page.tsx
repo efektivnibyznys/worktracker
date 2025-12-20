@@ -91,25 +91,25 @@ export default function EntriesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Načítám záznamy...</p>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-700 text-lg">Načítám záznamy...</p>
       </div>
     )
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Záznamy práce</h2>
-        <p className="text-gray-600 mt-1">Přehled všech odpracovaných hodin</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">Záznamy práce</h2>
+        <p className="text-lg text-gray-700">Přehled všech odpracovaných hodin</p>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Filtry</CardTitle>
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="p-0 mb-6">
+          <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="client">Klient</Label>
@@ -186,29 +186,29 @@ export default function EntriesPage() {
       </Card>
 
       {/* Summary */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Celkem hodin</div>
-            <div className="text-2xl font-bold mt-1">
+      <div className="grid gap-8 md:grid-cols-3">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
+            <div className="text-3xl font-bold">
               {formatTime(totalMinutes)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Celková částka</div>
-            <div className="text-2xl font-bold mt-1">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celková částka</div>
+            <div className="text-3xl font-bold">
               {formatCurrency(totalAmount)}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-gray-600">Počet záznamů</div>
-            <div className="text-2xl font-bold mt-1">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
+            <div className="text-3xl font-bold">
               {entries.length}
             </div>
           </CardContent>
@@ -217,9 +217,9 @@ export default function EntriesPage() {
 
       {/* Entries List */}
       {entries.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-600">
+        <Card className="bg-white p-8 shadow-md">
+          <CardContent className="p-0 py-8 text-center">
+            <p className="text-gray-700 text-lg">
               {Object.keys(filters).length > 0
                 ? 'Žádné záznamy pro vybrané filtry'
                 : 'Zatím nemáte žádné záznamy práce'}
@@ -229,19 +229,19 @@ export default function EntriesPage() {
       ) : (
         <div className="space-y-4">
           {entries.map((entry) => (
-            <Card key={entry.id}>
-              <CardContent className="py-4">
+            <Card key={entry.id} className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-bold text-xl">
                         {entry.client?.name || 'Neznámý klient'}
                       </span>
                       {entry.phase && (
                         <Badge variant="secondary">{entry.phase.name}</Badge>
                       )}
                     </div>
-                    <p className="text-gray-700 mb-2">{entry.description}</p>
+                    <p className="text-gray-700 mb-3">{entry.description}</p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <span>📅 {formatDate(entry.date)}</span>
                       <span>🕐 {entry.start_time} - {entry.end_time}</span>
@@ -250,7 +250,7 @@ export default function EntriesPage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-3xl font-bold">
                       {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                     </div>
                     <Button

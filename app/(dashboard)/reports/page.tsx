@@ -77,21 +77,21 @@ export default function ReportsPage() {
   const stats = useMemo(() => calculateStats(entries), [entries])
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Reporty</h2>
-        <p className="text-gray-600 mt-1">Generování reportů odpracované doby</p>
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">Reporty</h2>
+        <p className="text-lg text-gray-700">Generování reportů odpracované doby</p>
       </div>
 
       {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Parametry reportu</CardTitle>
-          <CardDescription>
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="p-0 mb-6">
+          <CardTitle className="text-2xl font-bold">Parametry reportu</CardTitle>
+          <CardDescription className="text-gray-700 mt-1">
             Vyberte období a klienta pro generování reportu
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="client">Klient</Label>
@@ -153,29 +153,29 @@ export default function ReportsPage() {
       {showReport && (
         <>
           {/* Summary */}
-          <div className="grid gap-4 md:grid-cols-3 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-gray-600">Celkem hodin</div>
-                <div className="text-3xl font-bold mt-1">
+          <div className="grid gap-8 md:grid-cols-3">
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardContent className="p-0">
+                <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
+                <div className="text-3xl font-bold">
                   {formatTime(stats.totalMinutes)}
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-gray-600">K fakturaci</div>
-                <div className="text-3xl font-bold mt-1">
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardContent className="p-0">
+                <div className="text-sm text-gray-600 font-medium mb-2">K fakturaci</div>
+                <div className="text-3xl font-bold">
                   {formatCurrency(stats.amount)}
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-sm text-gray-600">Počet záznamů</div>
-                <div className="text-3xl font-bold mt-1">
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardContent className="p-0">
+                <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
+                <div className="text-3xl font-bold">
                   {stats.count}
                 </div>
               </CardContent>
@@ -183,16 +183,16 @@ export default function ReportsPage() {
           </div>
 
           {/* Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Detaily</CardTitle>
-              <CardDescription>
+          <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+            <CardHeader className="p-0 mb-6">
+              <CardTitle className="text-2xl font-bold">Detaily</CardTitle>
+              <CardDescription className="text-gray-700 mt-1">
                 Kompletní seznam záznamů v reportu
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {entries.length === 0 ? (
-                <p className="text-gray-600 text-center py-4">
+                <p className="text-gray-700 text-center py-8">
                   Žádné záznamy pro vybrané období
                 </p>
               ) : (
@@ -200,22 +200,22 @@ export default function ReportsPage() {
                   {entries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between py-3 border-b last:border-0"
+                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-3 border-b last:border-0"
                     >
                       <div className="flex-1">
-                        <div className="font-medium">{entry.description}</div>
+                        <div className="font-semibold text-gray-900">{entry.description}</div>
                         <div className="text-sm text-gray-600">
-                          {formatDate(entry.date)} • {entry.start_time} - {entry.end_time}
+                          📅 {formatDate(entry.date)} • 🕐 {entry.start_time} - {entry.end_time}
                           {entry.client && ` • ${entry.client.name}`}
                           {entry.phase && ` • ${entry.phase.name}`}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold">
+                      <div className="text-left md:text-right">
+                        <div className="font-bold text-lg text-gray-900">
                           {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {formatTime(entry.duration_minutes)}
+                          ⏱️ {formatTime(entry.duration_minutes)}
                         </div>
                       </div>
                     </div>

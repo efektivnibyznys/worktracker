@@ -104,16 +104,16 @@ export default function ClientDetailPage() {
 
   if (clientLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-gray-600">Načítám klienta...</p>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-700 text-lg">Načítám klienta...</p>
       </div>
     )
   }
 
   if (!client) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600 mb-4">Klient nenalezen</p>
+      <div className="text-center py-20">
+        <p className="text-gray-700 text-lg mb-4">Klient nenalezen</p>
         <Button onClick={() => router.push('/clients')}>
           Zpět na seznam klientů
         </Button>
@@ -135,67 +135,67 @@ export default function ClientDetailPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-8">
       {/* Header */}
-      <div className="mb-6">
-        <Link href="/clients" className="text-sm text-gray-900 hover:text-primary hover:underline mb-2 inline-block">
+      <div>
+        <Link href="/clients" className="text-sm text-gray-700 hover:text-primary hover:underline mb-2 inline-block">
           ← Zpět na seznam klientů
         </Link>
-        <h2 className="text-2xl font-bold text-gray-900">{client.name}</h2>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">{client.name}</h2>
         {client.note && (
-          <p className="text-gray-600 mt-2">{client.note}</p>
+          <p className="text-lg text-gray-700">{client.note}</p>
         )}
       </div>
 
       {/* Client Stats */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Hodinová sazba</CardDescription>
+      <div className="grid gap-8 md:grid-cols-4">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-2">
+            <CardDescription className="text-sm text-gray-600 font-medium">Hodinová sazba</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <p className="text-3xl font-bold">
               {client.hourly_rate ? formatCurrency(client.hourly_rate) : '—'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Odpracováno</CardDescription>
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-2">
+            <CardDescription className="text-sm text-gray-600 font-medium">Odpracováno</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <p className="text-3xl font-bold">
               {formatTime(client.totalHours * 60)}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Celková částka</CardDescription>
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-2">
+            <CardDescription className="text-sm text-gray-600 font-medium">Celková částka</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">
+          <CardContent className="p-0">
+            <p className="text-3xl font-bold">
               {formatCurrency(client.totalAmount)}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Fáze projektu</CardDescription>
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-2">
+            <CardDescription className="text-sm text-gray-600 font-medium">Fáze projektu</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{client.phasesCount}</p>
+          <CardContent className="p-0">
+            <p className="text-3xl font-bold">{client.phasesCount}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Phases */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Fáze projektu</h3>
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <h3 className="text-2xl font-bold">Fáze projektu</h3>
           <Button onClick={() => {
             setEditingPhase(null)
             setIsDialogOpen(true)
@@ -205,61 +205,61 @@ export default function ClientDetailPage() {
         </div>
 
         {phases.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-600 mb-4">Zatím nejsou žádné fáze</p>
+          <Card className="bg-white p-8 shadow-md">
+            <CardContent className="p-0 py-8 text-center">
+              <p className="text-gray-700 text-lg mb-4">Zatím nejsou žádné fáze</p>
               <Button onClick={() => setIsDialogOpen(true)}>
                 Přidat první fázi
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2">
             {phases.map((phase) => (
-              <Card key={phase.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
+              <Card key={phase.id} className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <CardHeader className="p-0 mb-4">
+                  <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{phase.name}</CardTitle>
+                      <CardTitle className="text-xl font-bold mb-1">{phase.name}</CardTitle>
                       {phase.description && (
-                        <CardDescription className="mt-1">
+                        <CardDescription className="text-gray-700">
                           {phase.description}
                         </CardDescription>
                       )}
                     </div>
-                    <div className="ml-2">
+                    <div className="shrink-0">
                       {getStatusBadge(phase.status)}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   <div className="space-y-2 text-sm">
                     {phase.hourly_rate && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Sazba:</span>
-                        <span className="font-medium">
-                          {formatCurrency(phase.hourly_rate)}
+                        <span className="font-semibold text-gray-900">
+                          {formatCurrency(phase.hourly_rate)}/h
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-gray-600">Odpracováno:</span>
-                      <span className="font-medium">
+                      <span className="font-semibold text-gray-900">
                         {formatTime(phase.totalHours * 60)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Celkem:</span>
-                      <span className="font-medium">
+                      <span className="font-semibold text-gray-900">
                         {formatCurrency(phase.totalAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Záznamů:</span>
-                      <span className="font-medium">{phase.entriesCount}</span>
+                      <span className="font-semibold text-gray-900">{phase.entriesCount}</span>
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-4 pt-4 border-t">
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
                     <Button
                       variant="outline"
                       size="sm"
