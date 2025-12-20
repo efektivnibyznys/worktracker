@@ -27,6 +27,7 @@ import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { EntryFilters } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function DashboardPage() {
   usePageMetadata({
@@ -40,6 +41,8 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set())
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
@@ -117,6 +120,18 @@ export default function DashboardPage() {
     }
   }, [deleteEntry])
 
+  const toggleEntry = useCallback((id: string) => {
+    setExpandedEntries(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }, [])
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -125,18 +140,32 @@ export default function DashboardPage() {
 
       {/* Quick Add Form */}
       <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Rychlé přidání záznamu</CardTitle>
-          <CardDescription>
-            Přidejte nový záznam odpracované doby
-          </CardDescription>
+        <CardHeader
+          className="cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsQuickAddOpen(!isQuickAddOpen)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Rychlé přidání záznamu</CardTitle>
+              <CardDescription>
+                Přidejte nový záznam odpracované doby
+              </CardDescription>
+            </div>
+            {isQuickAddOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </div>
         </CardHeader>
-        <CardContent>
-          <QuickAddForm
-            onSubmit={handleQuickAdd}
-            isLoading={createEntry.isPending}
-          />
-        </CardContent>
+        {isQuickAddOpen && (
+          <CardContent>
+            <QuickAddForm
+              onSubmit={handleQuickAdd}
+              isLoading={createEntry.isPending}
+            />
+          </CardContent>
+        )}
       </Card>
 
       {/* Stats Cards */}
@@ -317,45 +346,72 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {entries.map((entry) => (
-            <Card key={entry.id}>
-              <CardContent className="py-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-lg">
-                        {entry.client?.name || 'Neznámý klient'}
-                      </span>
-                      {entry.phase && (
-                        <Badge variant="secondary">{entry.phase.name}</Badge>
-                      )}
+          {entries.map((entry) => {
+            const isExpanded = expandedEntries.has(entry.id)
+            return (
+              <Card key={entry.id}>
+                <CardContent className="py-4">
+                  {/* Collapsed View - Always Visible */}
+                  <div
+                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors p-2 -m-2 rounded"
+                    onClick={() => toggleEntry(entry.id)}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div>
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">
+                            {entry.client?.name || 'Neznámý klient'}
+                          </span>
+                          {entry.phase && (
+                            <Badge variant="secondary">{entry.phase.name}</Badge>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {formatDate(entry.date)} • {formatTime(entry.duration_minutes)}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-700 mb-2">{entry.description}</p>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      <span>📅 {formatDate(entry.date)}</span>
-                      <span>🕐 {entry.start_time} - {entry.end_time}</span>
-                      <span>⏱️ {formatTime(entry.duration_minutes)}</span>
-                      <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-xl font-bold text-gray-900">
                       {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(entry.id)}
-                      disabled={deletingId === entry.id}
-                    >
-                      {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                  {/* Expanded View - Details */}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <p className="text-gray-700 mb-3">{entry.description}</p>
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                        <span>🕐 {entry.start_time} - {entry.end_time}</span>
+                        <span>⏱️ {formatTime(entry.duration_minutes)}</span>
+                        <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(entry.id)
+                          }}
+                          disabled={deletingId === entry.id}
+                        >
+                          {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>
