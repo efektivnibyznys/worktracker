@@ -26,15 +26,25 @@
   input,
   textarea,
   select {
-    font-size: 16px;
+    font-size: 16px !important;
     -webkit-text-size-adjust: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Explicit height for all inputs to prevent iOS from changing it */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    min-height: 40px;
+    line-height: normal;
   }
 
   @media (min-width: 768px) {
     input,
     textarea,
     select {
-      font-size: 14px;
+      font-size: 14px !important;
     }
   }
 
