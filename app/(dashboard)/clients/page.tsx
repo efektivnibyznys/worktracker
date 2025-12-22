@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import Link from 'next/link'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
@@ -206,12 +205,7 @@ export default function ClientsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <CardTitle className="text-xl font-bold mb-1">
-                      <Link
-                        href={`/clients/${client.id}`}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {client.name}
-                      </Link>
+                      {client.name}
                     </CardTitle>
                     {client.hourly_rate && (
                       <CardDescription className="text-gray-700">
