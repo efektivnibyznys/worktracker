@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
+import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { ClientForm, ClientFormData } from '@/features/time-tracking/components/ClientForm'
+import { PhaseForm, PhaseFormData } from '@/features/time-tracking/components/PhaseForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -19,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatTime } from '@/lib/utils/time'
 import { Client } from '@/features/time-tracking/types/client.types'
+import { Phase } from '@/features/time-tracking/types/phase.types'
 import { useAuthStore } from '@/lib/stores/authStore'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 
@@ -33,6 +36,12 @@ export default function ClientsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  // Phase management
+  const [isPhaseDialogOpen, setIsPhaseDialogOpen] = useState(false)
+  const [editingPhase, setEditingPhase] = useState<Phase | null>(null)
+  const [deletingPhaseId, setDeletingPhaseId] = useState<string | null>(null)
+  const { phases, createPhase, updatePhase, deletePhase } = usePhases(editingClient?.id || '')
 
   const handleCreate = useCallback(async (data: ClientFormData) => {
     try {
@@ -94,6 +103,68 @@ export default function ClientsPage() {
       setDeletingId(null)
     }
   }, [deleteClient])
+
+  // Phase handlers
+  const handleCreatePhase = useCallback(async (data: PhaseFormData) => {
+    if (!editingClient) return
+    try {
+      await createPhase.mutateAsync({
+        ...data,
+        user_id: user!.id,
+        client_id: editingClient.id,
+        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      })
+      setIsPhaseDialogOpen(false)
+      toast.success('Fáze byla úspěšně přidána')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat fázi')
+      logger.error('Failed to create phase', error, {
+        component: 'ClientsPage',
+        action: 'handleCreatePhase',
+      })
+    }
+  }, [createPhase, user, editingClient])
+
+  const handleUpdatePhase = useCallback(async (data: PhaseFormData) => {
+    if (!editingPhase) return
+    try {
+      await updatePhase.mutateAsync({
+        id: editingPhase.id,
+        data: {
+          ...data,
+          hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+        },
+      })
+      setEditingPhase(null)
+      setIsPhaseDialogOpen(false)
+      toast.success('Fáze byla úspěšně upravena')
+    } catch (error) {
+      toast.error('Nepodařilo se upravit fázi')
+      logger.error('Failed to update phase', error, {
+        component: 'ClientsPage',
+        action: 'handleUpdatePhase',
+      })
+    }
+  }, [editingPhase, updatePhase])
+
+  const handleDeletePhase = useCallback(async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tuto fázi?')) {
+      return
+    }
+    setDeletingPhaseId(id)
+    try {
+      await deletePhase.mutateAsync(id)
+      toast.success('Fáze byla úspěšně smazána')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat fázi')
+      logger.error('Failed to delete phase', error, {
+        component: 'ClientsPage',
+        action: 'handleDeletePhase',
+      })
+    } finally {
+      setDeletingPhaseId(null)
+    }
+  }, [deletePhase])
 
   if (isLoading) {
     return (
@@ -207,14 +278,14 @@ export default function ClientsPage() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingClient ? 'Upravit klienta' : 'Přidat klienta'}
             </DialogTitle>
             <DialogDescription>
               {editingClient
-                ? 'Upravte údaje klienta'
+                ? 'Upravte údaje klienta a spravujte jeho fáze'
                 : 'Vyplňte údaje nového klienta'}
             </DialogDescription>
           </DialogHeader>
@@ -226,6 +297,97 @@ export default function ClientsPage() {
               setEditingClient(null)
             }}
             isLoading={createClient.isPending || updateClient.isPending}
+          />
+
+          {editingClient && (
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold">Fáze projektu</h3>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditingPhase(null)
+                    setIsPhaseDialogOpen(true)
+                  }}
+                >
+                  + Přidat fázi
+                </Button>
+              </div>
+
+              {phases.length === 0 ? (
+                <p className="text-gray-700 text-sm text-center py-4">
+                  Zatím nejsou žádné fáze
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {phases.map((phase) => (
+                    <div
+                      key={phase.id}
+                      className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded border border-gray-200"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">{phase.name}</div>
+                        {phase.description && (
+                          <div className="text-xs text-gray-600 truncate">{phase.description}</div>
+                        )}
+                        <div className="text-xs text-gray-600 mt-1">
+                          {phase.hourly_rate && `${formatCurrency(phase.hourly_rate)}/h • `}
+                          {phase.status === 'active' && '✅ Aktivní'}
+                          {phase.status === 'completed' && '☑️ Dokončeno'}
+                          {phase.status === 'paused' && '⏸️ Pozastaveno'}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingPhase(phase)
+                            setIsPhaseDialogOpen(true)
+                          }}
+                        >
+                          Upravit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeletePhase(phase.id)}
+                          disabled={deletingPhaseId === phase.id}
+                        >
+                          {deletingPhaseId === phase.id ? '...' : 'Smazat'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Phase Dialog */}
+      <Dialog open={isPhaseDialogOpen} onOpenChange={setIsPhaseDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingPhase ? 'Upravit fázi' : 'Přidat fázi'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingPhase
+                ? 'Upravte údaje fáze projektu'
+                : 'Vyplňte údaje nové fáze projektu'}
+            </DialogDescription>
+          </DialogHeader>
+          <PhaseForm
+            phase={editingPhase || undefined}
+            onSubmit={editingPhase ? handleUpdatePhase : handleCreatePhase}
+            onCancel={() => {
+              setIsPhaseDialogOpen(false)
+              setEditingPhase(null)
+            }}
+            isLoading={createPhase.isPending || updatePhase.isPending}
           />
         </DialogContent>
       </Dialog>
