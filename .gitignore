@@ -35,6 +35,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# configuration files with sensitive data
-archive-html/config.js
