@@ -1,8 +1,19 @@
 # Bezpečnostní upozornění
 
-## ⚠️ DŮLEŽITÉ: Odhalený API klíč vyžaduje okamžitou akci
+## ✅ VYŘEŠENO: API klíč byl rotován
 
-Byl objeven Supabase API klíč commitnutý do veřejného repozitáře. I když byl soubor nyní odebrán z verzování, klíč je stále viditelný v git historii a musí být rotován.
+**Stav:** API klíč byl úspěšně rotován a aplikace používá nový Publishable klíč.
+
+**Historie problému:**
+Byl objeven Supabase API klíč (starý JWT formát) commitnutý do veřejného repozitáře v commitu 763af81. Soubor byl odebrán z verzování a klíč byl rotován na nový Publishable formát (`sb_publishable_*`).
+
+**Vyřešeno:**
+- ✅ Soubor `archive-html/config.js` odebrán z Git verzování
+- ✅ Přidán do `.gitignore`
+- ✅ Nový Publishable klíč vygenerován
+- ✅ Lokální konfigurace aktualizována
+
+**Doporučení:** Vypněte staré Legacy JWT klíče v Supabase Dashboard → Settings → API → "Disable JWT-based API keys"
 
 ### Projekt:
 - URL: `https://tdgxfhoymdjszrsctcxh.supabase.co`
@@ -29,8 +40,10 @@ Po vygenerování nového klíče:
 // This file contains your actual credentials and should NOT be committed to git
 
 const SUPABASE_URL = 'https://tdgxfhoymdjszrsctcxh.supabase.co'
-const SUPABASE_ANON_KEY = 'VÁŠ_NOVÝ_ANON_KEY_ZDE'
+const SUPABASE_ANON_KEY = 'sb_publishable_...' // Nový formát klíče
 ```
+
+**Poznámka:** Nové Publishable klíče mají formát `sb_publishable_*` (ne starý JWT formát).
 
 2. Soubor **NIKDY** necommitujte - je automaticky ignorován přes .gitignore
 
