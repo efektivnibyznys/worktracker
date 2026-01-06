@@ -21,8 +21,9 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
 import { formatTime } from '@/lib/utils/time'
-import { EntryFilters } from '@/features/time-tracking/types/entry.types'
+import { EntryFilters, EntryWithRelations } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
+import { EditEntryDialog, EditEntrySubmitData } from '@/features/time-tracking/components/EditEntryDialog'
 
 export default function EntriesPage() {
   usePageMetadata({
@@ -35,8 +36,10 @@ export default function EntriesPage() {
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
-  const { entries, isLoading, deleteEntry } = useEntries(filters)
+  const { entries, isLoading, deleteEntry, updateEntry } = useEntries(filters)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingEntry, setEditingEntry] = useState<EntryWithRelations | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
     setFilters(prev => ({
@@ -55,6 +58,41 @@ export default function EntriesPage() {
     setFilters({})
     setSelectedClientId('')
   }, [])
+
+  const handleEdit = useCallback((entry: EntryWithRelations) => {
+    setEditingEntry(entry)
+    setIsEditDialogOpen(true)
+  }, [])
+
+  const handleEditSubmit = useCallback(async (data: EditEntrySubmitData) => {
+    if (!editingEntry) return
+
+    try {
+      await updateEntry.mutateAsync({
+        id: editingEntry.id,
+        data: {
+          client_id: data.client_id,
+          phase_id: data.phase_id,
+          date: data.date,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          duration_minutes: data.duration_minutes,
+          description: data.description,
+          hourly_rate: data.hourly_rate,
+        }
+      })
+      toast.success('Záznam byl úspěšně upraven')
+      setIsEditDialogOpen(false)
+      setEditingEntry(null)
+    } catch (error) {
+      toast.error('Nepodařilo se upravit záznam')
+      logger.error('Failed to update entry', error, {
+        component: 'EntriesPage',
+        action: 'handleEditSubmit',
+        metadata: { entryId: editingEntry.id },
+      })
+    }
+  }, [editingEntry, updateEntry])
 
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Opravdu chcete smazat tento záznam?')) {
@@ -253,15 +291,24 @@ export default function EntriesPage() {
                     <div className="text-3xl font-bold">
                       {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(entry.id)}
-                      disabled={deletingId === entry.id}
-                    >
-                      {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(entry)}
+                      >
+                        Upravit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDelete(entry.id)}
+                        disabled={deletingId === entry.id}
+                      >
+                        {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -269,6 +316,14 @@ export default function EntriesPage() {
           ))}
         </div>
       )}
+
+      <EditEntryDialog
+        entry={editingEntry}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSubmit={handleEditSubmit}
+        isLoading={updateEntry.isPending}
+      />
     </div>
   )
 }
