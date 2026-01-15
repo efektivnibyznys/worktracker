@@ -7,6 +7,9 @@ import { Toaster } from '@/components/ui/toaster';
 export const metadata: Metadata = {
   title: 'Work Tracker',
   description: 'Time tracking and project management application',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
