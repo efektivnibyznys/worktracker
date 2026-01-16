@@ -108,11 +108,80 @@ Tento dokument slouží jako dokumentace problémů, řešení a best practices 
 
 ---
 
-## Další fáze: UI Komponenty
+## Fáze 3: UI Komponenty
+
+### Datum: 2026-01-16
+
+#### Stav: DOKONČENO
+
+### Vytvořené soubory
+
+1. `components/ui/checkbox.tsx` - Vlastní Checkbox komponenta
+2. `features/billing/components/InvoiceStatusBadge.tsx`
+3. `features/billing/components/BillingStatusBadge.tsx`
+4. `features/billing/components/InvoiceStats.tsx`
+5. `features/billing/components/InvoiceCard.tsx`
+6. `features/billing/components/InvoiceFilters.tsx`
+7. `features/billing/components/EntrySelector.tsx`
+8. `features/billing/components/LinkedInvoiceForm.tsx`
+9. `features/billing/components/StandaloneInvoiceForm.tsx`
+10. `features/billing/components/CreateInvoiceDialog.tsx`
+11. `features/billing/components/index.ts`
+
+### Co bylo implementováno
+
+1. **Badge komponenty**
+   - InvoiceStatusBadge - barevné zobrazení stavu faktury
+   - BillingStatusBadge - stav fakturace záznamu
+
+2. **InvoiceStatsCards**
+   - 4 karty se statistikami (celkem, nezaplacené, zaplacené, po splatnosti)
+   - Loading skeleton
+
+3. **InvoiceCard**
+   - Zobrazení faktury v seznamu
+   - Akce: detail, změna stavu, smazání
+   - Detekce po splatnosti
+
+4. **InvoiceFiltersCard**
+   - Filtry: klient, stav, typ, datum od/do
+   - Tlačítko vymazat filtry
+
+5. **EntrySelector**
+   - Multi-select s checkboxy
+   - Vybrat vše / zrušit výběr
+   - Sticky header a footer
+   - Zobrazení součtů
+
+6. **LinkedInvoiceForm**
+   - Výběr klienta → načtení nefakturovaných záznamů
+   - Seskupení položek (entry/phase/day)
+   - Náhled částky s DPH
+
+7. **StandaloneInvoiceForm**
+   - Dynamické přidávání položek
+   - useFieldArray pro položky
+   - Průběžný výpočet celkové částky
+
+8. **CreateInvoiceDialog**
+   - Přepínání mezi linked a standalone
+   - Předvýběr záznamů
+
+---
+
+## Problémy a řešení (Fáze 3)
+
+### [P002] - shadcn/ui checkbox nelze nainstalovat
+- **Problém:** `npx shadcn add checkbox` selhává s autentizační chybou
+- **Příčina:** Omezení přístupu k shadcn registry
+- **Řešení:** Vytvořit vlastní Checkbox komponentu kompatibilní se shadcn API
+- **Poučení:** Mít připravenou fallback variantu pro shadcn komponenty
+
+---
+
+## Další fáze: Stránky
 
 Připraveno k implementaci:
-- `features/billing/components/InvoiceStatusBadge.tsx`
-- `features/billing/components/InvoiceStats.tsx`
-- `features/billing/components/InvoiceCard.tsx`
-- `features/billing/components/EntrySelector.tsx`
-- `features/billing/components/CreateInvoiceDialog.tsx`
+- `app/(dashboard)/invoices/page.tsx` - Seznam faktur
+- `app/(dashboard)/invoices/[id]/page.tsx` - Detail faktury
+- Aktualizace navigace v Header.tsx
