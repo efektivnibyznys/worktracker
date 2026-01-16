@@ -48,37 +48,38 @@ Poslední aktualizace: 2026-01-16
 
 ---
 
+### Fáze 4: Stránky a Navigace
+- [x] `app/(dashboard)/invoices/page.tsx` - seznam faktur
+  - [x] Statistiky nahoře
+  - [x] Filtry
+  - [x] Grid s kartami faktur
+  - [x] Tlačítko "Nová faktura"
+  - [x] Dialog pro vytvoření faktury (linked/standalone)
+- [x] `app/(dashboard)/invoices/[id]/page.tsx` - detail faktury
+  - [x] Zobrazení hlavičky faktury
+  - [x] Tabulka položek
+  - [x] Akce (změna stavu, smazání)
+  - [x] Souhrn s mezisoučtem, DPH a celkem
+- [x] Přidat link "Faktury" do `components/layout/Header.tsx`
+
+---
+
 ## 🔲 ZBÝVÁ DODĚLAT
 
-### Fáze 4: Stránky
-- [ ] `app/(dashboard)/invoices/page.tsx` - seznam faktur
-  - [ ] Statistiky nahoře
-  - [ ] Filtry
-  - [ ] Grid s kartami faktur
-  - [ ] Tlačítko "Nová faktura"
-- [ ] `app/(dashboard)/invoices/[id]/page.tsx` - detail faktury
-  - [ ] Zobrazení hlavičky faktury
-  - [ ] Tabulka položek
-  - [ ] Akce (změna stavu, tisk)
-  - [ ] Pro linked faktury: seznam propojených záznamů
-
-### Fáze 5: Navigace
-- [ ] Přidat link "Faktury" do `components/layout/Header.tsx`
-
-### Fáze 6: Integrace do stránky Záznamy
+### Fáze 5: Integrace do stránky Záznamy
 - [ ] Přidat `billing_status` badge k záznamům
 - [ ] Přidat checkboxy pro výběr záznamů
 - [ ] Přidat floating action bar pro vytvoření faktury
 - [ ] Přidat filtr podle `billing_status`
 
-### Fáze 7: Rozšíření Nastavení
+### Fáze 6: Rozšíření Nastavení
 - [ ] Přidat sekci "Fakturační údaje" do `/settings`
   - [ ] Název firmy, adresa, IČO, DIČ
   - [ ] Bankovní účet
   - [ ] Výchozí splatnost (dny)
   - [ ] Výchozí DPH
 
-### Fáze 8: Databáze (ruční krok)
+### Fáze 7: Databáze (ruční krok)
 - [ ] Aplikovat SQL migraci v Supabase Dashboard
 
 ---
@@ -90,13 +91,12 @@ Poslední aktualizace: 2026-01-16
 | 1 | Databáze a typy | ✅ 100% |
 | 2 | Services a Hooks | ✅ 100% |
 | 3 | UI Komponenty | ✅ 100% |
-| 4 | Stránky | 🔲 0% |
-| 5 | Navigace | 🔲 0% |
-| 6 | Integrace Záznamy | 🔲 0% |
-| 7 | Rozšíření Nastavení | 🔲 0% |
-| 8 | Aplikace migrace | 🔲 0% |
+| 4 | Stránky a Navigace | ✅ 100% |
+| 5 | Integrace Záznamy | 🔲 0% |
+| 6 | Rozšíření Nastavení | 🔲 0% |
+| 7 | Aplikace migrace | 🔲 0% |
 
-**Celkem: ~40% hotovo** (backend kompletní, frontend částečně)
+**Celkem: ~60% hotovo** (backend a základní UI kompletní)
 
 ---
 
@@ -123,24 +123,32 @@ features/billing/
     ├── StandaloneInvoiceForm.tsx
     └── CreateInvoiceDialog.tsx
 
+app/(dashboard)/invoices/
+├── page.tsx (seznam faktur)
+└── [id]/
+    └── page.tsx (detail faktury)
+
 supabase/migrations/
 └── 002_billing.sql
 
 types/
 └── database.ts (aktualizováno)
 
-components/ui/
-└── checkbox.tsx (nový)
+components/
+├── layout/
+│   └── Header.tsx (aktualizováno - přidán link Faktury)
+└── ui/
+    └── checkbox.tsx (nový)
 ```
 
 ---
 
 ## 🚀 Další kroky (doporučené pořadí)
 
-1. **Vytvořit stránku `/invoices`** - seznam faktur se všemi komponentami
-2. **Přidat do navigace** - link v Header.tsx
-3. **Testovat vytváření faktur** - linked i standalone
-4. **Vytvořit detail faktury** - `/invoices/[id]`
-5. **Integrovat do stránky Záznamy** - multi-select a floating bar
-6. **Rozšířit Nastavení** - firemní údaje
-7. **Aplikovat migraci** - v Supabase Dashboard
+1. ~~**Vytvořit stránku `/invoices`** - seznam faktur se všemi komponentami~~ ✅
+2. ~~**Přidat do navigace** - link v Header.tsx~~ ✅
+3. ~~**Vytvořit detail faktury** - `/invoices/[id]`~~ ✅
+4. **Aplikovat migraci** - v Supabase Dashboard
+5. **Testovat vytváření faktur** - linked i standalone
+6. **Integrovat do stránky Záznamy** - multi-select a floating bar
+7. **Rozšířit Nastavení** - firemní údaje

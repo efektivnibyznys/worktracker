@@ -179,9 +179,41 @@ Tento dokument slouží jako dokumentace problémů, řešení a best practices 
 
 ---
 
-## Další fáze: Stránky
+## Fáze 4: Stránky
+
+### Datum: 2026-01-16
+
+#### Stav: DOKONČENO
+
+### Vytvořené soubory
+
+1. `app/(dashboard)/invoices/page.tsx` - Seznam faktur
+2. `app/(dashboard)/invoices/[id]/page.tsx` - Detail faktury
+3. `components/layout/Header.tsx` - Aktualizovaná navigace
+
+### Co bylo implementováno
+
+1. **Seznam faktur (`/invoices`)**
+   - Statistické karty (celkem, nezaplacené, zaplacené, po splatnosti)
+   - Filtry (klient, stav, typ, datum)
+   - Grid zobrazení faktur
+   - Dialog pro vytvoření faktury (linked/standalone)
+
+2. **Detail faktury (`/invoices/[id]`)**
+   - Hlavička s číslem faktury a klientem
+   - Informační karty (datum vystavení, splatnost, typ, částka)
+   - Tabulka položek
+   - Souhrn s mezisoučtem, DPH a celkem
+   - Akce: změna stavu, smazání
+   - Platební údaje a poznámky
+
+3. **Navigace**
+   - Přidán odkaz "Faktury" do hlavní navigace
+
+---
+
+## Další fáze: Integrace
 
 Připraveno k implementaci:
-- `app/(dashboard)/invoices/page.tsx` - Seznam faktur
-- `app/(dashboard)/invoices/[id]/page.tsx` - Detail faktury
-- Aktualizace navigace v Header.tsx
+- Rozšíření stránky Záznamy o multi-select a tlačítko "Fakturovat vybrané"
+- Rozšíření Nastavení o firemní údaje pro faktury
