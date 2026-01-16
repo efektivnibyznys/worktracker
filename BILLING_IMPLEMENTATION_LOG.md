@@ -212,8 +212,45 @@ Tento dokument slouží jako dokumentace problémů, řešení a best practices 
 
 ---
 
-## Další fáze: Integrace
+## Fáze 5: Integrace do stránky Záznamy
+
+### Datum: 2026-01-16
+
+#### Stav: DOKONČENO
+
+### Upravené soubory
+
+1. `app/(dashboard)/entries/page.tsx` - Integrace billing funkcí
+2. `features/time-tracking/types/entry.types.ts` - Přidán BillingStatus typ a filtr
+3. `features/time-tracking/services/entryService.ts` - Podpora billing filtru
+
+### Co bylo implementováno
+
+1. **Billing status badge**
+   - Každý záznam zobrazuje BillingStatusBadge (nefakturováno/fakturováno/zaplaceno)
+   - Barevné rozlišení stavů
+
+2. **Multi-select checkboxy**
+   - Checkboxy pouze u nefakturovaných záznamů
+   - "Vybrat všechny nefakturované" tlačítko
+   - Vizuální zvýraznění vybraných záznamů (ring)
+
+3. **Floating action bar**
+   - Zobrazuje se při výběru záznamů
+   - Počet vybraných, celkový čas a částka
+   - Tlačítka "Zrušit výběr" a "Vytvořit fakturu"
+   - Fixed position dole na stránce
+
+4. **Filtr podle billing_status**
+   - Nový select v sekci filtrů
+   - Možnosti: Všechny stavy, Nefakturováno, Fakturováno, Zaplaceno
+   - Podpora v EntryService a useEntries hook
+
+---
+
+## Další fáze: Rozšíření Nastavení
 
 Připraveno k implementaci:
-- Rozšíření stránky Záznamy o multi-select a tlačítko "Fakturovat vybrané"
-- Rozšíření Nastavení o firemní údaje pro faktury
+- Přidání sekce "Fakturační údaje" do stránky Nastavení
+- Formulář pro firemní údaje (název, adresa, IČO, DIČ)
+- Nastavení bankovního účtu, výchozí splatnosti a DPH

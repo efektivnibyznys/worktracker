@@ -64,13 +64,15 @@ Poslední aktualizace: 2026-01-16
 
 ---
 
-## 🔲 ZBÝVÁ DODĚLAT
-
 ### Fáze 5: Integrace do stránky Záznamy
-- [ ] Přidat `billing_status` badge k záznamům
-- [ ] Přidat checkboxy pro výběr záznamů
-- [ ] Přidat floating action bar pro vytvoření faktury
-- [ ] Přidat filtr podle `billing_status`
+- [x] Přidat `billing_status` badge k záznamům
+- [x] Přidat checkboxy pro výběr záznamů
+- [x] Přidat floating action bar pro vytvoření faktury
+- [x] Přidat filtr podle `billing_status`
+
+---
+
+## 🔲 ZBÝVÁ DODĚLAT
 
 ### Fáze 6: Rozšíření Nastavení
 - [ ] Přidat sekci "Fakturační údaje" do `/settings`
@@ -92,11 +94,11 @@ Poslední aktualizace: 2026-01-16
 | 2 | Services a Hooks | ✅ 100% |
 | 3 | UI Komponenty | ✅ 100% |
 | 4 | Stránky a Navigace | ✅ 100% |
-| 5 | Integrace Záznamy | 🔲 0% |
+| 5 | Integrace Záznamy | ✅ 100% |
 | 6 | Rozšíření Nastavení | 🔲 0% |
 | 7 | Aplikace migrace | 🔲 0% |
 
-**Celkem: ~60% hotovo** (backend a základní UI kompletní)
+**Celkem: ~75% hotovo** (zbývá rozšíření nastavení a aplikace migrace)
 
 ---
 
@@ -128,6 +130,13 @@ app/(dashboard)/invoices/
 └── [id]/
     └── page.tsx (detail faktury)
 
+app/(dashboard)/entries/
+└── page.tsx (aktualizováno - billing integrace)
+
+features/time-tracking/
+├── types/entry.types.ts (aktualizováno - BillingStatus)
+└── services/entryService.ts (aktualizováno - billing filter)
+
 supabase/migrations/
 └── 002_billing.sql
 
@@ -148,7 +157,7 @@ components/
 1. ~~**Vytvořit stránku `/invoices`** - seznam faktur se všemi komponentami~~ ✅
 2. ~~**Přidat do navigace** - link v Header.tsx~~ ✅
 3. ~~**Vytvořit detail faktury** - `/invoices/[id]`~~ ✅
-4. **Aplikovat migraci** - v Supabase Dashboard
-5. **Testovat vytváření faktur** - linked i standalone
-6. **Integrovat do stránky Záznamy** - multi-select a floating bar
+4. ~~**Integrovat do stránky Záznamy** - multi-select a floating bar~~ ✅
+5. **Aplikovat migraci** - v Supabase Dashboard
+6. **Testovat vytváření faktur** - linked i standalone
 7. **Rozšířit Nastavení** - firemní údaje
