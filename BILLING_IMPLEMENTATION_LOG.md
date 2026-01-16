@@ -68,9 +68,51 @@ Tento dokument slouží jako dokumentace problémů, řešení a best practices 
 
 ---
 
-## Další fáze: Services a Hooks
+## Fáze 2: Services a Hooks
+
+### Datum: 2026-01-16
+
+#### Stav: DOKONČENO
+
+### Vytvořené soubory
+
+1. `features/billing/services/invoiceService.ts` - Hlavní service pro faktury
+2. `features/billing/hooks/useInvoices.ts` - React Query hooks
+3. `features/billing/hooks/useEntrySelection.ts` - Hook pro multi-select
+
+### Co bylo implementováno
+
+1. **InvoiceService**
+   - `getAllWithFilters()` - Seznam faktur s filtry
+   - `getByIdWithItems()` - Detail faktury s položkami
+   - `getStats()` - Statistiky faktur
+   - `getUnbilledEntries()` - Nefakturované záznamy
+   - `createLinkedInvoice()` - Vytvoření z vybraných záznamů
+   - `createStandaloneInvoice()` - Vytvoření s vlastními položkami
+   - `updateStatus()` - Změna stavu faktury
+   - `deleteInvoice()` - Smazání s resetem záznamů
+   - `generateInvoiceNumber()` - Generování čísla faktury
+   - `groupEntriesForInvoice()` - Seskupení položek
+
+2. **useInvoices hook**
+   - Query pro seznam faktur
+   - Query pro statistiky
+   - Mutations: create, updateStatus, delete
+   - Toast notifikace
+
+3. **useEntrySelection hook**
+   - Multi-select logika
+   - toggle, selectAll, clearSelection
+   - areAllSelected, areSomeSelected
+   - Optimalizované pomocí useCallback/useMemo
+
+---
+
+## Další fáze: UI Komponenty
 
 Připraveno k implementaci:
-- `features/billing/services/invoiceService.ts`
-- `features/billing/hooks/useInvoices.ts`
-- `features/billing/hooks/useEntrySelection.ts`
+- `features/billing/components/InvoiceStatusBadge.tsx`
+- `features/billing/components/InvoiceStats.tsx`
+- `features/billing/components/InvoiceCard.tsx`
+- `features/billing/components/EntrySelector.tsx`
+- `features/billing/components/CreateInvoiceDialog.tsx`
