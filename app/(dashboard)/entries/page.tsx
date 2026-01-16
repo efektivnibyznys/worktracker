@@ -18,12 +18,22 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
 import { formatTime } from '@/lib/utils/time'
-import { EntryFilters, EntryWithRelations } from '@/features/time-tracking/types/entry.types'
+import { EntryFilters, EntryWithRelations, BillingStatus } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 import { EditEntryDialog, EditEntrySubmitData } from '@/features/time-tracking/components/EditEntryDialog'
+import { BillingStatusBadge, CreateInvoiceDialog } from '@/features/billing/components'
+import { useEntrySelection } from '@/features/billing/hooks/useEntrySelection'
+
+const BILLING_STATUS_OPTIONS: { value: BillingStatus | 'all'; label: string }[] = [
+  { value: 'all', label: 'Všechny stavy' },
+  { value: 'unbilled', label: 'Nefakturováno' },
+  { value: 'billed', label: 'Fakturováno' },
+  { value: 'paid', label: 'Zaplaceno' },
+]
 
 export default function EntriesPage() {
   usePageMetadata({
@@ -33,6 +43,7 @@ export default function EntriesPage() {
 
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
+  const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false)
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
@@ -40,6 +51,24 @@ export default function EntriesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingEntry, setEditingEntry] = useState<EntryWithRelations | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  // Entry selection for invoicing
+  const {
+    selectedIds,
+    selectedCount,
+    hasSelection,
+    toggle,
+    selectAll,
+    clearSelection,
+    isSelected,
+    areAllSelected
+  } = useEntrySelection()
+
+  // Get only unbilled entries for selection
+  const unbilledEntries = useMemo(
+    () => entries.filter(e => e.billing_status === 'unbilled'),
+    [entries]
+  )
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
     setFilters(prev => ({
@@ -114,6 +143,24 @@ export default function EntriesPage() {
     }
   }, [deleteEntry])
 
+  const handleSelectAllUnbilled = useCallback(() => {
+    const unbilledIds = unbilledEntries.map(e => e.id)
+    if (areAllSelected(unbilledIds)) {
+      clearSelection()
+    } else {
+      selectAll(unbilledIds)
+    }
+  }, [unbilledEntries, areAllSelected, clearSelection, selectAll])
+
+  const handleCreateInvoice = useCallback(() => {
+    setIsCreateInvoiceOpen(true)
+  }, [])
+
+  const handleInvoiceCreated = useCallback(() => {
+    clearSelection()
+    setIsCreateInvoiceOpen(false)
+  }, [clearSelection])
+
   // Calculate totals - memoized to avoid recalculation on every render
   const totalMinutes = useMemo(
     () => entries.reduce((sum, e) => sum + e.duration_minutes, 0),
@@ -127,6 +174,17 @@ export default function EntriesPage() {
     [entries]
   )
 
+  // Calculate selected totals
+  const selectedTotals = useMemo(() => {
+    const selectedEntries = entries.filter(e => selectedIds.includes(e.id))
+    const minutes = selectedEntries.reduce((sum, e) => sum + e.duration_minutes, 0)
+    const amount = selectedEntries.reduce((sum, e) => {
+      const hours = e.duration_minutes / 60
+      return sum + (hours * e.hourly_rate)
+    }, 0)
+    return { minutes, amount }
+  }, [entries, selectedIds])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -135,8 +193,10 @@ export default function EntriesPage() {
     )
   }
 
+  const hasActiveFilters = filters.clientId || filters.phaseId || filters.dateFrom || filters.dateTo || filters.billingStatus
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
       <div>
         <h2 className="text-3xl md:text-4xl font-bold mb-2">Záznamy práce</h2>
         <p className="text-lg text-gray-700">Přehled všech odpracovaných hodin</p>
@@ -148,7 +208,7 @@ export default function EntriesPage() {
           <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <Label htmlFor="client">Klient</Label>
               <Select
@@ -191,6 +251,25 @@ export default function EntriesPage() {
             </div>
 
             <div>
+              <Label htmlFor="billingStatus">Stav fakturace</Label>
+              <Select
+                value={filters.billingStatus || 'all'}
+                onValueChange={(value) => handleFilterChange('billingStatus', value === 'all' ? '' : value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Všechny stavy" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BILLING_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <Label htmlFor="dateFrom">Od data</Label>
               <Input
                 id="dateFrom"
@@ -213,7 +292,7 @@ export default function EntriesPage() {
             </div>
           </div>
 
-          {(filters.clientId || filters.phaseId || filters.dateFrom || filters.dateTo) && (
+          {hasActiveFilters && (
             <div className="mt-4">
               <Button variant="outline" size="sm" onClick={clearFilters}>
                 Vymazat filtry
@@ -253,12 +332,25 @@ export default function EntriesPage() {
         </Card>
       </div>
 
+      {/* Selection header */}
+      {unbilledEntries.length > 0 && (
+        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <Checkbox
+            checked={areAllSelected(unbilledEntries.map(e => e.id))}
+            onCheckedChange={handleSelectAllUnbilled}
+          />
+          <span className="text-sm text-gray-600">
+            Vybrat všechny nefakturované ({unbilledEntries.length})
+          </span>
+        </div>
+      )}
+
       {/* Entries List */}
       {entries.length === 0 ? (
         <Card className="bg-white p-8 shadow-md">
           <CardContent className="p-0 py-8 text-center">
             <p className="text-gray-700 text-lg">
-              {Object.keys(filters).length > 0
+              {hasActiveFilters
                 ? 'Žádné záznamy pro vybrané filtry'
                 : 'Zatím nemáte žádné záznamy práce'}
             </p>
@@ -266,54 +358,102 @@ export default function EntriesPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {entries.map((entry) => (
-            <Card key={entry.id} className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="p-0">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-bold text-xl">
-                        {entry.client?.name || 'Neznámý klient'}
-                      </span>
-                      {entry.phase && (
-                        <Badge variant="secondary">{entry.phase.name}</Badge>
+          {entries.map((entry) => {
+            const isUnbilled = entry.billing_status === 'unbilled'
+            const entrySelected = isSelected(entry.id)
+
+            return (
+              <Card
+                key={entry.id}
+                className={`bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200 ${
+                  entrySelected ? 'ring-2 ring-primary' : ''
+                }`}
+              >
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    {/* Checkbox for unbilled entries */}
+                    <div className="flex items-start gap-4">
+                      {isUnbilled && (
+                        <div className="pt-1">
+                          <Checkbox
+                            checked={entrySelected}
+                            onCheckedChange={() => toggle(entry.id)}
+                          />
+                        </div>
                       )}
+
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <span className="font-bold text-xl">
+                            {entry.client?.name || 'Neznámý klient'}
+                          </span>
+                          {entry.phase && (
+                            <Badge variant="secondary">{entry.phase.name}</Badge>
+                          )}
+                          <BillingStatusBadge status={entry.billing_status} />
+                        </div>
+                        <p className="text-gray-700 mb-3">{entry.description}</p>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                          <span>{formatDate(entry.date)}</span>
+                          <span>{entry.start_time} - {entry.end_time}</span>
+                          <span>{formatTime(entry.duration_minutes)}</span>
+                          <span>{formatCurrency(entry.hourly_rate)}/h</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-700 mb-3">{entry.description}</p>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                      <span>📅 {formatDate(entry.date)}</span>
-                      <span>🕐 {entry.start_time} - {entry.end_time}</span>
-                      <span>⏱️ {formatTime(entry.duration_minutes)}</span>
-                      <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-3xl font-bold">
+                        {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(entry)}
+                        >
+                          Upravit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDelete(entry.id)}
+                          disabled={deletingId === entry.id}
+                        >
+                          {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-3xl font-bold">
-                      {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(entry)}
-                      >
-                        Upravit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDelete(entry.id)}
-                        disabled={deletingId === entry.id}
-                      >
-                        {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Floating action bar for selection */}
+      {hasSelection && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-40">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className="font-semibold">
+                Vybráno: {selectedCount} záznamů
+              </span>
+              <span className="text-gray-600">
+                {formatTime(selectedTotals.minutes)} | {formatCurrency(selectedTotals.amount)}
+              </span>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={clearSelection}>
+                Zrušit výběr
+              </Button>
+              <Button onClick={handleCreateInvoice}>
+                Vytvořit fakturu
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -323,6 +463,13 @@ export default function EntriesPage() {
         onOpenChange={setIsEditDialogOpen}
         onSubmit={handleEditSubmit}
         isLoading={updateEntry.isPending}
+      />
+
+      <CreateInvoiceDialog
+        open={isCreateInvoiceOpen}
+        onOpenChange={setIsCreateInvoiceOpen}
+        preselectedEntryIds={selectedIds}
+        onSuccess={handleInvoiceCreated}
       />
     </div>
   )

@@ -15,9 +15,12 @@ export interface EntryWithRelations extends Entry {
   } | null
 }
 
+export type BillingStatus = 'unbilled' | 'billed' | 'paid'
+
 export interface EntryFilters {
   clientId?: string
   phaseId?: string
   dateFrom?: string
   dateTo?: string
+  billingStatus?: BillingStatus
 }

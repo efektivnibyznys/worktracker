@@ -35,6 +35,9 @@ export class EntryService extends BaseService<'entries'> {
     if (filters.dateTo) {
       query = query.lte('date', filters.dateTo)
     }
+    if (filters.billingStatus) {
+      query = query.eq('billing_status', filters.billingStatus)
+    }
 
     const { data, error } = await query
       .order('date', { ascending: false })
