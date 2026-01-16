@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Dashboard', href: '/' },
   { name: 'Klienti', href: '/clients' },
   { name: 'Záznamy', href: '/entries' },
+  { name: 'Faktury', href: '/invoices' },
   { name: 'Reporty', href: '/reports' },
   { name: 'Nastavení', href: '/settings' },
 ]
