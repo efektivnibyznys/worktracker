@@ -72,14 +72,16 @@ Poslední aktualizace: 2026-01-16
 
 ---
 
-## 🔲 ZBÝVÁ DODĚLAT
-
 ### Fáze 6: Rozšíření Nastavení
-- [ ] Přidat sekci "Fakturační údaje" do `/settings`
-  - [ ] Název firmy, adresa, IČO, DIČ
-  - [ ] Bankovní účet
-  - [ ] Výchozí splatnost (dny)
-  - [ ] Výchozí DPH
+- [x] Přidat sekci "Fakturační údaje" do `/settings`
+  - [x] Název firmy, adresa, IČO, DIČ
+  - [x] Bankovní účet
+  - [x] Výchozí splatnost (dny)
+  - [x] Výchozí DPH
+
+---
+
+## 🔲 ZBÝVÁ DODĚLAT
 
 ### Fáze 7: Databáze (ruční krok)
 - [ ] Aplikovat SQL migraci v Supabase Dashboard
@@ -95,10 +97,10 @@ Poslední aktualizace: 2026-01-16
 | 3 | UI Komponenty | ✅ 100% |
 | 4 | Stránky a Navigace | ✅ 100% |
 | 5 | Integrace Záznamy | ✅ 100% |
-| 6 | Rozšíření Nastavení | 🔲 0% |
+| 6 | Rozšíření Nastavení | ✅ 100% |
 | 7 | Aplikace migrace | 🔲 0% |
 
-**Celkem: ~75% hotovo** (zbývá rozšíření nastavení a aplikace migrace)
+**Celkem: ~95% hotovo** (zbývá pouze aplikovat SQL migraci v Supabase)
 
 ---
 
@@ -133,6 +135,9 @@ app/(dashboard)/invoices/
 app/(dashboard)/entries/
 └── page.tsx (aktualizováno - billing integrace)
 
+app/(dashboard)/settings/
+└── page.tsx (aktualizováno - fakturační údaje)
+
 features/time-tracking/
 ├── types/entry.types.ts (aktualizováno - BillingStatus)
 └── services/entryService.ts (aktualizováno - billing filter)
@@ -158,6 +163,6 @@ components/
 2. ~~**Přidat do navigace** - link v Header.tsx~~ ✅
 3. ~~**Vytvořit detail faktury** - `/invoices/[id]`~~ ✅
 4. ~~**Integrovat do stránky Záznamy** - multi-select a floating bar~~ ✅
-5. **Aplikovat migraci** - v Supabase Dashboard
-6. **Testovat vytváření faktur** - linked i standalone
-7. **Rozšířit Nastavení** - firemní údaje
+5. ~~**Rozšířit Nastavení** - firemní údaje~~ ✅
+6. **Aplikovat migraci** - v Supabase Dashboard
+7. **Testovat vytváření faktur** - linked i standalone

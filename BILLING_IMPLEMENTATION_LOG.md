@@ -248,9 +248,38 @@ Tento dokument slouží jako dokumentace problémů, řešení a best practices 
 
 ---
 
-## Další fáze: Rozšíření Nastavení
+## Fáze 6: Rozšíření Nastavení
 
-Připraveno k implementaci:
-- Přidání sekce "Fakturační údaje" do stránky Nastavení
-- Formulář pro firemní údaje (název, adresa, IČO, DIČ)
-- Nastavení bankovního účtu, výchozí splatnosti a DPH
+### Datum: 2026-01-16
+
+#### Stav: DOKONČENO
+
+### Upravené soubory
+
+1. `app/(dashboard)/settings/page.tsx` - Rozšířená stránka nastavení
+
+### Co bylo implementováno
+
+1. **Sekce "Fakturační údaje"**
+   - Název firmy / Jméno
+   - Adresa (textarea pro více řádků)
+   - IČO a DIČ v grid layoutu
+   - Bankovní účet
+
+2. **Sekce "Výchozí nastavení faktur"**
+   - Výchozí splatnost (dny) - předvyplněno 14
+   - Výchozí sazba DPH (%) - předvyplněno 21
+   - Nápověda "0 pro neplátce DPH"
+
+3. **Reorganizace formuláře**
+   - Rozdělení do 3 karet (Základní nastavení, Fakturační údaje, Výchozí nastavení faktur)
+   - Jeden společný submit button na konci
+   - Rozšíření zod schématu o nové fieldy
+
+---
+
+## IMPLEMENTACE DOKONČENA
+
+Zbývá pouze:
+- Aplikovat SQL migraci `002_billing.sql` v Supabase Dashboard
+- Otestovat funkcionalitu s reálnými daty
