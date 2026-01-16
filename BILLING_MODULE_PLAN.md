@@ -4,8 +4,29 @@
 
 Fakturační modul rozšíří aplikaci Work Tracker o možnost vystavování faktur ve dvou variantách:
 
-1. **Faktury navázané na záznamy/fáze** - automatické generování z odpracovaných hodin
+1. **Faktury navázané na záznamy** - uživatel vybere jeden nebo více záznamů (entries) a z nich vytvoří jednu fakturu
 2. **Samostatné faktury** - ruční vytváření bez vazby na záznamy času
+
+### Varianta 1: Linked faktury (z vybraných záznamů)
+
+**Workflow:**
+1. Uživatel přejde na stránku faktur nebo na stránku záznamů
+2. Zobrazí se seznam nefakturovaných záznamů (filtrovat lze podle klienta, fáze, data)
+3. Uživatel vybere **jeden nebo více záznamů** pomocí checkboxů
+4. Klikne na tlačítko "Vytvořit fakturu z vybraných"
+5. Otevře se dialog s:
+   - Shrnutím vybraných záznamů (počet, celkové hodiny, částka)
+   - Možností seskupení položek (každý záznam zvlášť / podle fáze / podle dne)
+   - Nastavením DPH, data splatnosti, poznámky
+6. Po potvrzení se vytvoří **jedna faktura** obsahující všechny vybrané záznamy
+7. Vybrané záznamy se označí jako fakturované
+
+### Varianta 2: Standalone faktury
+
+**Workflow:**
+1. Uživatel vytvoří novou fakturu bez vazby na záznamy
+2. Ručně přidá položky (popis, množství, cena)
+3. Vhodné pro jednorázové práce, produkty, nebo práce mimo time tracking
 
 ---
 
@@ -918,6 +939,49 @@ features/billing/components/
 
 ### 5.2 Klíčové komponenty
 
+#### EntrySelector.tsx (Multi-select záznamů)
+```typescript
+// KLÍČOVÁ KOMPONENTA pro výběr více záznamů k fakturaci
+//
+// Props:
+// - selectedEntryIds: string[]           // Pole ID vybraných záznamů
+// - onSelectionChange: (ids: string[]) => void
+// - clientId?: string                    // Filtr podle klienta
+// - phaseId?: string                     // Filtr podle fáze
+//
+// Funkce:
+// 1. Zobrazí tabulku/seznam nefakturovaných záznamů
+// 2. Každý řádek má CHECKBOX pro výběr
+// 3. Header má checkbox "Vybrat vše" / "Zrušit výběr"
+// 4. Filtry: klient, fáze, datum od-do
+// 5. Řazení: podle data, klienta, částky
+// 6. Zobrazené sloupce: datum, klient, fáze, popis, hodiny, částka
+// 7. Footer: počet vybraných, celkové hodiny, celková částka
+//
+// UI prvky:
+// - Checkbox u každého záznamu
+// - Zvýraznění vybraných řádků (bg-primary/10)
+// - Sticky header s "Vybrat vše"
+// - Sticky footer se shrnutím výběru
+// - Badge s počtem vybraných
+
+interface EntrySelectorProps {
+    selectedEntryIds: string[];
+    onSelectionChange: (ids: string[]) => void;
+    clientFilter?: string;
+    phaseFilter?: string;
+    dateFrom?: string;
+    dateTo?: string;
+}
+
+// Příklad použití:
+<EntrySelector
+    selectedEntryIds={selectedIds}
+    onSelectionChange={setSelectedIds}
+    clientFilter={selectedClientId}
+/>
+```
+
 #### InvoiceList.tsx
 ```typescript
 // Seznam faktur s filtry (klient, stav, datum)
@@ -928,18 +992,40 @@ features/billing/components/
 #### CreateInvoiceDialog.tsx
 ```typescript
 // Modal pro vytvoření nové faktury
-// Tab 1: Linked faktura - výběr záznamů/fází
-// Tab 2: Standalone faktura - ruční položky
+// Tab 1: "Z vybraných záznamů" - linked faktura
+// Tab 2: "Vlastní položky" - standalone faktura
 ```
 
 #### LinkedInvoiceForm.tsx
 ```typescript
-// 1. Výběr klienta
-// 2. Filtry: datum od-do, fáze
-// 3. Seznam nefakturovaných záznamů (checkbox)
-// 4. Možnost seskupení: po záznamech / fázích / dnech
-// 5. Nastavení DPH, splatnosti
-// 6. Preview celkové částky
+// Formulář pro vytvoření faktury z vybraných záznamů
+//
+// KROK 1: Výběr záznamů
+// - Komponenta EntrySelector (viz výše)
+// - Filtry pro zúžení výběru (klient, fáze, datum)
+// - Multi-select pomocí checkboxů
+// - Minimálně 1 záznam musí být vybrán
+//
+// KROK 2: Nastavení faktury
+// - Seskupení položek:
+//   □ Každý záznam jako samostatná položka
+//   □ Seskupit podle fáze (méně položek)
+//   □ Seskupit podle dne
+// - Datum vystavení (default: dnes)
+// - Datum splatnosti (default: +14 dní)
+// - Sazba DPH (default z nastavení)
+// - Poznámka na fakturu
+//
+// KROK 3: Náhled a potvrzení
+// - Preview položek faktury
+// - Celková částka (bez DPH, DPH, s DPH)
+// - Tlačítko "Vytvořit fakturu"
+
+interface LinkedInvoiceFormProps {
+    onSuccess: (invoice: Invoice) => void;
+    onCancel: () => void;
+    preselectedEntryIds?: string[];  // Pokud přicházíme ze stránky záznamů
+}
 ```
 
 #### StandaloneInvoiceForm.tsx
@@ -954,9 +1040,54 @@ features/billing/components/
 #### InvoiceDetail.tsx
 ```typescript
 // Zobrazení detailu faktury
+// Pro linked faktury: seznam propojených záznamů
 // Seznam položek v tabulce
 // Timeline změn stavu
 // Akce: změna stavu, export PDF, tisk
+```
+
+### 5.3 Hook pro správu výběru záznamů
+
+```typescript
+// features/billing/hooks/useEntrySelection.ts
+
+export function useEntrySelection(initialIds: string[] = []) {
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(
+        new Set(initialIds)
+    );
+
+    const toggle = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const selectAll = (ids: string[]) => {
+        setSelectedIds(new Set(ids));
+    };
+
+    const clearSelection = () => {
+        setSelectedIds(new Set());
+    };
+
+    const isSelected = (id: string) => selectedIds.has(id);
+
+    return {
+        selectedIds: Array.from(selectedIds),
+        selectedCount: selectedIds.size,
+        toggle,
+        selectAll,
+        clearSelection,
+        isSelected,
+        hasSelection: selectedIds.size > 0
+    };
+}
 ```
 
 ---
@@ -988,28 +1119,67 @@ Přidat do `Header.tsx`:
 
 ## 7. Rozšíření existujících komponent
 
-### 7.1 Úpravy v entries
+### 7.1 Úpravy v entries (stránka záznamů)
 
 **EntryCard / EntryRow** - přidat:
-- Badge s billing_status
-- Checkbox pro výběr k fakturaci
-- Quick action "Fakturovat"
+- Badge s billing_status (Nefakturováno / Fakturováno / Zaplaceno)
+- **Checkbox** na levé straně pro výběr záznamu
+- Barevné odlišení podle billing_status
 
-**EntriesPage** - přidat:
-- Filtr podle billing_status
-- Hromadné akce (vybrat více záznamů → fakturovat)
+**EntriesPage** (`/entries/page.tsx`) - přidat:
+
+```typescript
+// Nový stav pro výběr záznamů
+const { selectedIds, toggle, selectAll, clearSelection, hasSelection } =
+    useEntrySelection();
+
+// Nový filtr
+<Select value={billingStatusFilter} onChange={setBillingStatusFilter}>
+    <option value="">Vše</option>
+    <option value="unbilled">Nefakturované</option>
+    <option value="billed">Fakturované</option>
+    <option value="paid">Zaplacené</option>
+</Select>
+
+// Floating action bar (zobrazí se když je vybrán alespoň 1 záznam)
+{hasSelection && (
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2
+                    bg-background border rounded-lg shadow-lg p-4
+                    flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">
+            Vybráno: {selectedIds.length} záznamů
+        </span>
+        <span className="text-sm font-medium">
+            {totalSelectedHours} h | {formatCurrency(totalSelectedAmount)}
+        </span>
+        <Button onClick={clearSelection} variant="ghost" size="sm">
+            Zrušit výběr
+        </Button>
+        <Button onClick={openInvoiceDialog} variant="default">
+            Vytvořit fakturu
+        </Button>
+    </div>
+)}
+```
+
+**Workflow na stránce záznamů:**
+1. Uživatel filtruje záznamy (klient, fáze, datum, billing_status)
+2. Klikáním na checkboxy vybere záznamy k fakturaci
+3. Ve floating baru vidí shrnutí (počet, hodiny, částka)
+4. Klikne "Vytvořit fakturu" → otevře se dialog s předvybranými záznamy
+5. Po vytvoření faktury se záznamy označí jako fakturované
 
 ### 7.2 Úpravy v phases
 
 **PhaseCard** - přidat:
-- Tlačítko "Fakturovat fázi"
-- Zobrazení nefakturované částky
+- Zobrazení nefakturované částky vedle celkové částky
+- Tlačítko "Fakturovat nefakturované záznamy"
 
 ### 7.3 Úpravy v reports
 
 **ReportsPage** - přidat:
 - Možnost generovat fakturu z reportu
-- Export jako faktura
+- Tlačítko "Vytvořit fakturu z tohoto reportu"
 
 ---
 
