@@ -75,7 +75,7 @@ export function EntrySelector({
         <div className="flex items-center gap-3">
           <Checkbox
             checked={allSelected}
-            onChange={() => {
+            onCheckedChange={() => {
               if (allSelected) {
                 onClearSelection()
               } else {
@@ -114,11 +114,12 @@ export function EntrySelector({
               `}
               onClick={() => onToggle(entry.id)}
             >
-              <Checkbox
-                checked={isSelected}
-                onChange={() => onToggle(entry.id)}
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => onToggle(entry.id)}
+                />
+              </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
