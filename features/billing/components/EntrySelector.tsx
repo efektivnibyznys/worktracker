@@ -105,7 +105,7 @@ export function EntrySelector({
             <div
               key={entry.id}
               className={`
-                flex items-center gap-4 p-4 rounded-lg border cursor-pointer
+                flex items-center gap-3 p-4 rounded-lg border cursor-pointer overflow-hidden
                 transition-colors duration-150
                 ${isSelected
                   ? 'bg-blue-50 border-blue-200'
@@ -114,20 +114,20 @@ export function EntrySelector({
               `}
               onClick={() => onToggle(entry.id)}
             >
-              <div onClick={(e) => e.stopPropagation()}>
+              <div onClick={(e) => e.stopPropagation()} className="shrink-0">
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={() => onToggle(entry.id)}
                 />
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium truncate">
                     {entry.client?.name || 'Neznámý klient'}
                   </span>
                   {entry.phase && (
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs shrink-0">
                       {entry.phase.name}
                     </Badge>
                   )}
