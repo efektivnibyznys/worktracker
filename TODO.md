@@ -24,7 +24,7 @@
 - [x] Externalizace credentials do .env.local
 - [x] Oprava XSS zranitelností (8+ míst v index.html)
 - [x] Error boundaries v Next.js aplikaci
-- [x] Archivace HTML verze do archive-html/
+- [x] ~~Archivace HTML verze~~ (odstraněno při úklidu)
 - [x] Security headers (CSP, X-Frame-Options, X-Content-Type-Options, atd.)
 
 ### Výkon - Kritické (3/3)
@@ -189,15 +189,5 @@ Po dokončení Fáze 5:
 
 ---
 
-## 🔗 Související dokumenty
-
-- **[PERFORMANCE_IMPROVEMENTS_LOG.md](./PERFORMANCE_IMPROVEMENTS_LOG.md)** - Detailní log výkonnostních optimalizací
-- **[DEVELOPMENT_STRATEGY.md](./DEVELOPMENT_STRATEGY.md)** - Celková strategie vývoje
-- **[SECURITY_AUDIT_LOG.md](./SECURITY_AUDIT_LOG.md)** - Bezpečnostní audit
-- **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)** - Testovací strategie
-- **[README.md](./README.md)** - Hlavní dokumentace
-
----
-
-**Poslední aktualizace:** 19. prosince 2025 (Fáze 5 dokončena)
+**Poslední aktualizace:** 17. ledna 2026
 **Next milestone:** Deployment + Testing
