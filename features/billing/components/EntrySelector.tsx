@@ -105,7 +105,7 @@ export function EntrySelector({
             <div
               key={entry.id}
               className={`
-                flex items-center gap-3 p-4 rounded-lg border cursor-pointer overflow-hidden
+                flex items-start gap-3 p-4 rounded-lg border cursor-pointer
                 transition-colors duration-150
                 ${isSelected
                   ? 'bg-blue-50 border-blue-200'
@@ -114,28 +114,28 @@ export function EntrySelector({
               `}
               onClick={() => onToggle(entry.id)}
             >
-              <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+              <div onClick={(e) => e.stopPropagation()} className="shrink-0 pt-0.5">
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={() => onToggle(entry.id)}
                 />
               </div>
 
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium truncate">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="font-medium">
                     {entry.client?.name || 'Neznámý klient'}
                   </span>
                   {entry.phase && (
-                    <Badge variant="secondary" className="text-xs shrink-0">
+                    <Badge variant="secondary" className="text-xs">
                       {entry.phase.name}
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-sm text-gray-600 break-words">
                   {entry.description}
                 </p>
-                <div className="flex gap-4 text-xs text-gray-500 mt-1">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
                   <span>{formatDate(entry.date)}</span>
                   <span>{entry.start_time} - {entry.end_time}</span>
                 </div>

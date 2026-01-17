@@ -57,7 +57,7 @@ export function CreateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[95vw] md:!max-w-[700px]">
+      <DialogContent className="!max-w-[95vw] md:!max-w-[75vw]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Nová faktura
