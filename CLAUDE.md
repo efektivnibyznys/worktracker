@@ -211,3 +211,22 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 For comprehensive architecture documentation, data flows, and component details, see:
 - `docs/ARCHITECTURE.md` - Full technical documentation
+
+---
+
+## Development Guidelines
+
+### Continuous Documentation Updates
+
+**IMPORTANT:** When developing or debugging this application, if you encounter:
+- A new bug or unexpected behavior
+- A tricky problem that took time to solve
+- A non-obvious solution or workaround
+- A pattern that might confuse future development
+
+**You MUST:**
+1. Add the problem and solution to the "Common Debugging" section above
+2. If it's a complex issue, also add it to `docs/ARCHITECTURE.md` in the Debugging Guide
+3. Update any relevant sections if the architecture changes
+
+This ensures the documentation stays current and useful for future development sessions.
