@@ -57,7 +57,7 @@ export function CreateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-[calc(100vw-4rem)]">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Nová faktura
