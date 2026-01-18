@@ -13,6 +13,7 @@ import { LinkedInvoiceForm } from './LinkedInvoiceForm'
 import { StandaloneInvoiceForm } from './StandaloneInvoiceForm'
 import { useInvoices } from '../hooks/useInvoices'
 import type { CreateLinkedInvoiceInput, CreateStandaloneInvoiceInput } from '../types/invoice.types'
+import type { EntryWithRelations } from '@/features/time-tracking/types/entry.types'
 
 type TabType = 'linked' | 'standalone'
 
@@ -20,6 +21,7 @@ interface CreateInvoiceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   preselectedEntryIds?: string[]
+  preselectedEntries?: EntryWithRelations[]
   onSuccess?: () => void
 }
 
@@ -30,6 +32,7 @@ export function CreateInvoiceDialog({
   open,
   onOpenChange,
   preselectedEntryIds = [],
+  preselectedEntries = [],
   onSuccess
 }: CreateInvoiceDialogProps) {
   // Default to linked if entries are preselected
@@ -95,6 +98,7 @@ export function CreateInvoiceDialog({
               onCancel={handleCancel}
               isLoading={createLinkedInvoice.isPending}
               preselectedEntryIds={preselectedEntryIds}
+              preselectedEntries={preselectedEntries}
             />
           ) : (
             <StandaloneInvoiceForm

@@ -143,14 +143,30 @@ export default function EntriesPage() {
     }
   }, [deleteEntry])
 
+  // Get selected entries with full data (moved up for use in handleSelectAllUnbilled)
+  const selectedEntries = useMemo(
+    () => entries.filter(e => selectedIds.includes(e.id)),
+    [entries, selectedIds]
+  )
+
+  // Get client from selected entries (for restricting selection to same client)
+  const selectedClientId_forInvoice = useMemo(() => {
+    if (selectedEntries.length === 0) return null
+    return selectedEntries[0].client_id
+  }, [selectedEntries])
+
   const handleSelectAllUnbilled = useCallback(() => {
-    const unbilledIds = unbilledEntries.map(e => e.id)
+    // Filter to same client if already have selection
+    const targetClientId = selectedClientId_forInvoice || (unbilledEntries[0]?.client_id ?? null)
+    const sameClientUnbilled = unbilledEntries.filter(e => e.client_id === targetClientId)
+    const unbilledIds = sameClientUnbilled.map(e => e.id)
+
     if (areAllSelected(unbilledIds)) {
       clearSelection()
     } else {
       selectAll(unbilledIds)
     }
-  }, [unbilledEntries, areAllSelected, clearSelection, selectAll])
+  }, [unbilledEntries, areAllSelected, clearSelection, selectAll, selectedClientId_forInvoice])
 
   const handleCreateInvoice = useCallback(() => {
     setIsCreateInvoiceOpen(true)
@@ -176,14 +192,38 @@ export default function EntriesPage() {
 
   // Calculate selected totals
   const selectedTotals = useMemo(() => {
-    const selectedEntries = entries.filter(e => selectedIds.includes(e.id))
     const minutes = selectedEntries.reduce((sum, e) => sum + e.duration_minutes, 0)
     const amount = selectedEntries.reduce((sum, e) => {
       const hours = e.duration_minutes / 60
       return sum + (hours * e.hourly_rate)
     }, 0)
     return { minutes, amount }
-  }, [entries, selectedIds])
+  }, [selectedEntries])
+
+  // Wrapper for toggle that enforces same-client selection
+  const handleEntryToggle = useCallback((entryId: string) => {
+    const entry = entries.find(e => e.id === entryId)
+    if (!entry) return
+
+    // If already selected, allow deselection
+    if (isSelected(entryId)) {
+      toggle(entryId)
+      return
+    }
+
+    // If no selection yet, allow any entry
+    if (!selectedClientId_forInvoice) {
+      toggle(entryId)
+      return
+    }
+
+    // Only allow selecting entries from the same client
+    if (entry.client_id === selectedClientId_forInvoice) {
+      toggle(entryId)
+    } else {
+      toast.error('Pro fakturu lze vybrat pouze záznamy od jednoho klienta')
+    }
+  }, [entries, isSelected, selectedClientId_forInvoice, toggle])
 
   if (isLoading) {
     return (
@@ -377,7 +417,7 @@ export default function EntriesPage() {
                         <div className="pt-1">
                           <Checkbox
                             checked={entrySelected}
-                            onCheckedChange={() => toggle(entry.id)}
+                            onCheckedChange={() => handleEntryToggle(entry.id)}
                           />
                         </div>
                       )}
@@ -469,6 +509,7 @@ export default function EntriesPage() {
         open={isCreateInvoiceOpen}
         onOpenChange={setIsCreateInvoiceOpen}
         preselectedEntryIds={selectedIds}
+        preselectedEntries={selectedEntries}
         onSuccess={handleInvoiceCreated}
       />
     </div>
