@@ -2,6 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Context7 Documentation Access
+
+**IMPORTANT:** When working with external libraries or frameworks (React, Next.js, Supabase, TypeScript, Tailwind, etc.), ALWAYS use Context7 to get up-to-date documentation.
+
+**How to use:**
+Add `use context7` to your prompts when you need current documentation:
+- "use context7: How to implement Server Actions in Next.js 15?"
+- "use context7: What's the latest Supabase client API for authentication?"
+- "use context7: Show me React 19 hooks best practices"
+
+This ensures you have the most current, version-specific documentation and prevents using outdated patterns or deprecated APIs.
+
 ## Build & Development Commands
 
 ```bash
