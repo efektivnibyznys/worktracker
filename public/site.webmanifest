@@ -1,0 +1,14 @@
+{
+  "name": "Work Tracker",
+  "short_name": "WorkTracker",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#78FAAA",
+  "background_color": "#000000",
+  "display": "standalone"
+}

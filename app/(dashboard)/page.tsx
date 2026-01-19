@@ -1,0 +1,456 @@
+'use client'
+
+import { useState, useMemo, useCallback } from 'react'
+import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
+import { QuickAddForm, QuickAddSubmitData } from '@/features/time-tracking/components/QuickAddForm'
+import { useDashboardEntries } from '@/features/time-tracking/hooks/useEntries'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCurrency } from '@/lib/utils/currency'
+import { formatTime, calculateDuration } from '@/lib/utils/time'
+import { formatDate } from '@/lib/utils/date'
+import { calculateStats } from '@/lib/utils/calculations'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useAuthStore } from '@/lib/stores/authStore'
+import { useEntries } from '@/features/time-tracking/hooks/useEntries'
+import { useClients } from '@/features/time-tracking/hooks/useClients'
+import { usePhases } from '@/features/time-tracking/hooks/usePhases'
+import { EntryFilters } from '@/features/time-tracking/types/entry.types'
+import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { TimelineChart } from '@/features/time-tracking/components/charts/TimelineChart'
+import { DistributionChart } from '@/features/time-tracking/components/charts/DistributionChart'
+import {
+  prepareTimelineData,
+  prepareDistributionData,
+  enrichDistributionDataWithNames,
+  determineTimelineGrouping
+} from '@/lib/utils/chartData'
+
+export default function DashboardPage() {
+  usePageMetadata({
+    title: 'Dashboard | Work Tracker',
+    description: 'Přehled odpracované doby a rychlé přidání záznamu'
+  })
+
+  const { user } = useAuthStore()
+  const { todayEntries, weekEntries, monthEntries } = useDashboardEntries()
+
+  const [filters, setFilters] = useState<EntryFilters>({})
+  const [selectedClientId, setSelectedClientId] = useState<string>('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
+  const [isEntriesListOpen, setIsEntriesListOpen] = useState(false)
+
+  const { clients } = useClients()
+  const { phases } = usePhases(selectedClientId)
+  const { entries, createEntry, deleteEntry } = useEntries(filters)
+
+  // Calculate stats - memoized to avoid recalculation on every render
+  const todayStats = useMemo(() => calculateStats(todayEntries), [todayEntries])
+  const weekStats = useMemo(() => calculateStats(weekEntries), [weekEntries])
+  const monthStats = useMemo(() => calculateStats(monthEntries), [monthEntries])
+
+  // Calculate totals for filtered entries
+  const totalMinutes = useMemo(
+    () => entries.reduce((sum, e) => sum + e.duration_minutes, 0),
+    [entries]
+  )
+  const totalAmount = useMemo(
+    () => entries.reduce((sum, e) => {
+      const hours = e.duration_minutes / 60
+      return sum + (hours * e.hourly_rate)
+    }, 0),
+    [entries]
+  )
+
+  // Prepare chart data
+  const timelineGrouping = useMemo(
+    () => determineTimelineGrouping(filters.dateFrom, filters.dateTo),
+    [filters.dateFrom, filters.dateTo]
+  )
+
+  const timelineData = useMemo(
+    () => prepareTimelineData(entries, timelineGrouping, filters.dateFrom, filters.dateTo),
+    [entries, timelineGrouping, filters.dateFrom, filters.dateTo]
+  )
+
+  const distributionData = useMemo(() => {
+    // Pokud je vybraný klient, zobrazíme fáze, jinak klienty
+    const groupBy = filters.clientId ? 'phase' : 'client'
+    const rawData = prepareDistributionData(entries, groupBy)
+
+    // Vytvoříme mapu ID -> jméno
+    const nameMap = new Map<string, string>()
+
+    if (groupBy === 'client') {
+      clients.forEach(client => nameMap.set(client.id, client.name))
+    } else {
+      phases.forEach(phase => nameMap.set(phase.id, phase.name))
+      nameMap.set('no-phase', 'Bez fáze')
+    }
+
+    return enrichDistributionDataWithNames(rawData, nameMap)
+  }, [entries, filters.clientId, clients, phases])
+
+  const handleQuickAdd = useCallback(async (data: QuickAddSubmitData) => {
+    try {
+      await createEntry.mutateAsync({
+        ...data,
+        user_id: user!.id,
+      })
+      toast.success('Záznam byl úspěšně přidán')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat záznam')
+      logger.error('Failed to create time entry', error, {
+        component: 'Dashboard',
+        action: 'handleQuickAdd',
+      })
+    }
+  }, [createEntry, user])
+
+  const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value || undefined,
+    }))
+
+    if (key === 'clientId') {
+      setSelectedClientId(value)
+      // Reset phase filter when client changes
+      setFilters(prev => ({ ...prev, phaseId: undefined }))
+    }
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setFilters({})
+    setSelectedClientId('')
+  }, [])
+
+  const handleDelete = useCallback(async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tento záznam?')) {
+      return
+    }
+    setDeletingId(id)
+    try {
+      await deleteEntry.mutateAsync(id)
+      toast.success('Záznam byl úspěšně smazán')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat záznam')
+      logger.error('Failed to delete entry', error, {
+        component: 'Dashboard',
+        action: 'handleDelete',
+        metadata: { entryId: id },
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }, [deleteEntry])
+
+  return (
+    <div className="space-y-8">
+      <h2 className="text-3xl md:text-4xl font-bold mb-6">
+        Dashboard
+      </h2>
+
+      {/* Quick Add Form */}
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader
+          className="cursor-pointer p-0 mb-6"
+          onClick={() => setIsQuickAddOpen(!isQuickAddOpen)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold">Rychlé přidání záznamu</CardTitle>
+              <CardDescription className="text-gray-700 mt-1">
+                Přidejte nový záznam odpracované doby
+              </CardDescription>
+            </div>
+            {isQuickAddOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-700" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-700" />
+            )}
+          </div>
+        </CardHeader>
+        {isQuickAddOpen && (
+          <CardContent className="p-0">
+            <QuickAddForm
+              onSubmit={handleQuickAdd}
+              isLoading={createEntry.isPending}
+            />
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Stats Cards */}
+      <div className="grid gap-8 md:grid-cols-3">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Dnes</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
+              {formatTime(todayStats.totalMinutes)}
+            </div>
+            <p className="text-lg text-gray-700 mt-2">
+              {formatCurrency(todayStats.amount)}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {todayStats.count} záznamů
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Tento týden</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
+              {formatTime(weekStats.totalMinutes)}
+            </div>
+            <p className="text-lg text-gray-700 mt-2">
+              {formatCurrency(weekStats.amount)}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {weekStats.count} záznamů
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-4">
+            <CardDescription className="text-sm text-gray-600 font-medium">Tento měsíc</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="text-3xl font-bold">
+              {formatTime(monthStats.totalMinutes)}
+            </div>
+            <p className="text-lg text-gray-700 mt-2">
+              {formatCurrency(monthStats.amount)}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {monthStats.count} záznamů
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader className="p-0 mb-6">
+          <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="client">Klient</Label>
+              <Select
+                value={filters.clientId || 'all'}
+                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Všichni klienti" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Všichni klienti</SelectItem>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="phase">Fáze</Label>
+              <Select
+                value={filters.phaseId || 'all'}
+                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
+                disabled={!selectedClientId || phases.length === 0}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={!selectedClientId ? "Nejprve vyberte klienta" : "Všechny fáze"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Všechny fáze</SelectItem>
+                  {phases.map((phase) => (
+                    <SelectItem key={phase.id} value={phase.id}>
+                      {phase.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="dateFrom">Od data</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.dateFrom || ''}
+                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="dateTo">Do data</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.dateTo || ''}
+                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {(filters.clientId || filters.phaseId || filters.dateFrom || filters.dateTo) && (
+            <div className="mt-4">
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                Vymazat filtry
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Summary for Filtered Entries */}
+      <div className="grid gap-8 md:grid-cols-3">
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
+            <div className="text-3xl font-bold">
+              {formatTime(totalMinutes)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Celková částka</div>
+            <div className="text-3xl font-bold">
+              {formatCurrency(totalAmount)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardContent className="p-0">
+            <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
+            <div className="text-3xl font-bold">
+              {entries.length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="space-y-8">
+        {/* Timeline Chart - Full Width */}
+        <TimelineChart
+          data={timelineData}
+          title="Hodiny a výnosy v čase"
+          description={`Zobrazení podle ${timelineGrouping === 'day' ? 'dnů' : timelineGrouping === 'week' ? 'týdnů' : 'měsíců'}`}
+        />
+
+        {/* Distribution Chart */}
+        <DistributionChart
+          data={distributionData}
+          title={filters.clientId ? 'Rozdělení práce podle fází' : 'Rozdělení práce podle klientů'}
+          description={filters.clientId ? 'Jak se práce rozděluje mezi jednotlivé fáze' : 'Jak se práce rozděluje mezi jednotlivé klienty'}
+        />
+      </div>
+
+      {/* Entries List */}
+      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+        <CardHeader
+          className="cursor-pointer p-0 mb-6"
+          onClick={() => setIsEntriesListOpen(!isEntriesListOpen)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold">Seznam záznamů ({entries.length})</CardTitle>
+              <CardDescription className="text-gray-700 mt-1">
+                Všechny záznamy odpovídající filtrům
+              </CardDescription>
+            </div>
+            {isEntriesListOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-700" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-700" />
+            )}
+          </div>
+        </CardHeader>
+        {isEntriesListOpen && (
+          <CardContent className="p-0">
+            {entries.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-gray-600">
+                  {Object.keys(filters).length > 0
+                    ? 'Žádné záznamy pro vybrané filtry'
+                    : 'Zatím nemáte žádné záznamy práce'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {entries.map((entry) => (
+                  <Card key={entry.id} className="bg-gray-50 p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-lg">
+                              {entry.client?.name || 'Neznámý klient'}
+                            </span>
+                            {entry.phase && (
+                              <Badge variant="secondary">{entry.phase.name}</Badge>
+                            )}
+                          </div>
+                          <p className="text-gray-700 mb-2">{entry.description}</p>
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <span>📅 {formatDate(entry.date)}</span>
+                            <span>🕐 {entry.start_time} - {entry.end_time}</span>
+                            <span>⏱️ {formatTime(entry.duration_minutes)}</span>
+                            <span>💰 {formatCurrency(entry.hourly_rate)}/h</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(entry.id)}
+                            disabled={deletingId === entry.id}
+                          >
+                            {deletingId === entry.id ? 'Mazání...' : 'Smazat'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    </div>
+  )
+}
