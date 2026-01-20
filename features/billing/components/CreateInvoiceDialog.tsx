@@ -60,7 +60,7 @@ export function CreateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[95vw] md:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[90vw] max-w-[90vw] md:w-[75vw] md:max-w-[75vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Nová faktura
