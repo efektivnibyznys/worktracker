@@ -279,25 +279,25 @@ export function LinkedInvoiceForm({
       {hasPreselectedEntries ? (
         <div>
           <Label>Vybrané záznamy ({effectiveEntries.length})</Label>
-          <div className="mt-2 border rounded-lg max-h-48 overflow-y-auto">
+          <div className="mt-2 border rounded-lg max-h-48 overflow-y-auto overflow-x-hidden">
             {effectiveEntries.map(entry => (
               <div key={entry.id} className="p-3 border-b last:border-b-0 text-sm">
-                <div className="flex justify-between items-start">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-2">
+                  <div className="min-w-0 flex-1">
                     <span className="font-medium">{formatDate(entry.date)}</span>
                     {entry.phase?.name && (
                       <span className="text-gray-500 ml-2">• {entry.phase.name}</span>
                     )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right flex sm:flex-col gap-2 sm:gap-0 shrink-0">
                     <span className="font-medium">{formatTime(entry.duration_minutes)}</span>
-                    <span className="text-gray-500 ml-2">
+                    <span className="text-gray-500">
                       {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
                     </span>
                   </div>
                 </div>
                 {entry.description && (
-                  <p className="text-gray-600 mt-1 truncate">{entry.description}</p>
+                  <p className="text-gray-600 mt-1 break-words whitespace-pre-wrap">{entry.description}</p>
                 )}
               </div>
             ))}
@@ -430,13 +430,14 @@ export function LinkedInvoiceForm({
       )}
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Zrušit
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !hasSelection}
+          className="w-full sm:w-auto"
         >
           {isLoading ? 'Vytvářím...' : 'Vytvořit fakturu'}
         </Button>

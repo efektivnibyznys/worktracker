@@ -60,23 +60,23 @@ export function CreateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] max-w-[90vw] md:w-[75vw] md:max-w-[75vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[90vw] max-w-[90vw] md:w-[75vw] md:max-w-[75vw] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-xl sm:text-2xl font-bold">
             Nová faktura
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             Vytvořte fakturu z odpracovaných záznamů nebo s vlastními položkami
           </DialogDescription>
         </DialogHeader>
 
         {/* Tab buttons */}
-        <div className="flex gap-2 border-b pb-4">
+        <div className="flex flex-col sm:flex-row gap-2 border-b pb-4">
           <Button
             type="button"
             variant={activeTab === 'linked' ? 'default' : 'outline'}
             onClick={() => setActiveTab('linked')}
-            className="flex-1"
+            className="flex-1 text-sm sm:text-base"
           >
             Ze záznamů
           </Button>
@@ -84,7 +84,7 @@ export function CreateInvoiceDialog({
             type="button"
             variant={activeTab === 'standalone' ? 'default' : 'outline'}
             onClick={() => setActiveTab('standalone')}
-            className="flex-1"
+            className="flex-1 text-sm sm:text-base"
           >
             Vlastní položky
           </Button>

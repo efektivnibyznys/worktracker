@@ -319,11 +319,11 @@ export function StandaloneInvoiceForm({
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 justify-end pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
           Zrušit
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
           {isLoading ? 'Vytvářím...' : 'Vytvořit fakturu'}
         </Button>
       </div>
