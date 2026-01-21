@@ -17,8 +17,10 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
+import { pdf } from '@react-pdf/renderer'
 import { useInvoice, useInvoices } from '@/features/billing/hooks/useInvoices'
-import { InvoiceStatusBadge } from '@/features/billing/components'
+import { InvoiceStatusBadge, InvoicePdf } from '@/features/billing/components'
+import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { InvoiceStatus, INVOICE_STATUS_CONFIG } from '@/features/billing/types/invoice.types'
 
@@ -36,8 +38,10 @@ export default function InvoiceDetailPage() {
   const invoiceId = params.id as string
 
   const { data: invoice, isLoading } = useInvoice(invoiceId)
+  const { settings, isLoading: isSettingsLoading } = useSettings(invoice?.user_id)
   const { updateStatus, deleteInvoice } = useInvoices()
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
 
   const handleStatusChange = useCallback(async (newStatus: InvoiceStatus) => {
     try {
@@ -70,6 +74,36 @@ export default function InvoiceDetailPage() {
       setIsDeleting(false)
     }
   }, [deleteInvoice, invoiceId, router])
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!invoice) return
+
+    setIsGeneratingPdf(true)
+    try {
+      const blob = await pdf(
+        <InvoicePdf invoice={invoice} settings={settings || null} />
+      ).toBlob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `faktura-${invoice.invoice_number}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      toast.success('Faktura byla stažena')
+    } catch (error) {
+      console.error(error)
+      toast.error('Nepodařilo se vygenerovat PDF')
+      logger.error('Failed to generate PDF', error, {
+        component: 'InvoiceDetailPage',
+        action: 'handleDownloadPdf',
+        metadata: { invoiceId }
+      })
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }, [invoice, settings, invoiceId])
 
   if (isLoading) {
     return (
@@ -230,6 +264,13 @@ export default function InvoiceDetailPage() {
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              variant="default"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf || isSettingsLoading}
+            >
+              {isGeneratingPdf ? 'Generuji PDF...' : 'Stáhnout PDF'}
+            </Button>
             <Button
               variant="outline"
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
