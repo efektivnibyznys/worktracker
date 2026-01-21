@@ -187,7 +187,16 @@ export class InvoiceService extends BaseService<'invoices'> {
       throw new Error('Žádné záznamy k fakturaci')
     }
 
-    // 2. Calculate totals
+    // 2. Fetch client data for snapshot
+    const { data: client, error: clientError } = await this.supabase
+      .from('clients')
+      .select('name, address, ico')
+      .eq('id', invoiceData.client_id)
+      .single()
+
+    if (clientError) throw clientError
+
+    // 3. Calculate totals
     const subtotal = entries.reduce((sum, entry) => {
       const hours = entry.duration_minutes / 60
       return sum + (hours * entry.hourly_rate)
@@ -197,13 +206,16 @@ export class InvoiceService extends BaseService<'invoices'> {
     const tax_amount = subtotal * (tax_rate / 100)
     const total_amount = subtotal + tax_amount
 
-    // 3. Generate invoice number
+    // 4. Generate invoice number
     const invoice_number = await this.generateInvoiceNumber()
 
-    // 4. Create the invoice
+    // 5. Create the invoice with client snapshot
     const invoiceInsert: InvoiceInsert = {
       user_id: entries[0].user_id, // All entries have same user
       client_id: invoiceData.client_id,
+      client_name: client?.name || null,
+      client_address: client?.address || null,
+      client_ico: client?.ico || null,
       invoice_number,
       issue_date: invoiceData.issue_date,
       due_date: invoiceData.due_date,
@@ -286,10 +298,32 @@ export class InvoiceService extends BaseService<'invoices'> {
     const { data: { user } } = await this.supabase.auth.getUser()
     if (!user) throw new Error('Uživatel není přihlášen')
 
-    // 4. Create the invoice
+    // 4. Fetch client data for snapshot (if client is selected)
+    let clientName = null
+    let clientAddress = null
+    let clientIco = null
+
+    if (invoiceData.client_id) {
+      const { data: client, error: clientError } = await this.supabase
+        .from('clients')
+        .select('name, address, ico')
+        .eq('id', invoiceData.client_id)
+        .single()
+
+      if (clientError) throw clientError
+
+      clientName = client?.name || null
+      clientAddress = client?.address || null
+      clientIco = client?.ico || null
+    }
+
+    // 5. Create the invoice with client snapshot
     const invoiceInsert: InvoiceInsert = {
       user_id: user.id,
       client_id: invoiceData.client_id || null,
+      client_name: clientName,
+      client_address: clientAddress,
+      client_ico: clientIco,
       invoice_number,
       issue_date: invoiceData.issue_date,
       due_date: invoiceData.due_date,

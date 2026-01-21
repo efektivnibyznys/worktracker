@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS clients (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
+  address TEXT,
+  ico TEXT,
   hourly_rate NUMERIC(10,2),
   note TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

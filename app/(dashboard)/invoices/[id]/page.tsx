@@ -122,6 +122,35 @@ export default function InvoiceDetailPage() {
         </div>
       </div>
 
+      {/* Client Info */}
+      {(invoice.client_name || invoice.client_address || invoice.client_ico) && (
+        <Card className="bg-white p-6 shadow-md">
+          <CardHeader className="p-0 mb-4">
+            <CardTitle className="text-xl font-bold">Údaje o klientovi</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 space-y-2">
+            {invoice.client_name && (
+              <div className="flex gap-2">
+                <span className="text-gray-600 min-w-24">Jméno:</span>
+                <span className="font-semibold">{invoice.client_name}</span>
+              </div>
+            )}
+            {invoice.client_address && (
+              <div className="flex gap-2">
+                <span className="text-gray-600 min-w-24">Adresa:</span>
+                <span className="font-semibold whitespace-pre-line">{invoice.client_address}</span>
+              </div>
+            )}
+            {invoice.client_ico && (
+              <div className="flex gap-2">
+                <span className="text-gray-600 min-w-24">IČO:</span>
+                <span className="font-semibold">{invoice.client_ico}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Info Cards */}
       <div className="grid gap-8 md:grid-cols-4">
         <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">

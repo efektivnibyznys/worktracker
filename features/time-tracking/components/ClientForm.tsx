@@ -11,6 +11,8 @@ import { Client } from '../types/client.types'
 
 const clientSchema = z.object({
   name: z.string().min(1, 'Jméno klienta je povinné'),
+  address: z.string().optional(),
+  ico: z.string().optional(),
   hourly_rate: z.string()
     .optional()
     .refine((val) => !val || parseFloat(val) >= 0, {
@@ -37,6 +39,8 @@ export function ClientForm({ client, onSubmit, onCancel, isLoading }: ClientForm
     resolver: zodResolver(clientSchema),
     defaultValues: {
       name: client?.name || '',
+      address: client?.address || '',
+      ico: client?.ico || '',
       hourly_rate: client?.hourly_rate?.toString() || '',
       note: client?.note || '',
     },
@@ -58,6 +62,33 @@ export function ClientForm({ client, onSubmit, onCancel, isLoading }: ClientForm
         />
         {errors.name && (
           <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="address">Adresa</Label>
+        <Textarea
+          id="address"
+          {...register('address')}
+          placeholder="Např. Hlavní 123, 110 00 Praha 1"
+          rows={2}
+          className="mt-1"
+        />
+        {errors.address && (
+          <p className="text-sm text-red-600 mt-1">{errors.address.message}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="ico">IČO</Label>
+        <Input
+          id="ico"
+          {...register('ico')}
+          placeholder="Např. 12345678"
+          className="mt-1"
+        />
+        {errors.ico && (
+          <p className="text-sm text-red-600 mt-1">{errors.ico.message}</p>
         )}
       </div>
 

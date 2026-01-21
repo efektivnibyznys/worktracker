@@ -14,6 +14,8 @@ export interface Database {
           id: string
           user_id: string
           name: string
+          address: string | null
+          ico: string | null
           hourly_rate: number | null
           note: string | null
           created_at: string
@@ -22,6 +24,8 @@ export interface Database {
           id?: string
           user_id: string
           name: string
+          address?: string | null
+          ico?: string | null
           hourly_rate?: number | null
           note?: string | null
           created_at?: string
@@ -30,6 +34,8 @@ export interface Database {
           id?: string
           user_id?: string
           name?: string
+          address?: string | null
+          ico?: string | null
           hourly_rate?: number | null
           note?: string | null
           created_at?: string
@@ -216,6 +222,9 @@ export interface Database {
           id: string
           user_id: string
           client_id: string | null
+          client_name: string | null
+          client_address: string | null
+          client_ico: string | null
           invoice_number: string
           issue_date: string
           due_date: string
@@ -238,6 +247,9 @@ export interface Database {
           id?: string
           user_id: string
           client_id?: string | null
+          client_name?: string | null
+          client_address?: string | null
+          client_ico?: string | null
           invoice_number: string
           issue_date: string
           due_date: string
@@ -260,6 +272,9 @@ export interface Database {
           id?: string
           user_id?: string
           client_id?: string | null
+          client_name?: string | null
+          client_address?: string | null
+          client_ico?: string | null
           invoice_number?: string
           issue_date?: string
           due_date?: string
