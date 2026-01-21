@@ -140,18 +140,16 @@ export function InvoicePdf({ invoice, settings }: InvoicePdfProps) {
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>DODAVATEL:</Text>
-                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{settings?.company_name || 'Jakub (Freelancer)'}</Text>
-                        <Text>{settings?.company_address}</Text>
+                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{settings?.company_name || 'Jakub Vaněk'}</Text>
+                        <Text>{settings?.company_address || 'Dr. Nováka 496, 294 71, Benátky nad Jizerou'}</Text>
                         <View style={{ marginTop: 5 }}>
-                            <Text>IČO: {settings?.company_ico}</Text>
+                            <Text>IČO: {settings?.company_ico || '88699030'}</Text>
                             {settings?.company_dic && <Text>DIČ: {settings?.company_dic}</Text>}
                         </View>
                         <View style={{ marginTop: 10 }}>
                             <Text style={styles.label}>BANKOVNÍ SPOJENÍ:</Text>
-                            <Text>{invoice.bank_account || settings?.bank_account}</Text>
-                            {invoice.variable_symbol && (
-                                <Text style={{ marginTop: 2 }}>Variabilní symbol: {invoice.variable_symbol}</Text>
-                            )}
+                            <Text>Číslo účtu: {invoice.bank_account || settings?.bank_account || '4482411352/6363'}</Text>
+                            <Text style={{ marginTop: 2 }}>Variabilní symbol: {invoice.variable_symbol || invoice.invoice_number.replace('-', '')}</Text>
                         </View>
                     </View>
 
@@ -201,8 +199,8 @@ export function InvoicePdf({ invoice, settings }: InvoicePdfProps) {
                             <Text style={styles.colDesc}>{item.description}</Text>
                             <Text style={styles.colQty}>{item.quantity}</Text>
                             <Text style={styles.colUnit}>{item.unit}</Text>
-                            <Text style={styles.colPrice}>{formatCurrency(item.unit_price).replace('Kč', '')}</Text>
-                            <Text style={styles.colTotal}>{formatCurrency(item.quantity * item.unit_price).replace('Kč', '')}</Text>
+                            <Text style={styles.colPrice}>{formatCurrency(item.unit_price)}</Text>
+                            <Text style={styles.colTotal}>{formatCurrency(item.quantity * item.unit_price)}</Text>
                         </View>
                     ))}
                 </View>
