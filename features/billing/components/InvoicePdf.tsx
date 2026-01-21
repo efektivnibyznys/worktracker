@@ -1,5 +1,5 @@
 import React from 'react'
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer'
+import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer'
 import { InvoiceWithRelations } from '../types/invoice.types'
 import { Settings } from '@/features/time-tracking/types/settings.types'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -115,9 +115,10 @@ const styles = StyleSheet.create({
 interface InvoicePdfProps {
     invoice: InvoiceWithRelations
     settings: Settings | null
+    qrCodeUrl: string | null
 }
 
-export function InvoicePdf({ invoice, settings }: InvoicePdfProps) {
+export function InvoicePdf({ invoice, settings, qrCodeUrl }: InvoicePdfProps) {
     const isOverdue = invoice.status !== 'paid' &&
         invoice.status !== 'cancelled' &&
         new Date(invoice.due_date) < new Date()
@@ -221,6 +222,13 @@ export function InvoicePdf({ invoice, settings }: InvoicePdfProps) {
                         <Text style={styles.totalLabel}>CELKEM K ÚHRADĚ:</Text>
                         <Text style={styles.totalValue}>{formatCurrency(invoice.total_amount)}</Text>
                     </View>
+
+                    {qrCodeUrl && (
+                        <View style={{ marginTop: 20, alignItems: 'center' }}>
+                            <Text style={{ fontSize: 8, marginBottom: 5 }}>QR platba</Text>
+                            <Image src={qrCodeUrl} style={{ width: 100, height: 100 }} />
+                        </View>
+                    )}
                 </View>
 
                 {/* Footer */}

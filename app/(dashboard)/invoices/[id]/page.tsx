@@ -18,10 +18,12 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { pdf } from '@react-pdf/renderer'
+import QRCode from 'qrcode'
 import { useInvoice, useInvoices } from '@/features/billing/hooks/useInvoices'
 import { InvoiceStatusBadge, InvoicePdf } from '@/features/billing/components'
 import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { formatCurrency } from '@/lib/utils/currency'
+import { generateSpaydString } from '@/lib/utils/payment'
 import type { InvoiceStatus, INVOICE_STATUS_CONFIG } from '@/features/billing/types/invoice.types'
 
 const STATUS_OPTIONS: { value: InvoiceStatus; label: string }[] = [
@@ -80,8 +82,37 @@ export default function InvoiceDetailPage() {
 
     setIsGeneratingPdf(true)
     try {
+      // Generate QR Code if possible
+      let qrCodeUrl: string | null = null
+      const bankAccount = invoice.bank_account || settings?.bank_account || '4482411352/6363'
+      const variableSymbol = invoice.variable_symbol || invoice.invoice_number.replace(/-/g, '')
+
+      try {
+        const spayd = generateSpaydString({
+          accountNumber: bankAccount,
+          amount: invoice.total_amount,
+          currency: invoice.currency || 'CZK',
+          vs: variableSymbol,
+          message: `Faktura ${invoice.invoice_number}`
+        })
+
+        if (spayd) {
+          qrCodeUrl = await QRCode.toDataURL(spayd, {
+            errorCorrectionLevel: 'M',
+            margin: 2,
+            width: 256
+          })
+        }
+      } catch (qrError) {
+        console.warn('Failed to generate QR code:', qrError)
+      }
+
       const blob = await pdf(
-        <InvoicePdf invoice={invoice} settings={settings || null} />
+        <InvoicePdf
+          invoice={invoice}
+          settings={settings || null}
+          qrCodeUrl={qrCodeUrl}
+        />
       ).toBlob()
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
