@@ -20,8 +20,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co https://fonts.gstatic.com data:",
+              "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+              "connect-src 'self' https://*.supabase.co https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
             ].join('; '),
           },
           {

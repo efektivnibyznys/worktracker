@@ -9,8 +9,8 @@ import { formatDate } from '@/lib/utils/date'
 Font.register({
     family: 'Roboto',
     fonts: [
-        { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf', fontWeight: 400 },
-        { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc4.ttf', fontWeight: 700 }
+        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.0.8/files/roboto-latin-ext-400-normal.woff', fontWeight: 400 },
+        { src: 'https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.0.8/files/roboto-latin-ext-700-normal.woff', fontWeight: 700 }
     ]
 })
 
