@@ -180,7 +180,7 @@ export function InvoicePdf({ invoice, settings }: InvoicePdfProps) {
                     </View>
                     <View style={styles.column}>
                         <Text style={styles.label}>FORMA ÚHRADY</Text>
-                        <Text style={styles.value}>Hoto / Převod</Text>
+                        <Text style={styles.value}>Bankovním převodem</Text>
                     </View>
                 </View>
 
