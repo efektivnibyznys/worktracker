@@ -116,9 +116,10 @@ interface InvoicePdfProps {
     invoice: InvoiceWithRelations
     settings: Settings | null
     qrCodeUrl: string | null
+    logoUrl: string
 }
 
-export function InvoicePdf({ invoice, settings, qrCodeUrl }: InvoicePdfProps) {
+export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdfProps) {
     const isOverdue = invoice.status !== 'paid' &&
         invoice.status !== 'cancelled' &&
         new Date(invoice.due_date) < new Date()
@@ -239,7 +240,27 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl }: InvoicePdfProps) {
                             <Text>{invoice.notes}</Text>
                         </View>
                     )}
-                    <Text>Faktura byla vystavena elektronicky.</Text>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 10 }}>
+                        {/* Logo */}
+                        <View style={{ marginRight: 20 }}>
+                            <Image src={logoUrl} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                        </View>
+
+                        {/* Address */}
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ fontWeight: 700 }}>Jakub Vaněk</Text>
+                            <Text>Dr. Nováka 496</Text>
+                            <Text>294 71 Benátky nad Jizerou</Text>
+                        </View>
+
+                        {/* Contact */}
+                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                            <Text>www.efektivnibyznys.cz</Text>
+                            <Text>+420 705 911 414</Text>
+                            <Text style={{ marginTop: 5, fontSize: 6, color: '#999' }}>Faktura byla vystavena elektronicky.</Text>
+                        </View>
+                    </View>
                 </View>
             </Page>
         </Document>

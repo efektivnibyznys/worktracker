@@ -112,6 +112,7 @@ export default function InvoiceDetailPage() {
           invoice={invoice}
           settings={settings || null}
           qrCodeUrl={qrCodeUrl}
+          logoUrl={window.location.origin + '/logo.png'}
         />
       ).toBlob()
       const url = URL.createObjectURL(blob)
