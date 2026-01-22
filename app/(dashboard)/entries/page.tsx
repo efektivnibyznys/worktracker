@@ -27,6 +27,7 @@ import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 import { EditEntryDialog, EditEntrySubmitData } from '@/features/time-tracking/components/EditEntryDialog'
 import { BillingStatusBadge, CreateInvoiceDialog } from '@/features/billing/components'
 import { useEntrySelection } from '@/features/billing/hooks/useEntrySelection'
+import { YearSelector } from '@/features/time-tracking/components/YearSelector'
 
 const BILLING_STATUS_OPTIONS: { value: BillingStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Všechny stavy' },
@@ -41,13 +42,20 @@ export default function EntriesPage() {
     description: 'Přehled všech odpracovaných hodin s filtry'
   })
 
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const [isCreateInvoiceOpen, setIsCreateInvoiceOpen] = useState(false)
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
-  const { entries, isLoading, deleteEntry, updateEntry } = useEntries(filters)
+
+  const entriesFilters = useMemo(() => ({
+    ...filters,
+    year: selectedYear
+  }), [filters, selectedYear])
+
+  const { entries, isLoading, deleteEntry, updateEntry } = useEntries(entriesFilters)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingEntry, setEditingEntry] = useState<EntryWithRelations | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -71,6 +79,15 @@ export default function EntriesPage() {
   )
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
+    // Validace, že dateFrom/dateTo jsou v rámci selectedYear
+    if (key === 'dateFrom' || key === 'dateTo') {
+      const date = new Date(value)
+      if (!isNaN(date.getTime()) && date.getFullYear() !== selectedYear) {
+        toast.warning('Datum musí být v rámci vybraného roku')
+        return
+      }
+    }
+
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined,
@@ -237,9 +254,12 @@ export default function EntriesPage() {
 
   return (
     <div className="space-y-8 pb-24">
-      <div>
-        <h2 className="text-3xl md:text-4xl font-bold mb-2">Záznamy práce</h2>
-        <p className="text-lg text-gray-700">Přehled všech odpracovaných hodin</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-2">Záznamy práce</h2>
+          <p className="text-lg text-gray-700">Přehled všech odpracovaných hodin</p>
+        </div>
+        <YearSelector value={selectedYear} onChange={setSelectedYear} />
       </div>
 
       {/* Filters */}
@@ -405,9 +425,8 @@ export default function EntriesPage() {
             return (
               <Card
                 key={entry.id}
-                className={`bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200 ${
-                  entrySelected ? 'ring-2 ring-primary' : ''
-                }`}
+                className={`bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200 ${entrySelected ? 'ring-2 ring-primary' : ''
+                  }`}
               >
                 <CardContent className="p-0">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
