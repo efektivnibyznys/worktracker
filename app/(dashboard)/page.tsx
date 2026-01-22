@@ -57,7 +57,13 @@ export default function DashboardPage() {
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
-  const { entries, createEntry, deleteEntry } = useEntries({ ...filters, year: selectedYear })
+
+  const entriesFilters = useMemo(() => ({
+    ...filters,
+    year: selectedYear
+  }), [filters, selectedYear])
+
+  const { entries, createEntry, deleteEntry } = useEntries(entriesFilters)
 
   // Calculate stats - memoized to avoid recalculation on every render
   // Calculate stats - memoized to avoid recalculation on every render
@@ -211,7 +217,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Stats Cards */}
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-4">
         {isCurrentYear && (
           <>
             <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
