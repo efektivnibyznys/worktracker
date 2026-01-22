@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
   const { clients } = useClients()
   const { phases } = usePhases(selectedClientId)
-  const { entries, createEntry, deleteEntry } = useEntries(filters)
+  const { entries, createEntry, deleteEntry } = useEntries({ ...filters, year: selectedYear })
 
   // Calculate stats - memoized to avoid recalculation on every render
   // Calculate stats - memoized to avoid recalculation on every render

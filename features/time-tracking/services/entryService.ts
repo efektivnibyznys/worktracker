@@ -38,6 +38,11 @@ export class EntryService extends BaseService<'entries'> {
     if (filters.billingStatus) {
       query = query.eq('billing_status', filters.billingStatus)
     }
+    if (filters.year) {
+      const yearStart = `${filters.year}-01-01`
+      const yearEnd = `${filters.year}-12-31`
+      query = query.gte('date', yearStart).lte('date', yearEnd)
+    }
 
     const { data, error } = await query
       .order('date', { ascending: false })
