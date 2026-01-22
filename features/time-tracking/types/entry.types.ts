@@ -23,4 +23,12 @@ export interface EntryFilters {
   dateFrom?: string
   dateTo?: string
   billingStatus?: BillingStatus
+  year?: number
+}
+
+export interface YearlyStats {
+  year: number
+  totalMinutes: number
+  totalAmount: number
+  entryCount: number
 }

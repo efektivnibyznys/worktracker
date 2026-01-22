@@ -38,3 +38,6 @@ next-env.d.ts
 .mcp.json
 run-migration.js
 supabase/.temp/
+
+# Development plans (not for production)
+IMPLEMENTATION_PLAN.md

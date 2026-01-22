@@ -73,31 +73,53 @@ export function useEntries(filters?: EntryFilters) {
 }
 
 // Hook for dashboard stats - OPTIMIZED: Single query instead of 3
-export function useDashboardEntries() {
+export function useDashboardEntries(year?: number) {
+  const selectedYear = year ?? new Date().getFullYear()
+
   // Memoize supabase client and service to avoid recreation on every render
   const supabase = useMemo(() => createSupabaseClient(), [])
   const entryService = useMemo(() => new EntryService(supabase), [supabase])
 
-  // Fetch month entries once (single DB query)
-  const { data: monthEntries } = useQuery({
-    queryKey: [ENTRIES_KEY, 'month'],
-    queryFn: () => entryService.getThisMonth(),
+  // Fetch entries for selected year (single DB query)
+  const { data: yearEntries } = useQuery({
+    queryKey: [ENTRIES_KEY, 'year', selectedYear],
+    queryFn: () => entryService.getByYear(selectedYear),
   })
 
-  // Filter on client side (memoized for performance)
+  // Filter on client side for current periods
+  const isCurrentYear = selectedYear === new Date().getFullYear()
+
   const todayEntries = useMemo(
-    () => filterToday(monthEntries || []),
-    [monthEntries]
+    () => isCurrentYear ? filterToday(yearEntries || []) : [],
+    [yearEntries, isCurrentYear]
   )
 
   const weekEntries = useMemo(
-    () => filterThisWeek(monthEntries || []),
-    [monthEntries]
+    () => isCurrentYear ? filterThisWeek(yearEntries || []) : [],
+    [yearEntries, isCurrentYear]
+  )
+
+  const monthEntries = useMemo(
+    () => isCurrentYear ? filterThisMonth(yearEntries || []) : [],
+    [yearEntries, isCurrentYear]
   )
 
   return {
     todayEntries,
     weekEntries,
-    monthEntries: monthEntries || [],
+    monthEntries,
+    yearEntries: yearEntries || [],
+    selectedYear,
+    isCurrentYear,
   }
+}
+
+// Helper function for month filtering
+function filterThisMonth(entries: Entry[]): Entry[] {
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  const firstDayStr = firstDay.toISOString().split('T')[0]
+  const todayStr = now.toISOString().split('T')[0]
+
+  return entries.filter(entry => entry.date >= firstDayStr && entry.date <= todayStr)
 }

@@ -97,4 +97,60 @@ export class EntryService extends BaseService<'entries'> {
 
     return this.getByDateRange(dateFrom, dateTo)
   }
+  /**
+   * Get entries for a specific year
+   */
+  async getByYear(year: number): Promise<Entry[]> {
+    const dateFrom = `${year}-01-01`
+    const dateTo = `${year}-12-31`
+    return this.getByDateRange(dateFrom, dateTo)
+  }
+
+  /**
+   * Get entries for current year
+   */
+  async getThisYear(): Promise<Entry[]> {
+    const currentYear = new Date().getFullYear()
+    return this.getByYear(currentYear)
+  }
+
+  /**
+   * Get list of years that have entries (for archive dropdown)
+   */
+  async getAvailableYears(): Promise<number[]> {
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select('date')
+      .order('date', { ascending: false })
+
+    if (error) throw error
+
+    const years = [...new Set(data?.map(e => new Date(e.date).getFullYear()) || [])]
+    return years.sort((a, b) => b - a) // sestupně - nejnovější první
+  }
+
+  /**
+   * Get yearly statistics summary for archive view
+   */
+  async getYearlyStats(year: number): Promise<{
+    year: number
+    totalMinutes: number
+    totalAmount: number
+    entryCount: number
+  }> {
+    const entries = await this.getByYear(year)
+
+    const totalMinutes = entries.reduce((sum, e) => sum + e.duration_minutes, 0)
+    const totalAmount = entries.reduce((sum, e) => {
+      const hours = e.duration_minutes / 60
+      return sum + (hours * e.hourly_rate)
+    }, 0)
+
+    return {
+      year,
+      totalMinutes,
+      totalAmount,
+      entryCount: entries.length
+    }
+  }
 }

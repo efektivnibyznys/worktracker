@@ -30,6 +30,8 @@ import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { TimelineChart } from '@/features/time-tracking/components/charts/TimelineChart'
 import { DistributionChart } from '@/features/time-tracking/components/charts/DistributionChart'
+import { YearSelector } from '@/features/time-tracking/components/YearSelector'
+import { ArchiveSection } from '@/features/time-tracking/components/ArchiveSection'
 import {
   prepareTimelineData,
   prepareDistributionData,
@@ -44,7 +46,8 @@ export default function DashboardPage() {
   })
 
   const { user } = useAuthStore()
-  const { todayEntries, weekEntries, monthEntries } = useDashboardEntries()
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const { todayEntries, weekEntries, monthEntries, yearEntries, isCurrentYear } = useDashboardEntries(selectedYear)
 
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
@@ -57,9 +60,11 @@ export default function DashboardPage() {
   const { entries, createEntry, deleteEntry } = useEntries(filters)
 
   // Calculate stats - memoized to avoid recalculation on every render
+  // Calculate stats - memoized to avoid recalculation on every render
   const todayStats = useMemo(() => calculateStats(todayEntries), [todayEntries])
   const weekStats = useMemo(() => calculateStats(weekEntries), [weekEntries])
   const monthStats = useMemo(() => calculateStats(monthEntries), [monthEntries])
+  const yearStats = useMemo(() => calculateStats(yearEntries), [yearEntries])
 
   // Calculate totals for filtered entries
   const totalMinutes = useMemo(
@@ -120,6 +125,15 @@ export default function DashboardPage() {
   }, [createEntry, user])
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
+    // Validace, že dateFrom/dateTo jsou v rámci selectedYear
+    if (key === 'dateFrom' || key === 'dateTo') {
+      const date = new Date(value)
+      if (!isNaN(date.getTime()) && date.getFullYear() !== selectedYear) {
+        toast.warning('Datum musí být v rámci vybraného roku')
+        return
+      }
+    }
+
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined,
@@ -159,9 +173,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl md:text-4xl font-bold mb-6">
-        Dashboard
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl md:text-4xl font-bold">
+          Dashboard
+        </h2>
+        <YearSelector value={selectedYear} onChange={setSelectedYear} />
+      </div>
 
       {/* Quick Add Form */}
       <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -195,53 +212,74 @@ export default function DashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-8 md:grid-cols-3">
-        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="p-0 mb-4">
-            <CardDescription className="text-sm text-gray-600 font-medium">Dnes</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-3xl font-bold">
-              {formatTime(todayStats.totalMinutes)}
-            </div>
-            <p className="text-lg text-gray-700 mt-2">
-              {formatCurrency(todayStats.amount)}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {todayStats.count} záznamů
-            </p>
-          </CardContent>
-        </Card>
+        {isCurrentYear && (
+          <>
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-0 mb-4">
+                <CardDescription className="text-sm text-gray-600 font-medium">Dnes</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="text-3xl font-bold">
+                  {formatTime(todayStats.totalMinutes)}
+                </div>
+                <p className="text-lg text-gray-700 mt-2">
+                  {formatCurrency(todayStats.amount)}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {todayStats.count} záznamů
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-0 mb-4">
+                <CardDescription className="text-sm text-gray-600 font-medium">Tento týden</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="text-3xl font-bold">
+                  {formatTime(weekStats.totalMinutes)}
+                </div>
+                <p className="text-lg text-gray-700 mt-2">
+                  {formatCurrency(weekStats.amount)}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {weekStats.count} záznamů
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+              <CardHeader className="p-0 mb-4">
+                <CardDescription className="text-sm text-gray-600 font-medium">Tento měsíc</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="text-3xl font-bold">
+                  {formatTime(monthStats.totalMinutes)}
+                </div>
+                <p className="text-lg text-gray-700 mt-2">
+                  {formatCurrency(monthStats.amount)}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {monthStats.count} záznamů
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
           <CardHeader className="p-0 mb-4">
-            <CardDescription className="text-sm text-gray-600 font-medium">Tento týden</CardDescription>
+            <CardDescription className="text-sm text-gray-600 font-medium">Rok {selectedYear}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="text-3xl font-bold">
-              {formatTime(weekStats.totalMinutes)}
+              {formatTime(yearStats.totalMinutes)}
             </div>
             <p className="text-lg text-gray-700 mt-2">
-              {formatCurrency(weekStats.amount)}
+              {formatCurrency(yearStats.amount)}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              {weekStats.count} záznamů
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardHeader className="p-0 mb-4">
-            <CardDescription className="text-sm text-gray-600 font-medium">Tento měsíc</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="text-3xl font-bold">
-              {formatTime(monthStats.totalMinutes)}
-            </div>
-            <p className="text-lg text-gray-700 mt-2">
-              {formatCurrency(monthStats.amount)}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {monthStats.count} záznamů
+              {yearStats.count} záznamů
             </p>
           </CardContent>
         </Card>
@@ -451,6 +489,8 @@ export default function DashboardPage() {
           </CardContent>
         )}
       </Card>
+
+      <ArchiveSection onYearSelect={setSelectedYear} />
     </div>
   )
 }
