@@ -236,7 +236,7 @@ BEGIN
   ON CONFLICT (user_id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger, který spustí funkci při vytvoření nového uživatele
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
