@@ -61,11 +61,11 @@ export default function ReportsPage() {
     notionText += `- **Počet záznamů:** ${stats.count}\n\n`
 
     notionText += '## Detaily\n\n'
-    notionText += '| Datum | Čas | Klient | Popis | Hodiny | Částka |\n'
-    notionText += '|-------|-----|--------|-------|--------|--------|\n'
+    notionText += '| Datum | Čas | Popis | Hodiny | Částka |\n'
+    notionText += '|-------|-----|-------|--------|--------|\n'
 
     entries.forEach(entry => {
-      notionText += `| ${formatDate(entry.date)} | ${entry.start_time}-${entry.end_time} | ${entry.client?.name || '-'} | ${entry.description} | ${formatTime(entry.duration_minutes)} | ${formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)} |\n`
+      notionText += `| ${formatDate(entry.date)} | ${entry.start_time}-${entry.end_time} | ${entry.description} | ${formatTime(entry.duration_minutes)} | ${formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)} |\n`
     })
 
     // Copy to clipboard
