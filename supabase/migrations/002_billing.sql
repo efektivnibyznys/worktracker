@@ -150,20 +150,20 @@ ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own invoices"
     ON invoices FOR SELECT
-    USING (auth.uid() = user_id);
+    USING ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert own invoices"
     ON invoices FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can update own invoices"
     ON invoices FOR UPDATE
-    USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
+    USING ((select auth.uid()) = user_id)
+    WITH CHECK ((select auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete own invoices"
     ON invoices FOR DELETE
-    USING (auth.uid() = user_id);
+    USING ((select auth.uid()) = user_id);
 
 -- RLS pro invoice_items (přes parent invoice)
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
@@ -174,7 +174,7 @@ CREATE POLICY "Users can view own invoice items"
         EXISTS (
             SELECT 1 FROM invoices
             WHERE invoices.id = invoice_items.invoice_id
-            AND invoices.user_id = auth.uid()
+            AND invoices.user_id = (select auth.uid())
         )
     );
 
@@ -184,7 +184,7 @@ CREATE POLICY "Users can insert own invoice items"
         EXISTS (
             SELECT 1 FROM invoices
             WHERE invoices.id = invoice_items.invoice_id
-            AND invoices.user_id = auth.uid()
+            AND invoices.user_id = (select auth.uid())
         )
     );
 
@@ -194,7 +194,7 @@ CREATE POLICY "Users can update own invoice items"
         EXISTS (
             SELECT 1 FROM invoices
             WHERE invoices.id = invoice_items.invoice_id
-            AND invoices.user_id = auth.uid()
+            AND invoices.user_id = (select auth.uid())
         )
     );
 
@@ -204,7 +204,7 @@ CREATE POLICY "Users can delete own invoice items"
         EXISTS (
             SELECT 1 FROM invoices
             WHERE invoices.id = invoice_items.invoice_id
-            AND invoices.user_id = auth.uid()
+            AND invoices.user_id = (select auth.uid())
         )
     );
 
