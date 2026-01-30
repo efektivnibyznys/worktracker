@@ -219,7 +219,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 -- Trigger pro invoices
 DROP TRIGGER IF EXISTS update_invoices_updated_at ON invoices;
