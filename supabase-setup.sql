@@ -130,23 +130,23 @@ ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 -- Uživatelé vidí pouze své klienty
 CREATE POLICY "Users can view own clients"
   ON clients FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou vytvářet vlastní klienty
 CREATE POLICY "Users can insert own clients"
   ON clients FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou upravovat vlastní klienty
 CREATE POLICY "Users can update own clients"
   ON clients FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou mazat vlastní klienty
 CREATE POLICY "Users can delete own clients"
   ON clients FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- ============================================
 -- RLS POLITIKY - Phases
@@ -155,23 +155,23 @@ CREATE POLICY "Users can delete own clients"
 -- Uživatelé vidí pouze své fáze
 CREATE POLICY "Users can view own phases"
   ON phases FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou vytvářet vlastní fáze
 CREATE POLICY "Users can insert own phases"
   ON phases FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou upravovat vlastní fáze
 CREATE POLICY "Users can update own phases"
   ON phases FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou mazat vlastní fáze
 CREATE POLICY "Users can delete own phases"
   ON phases FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- ============================================
 -- RLS POLITIKY - Entries
@@ -180,23 +180,23 @@ CREATE POLICY "Users can delete own phases"
 -- Uživatelé vidí pouze své záznamy
 CREATE POLICY "Users can view own entries"
   ON entries FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou vytvářet vlastní záznamy
 CREATE POLICY "Users can insert own entries"
   ON entries FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou upravovat vlastní záznamy
 CREATE POLICY "Users can update own entries"
   ON entries FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou mazat vlastní záznamy
 CREATE POLICY "Users can delete own entries"
   ON entries FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- ============================================
 -- RLS POLITIKY - Settings
@@ -205,23 +205,23 @@ CREATE POLICY "Users can delete own entries"
 -- Uživatelé vidí pouze vlastní nastavení
 CREATE POLICY "Users can view own settings"
   ON settings FOR SELECT
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou vytvářet vlastní nastavení
 CREATE POLICY "Users can insert own settings"
   ON settings FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou upravovat vlastní nastavení
 CREATE POLICY "Users can update own settings"
   ON settings FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Uživatelé mohou mazat vlastní nastavení
 CREATE POLICY "Users can delete own settings"
   ON settings FOR DELETE
-  USING (auth.uid() = user_id);
+  USING ((select auth.uid()) = user_id);
 
 -- ============================================
 -- FUNKCE PRO AUTOMATICKÉ VYTVOŘENÍ NASTAVENÍ
