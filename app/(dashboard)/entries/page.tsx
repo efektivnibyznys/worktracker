@@ -119,6 +119,7 @@ export default function EntriesPage() {
         data: {
           client_id: data.client_id,
           phase_id: data.phase_id,
+          project_id: data.project_id,
           date: data.date,
           start_time: data.start_time,
           end_time: data.end_time,
