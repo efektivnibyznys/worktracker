@@ -190,9 +190,9 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
                 <View style={styles.table}>
                     <View style={styles.tableHeader}>
                         <Text style={styles.colDesc}>Popis</Text>
-                        <Text style={styles.colQty}>Mn.</Text>
-                        <Text style={styles.colUnit}>J.</Text>
-                        <Text style={styles.colPrice}>Cena/j.</Text>
+                        <Text style={styles.colQty}>Množství</Text>
+                        <Text style={styles.colUnit}>Jednotka</Text>
+                        <Text style={styles.colPrice}>Cena/jednotku</Text>
                         <Text style={styles.colTotal}>Celkem</Text>
                     </View>
 
