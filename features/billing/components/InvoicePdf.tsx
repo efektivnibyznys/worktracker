@@ -202,7 +202,7 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
                             <Text style={styles.colQty}>{item.quantity}</Text>
                             <Text style={styles.colUnit}>{item.unit}</Text>
                             <Text style={styles.colPrice}>{formatCurrency(item.unit_price)}</Text>
-                            <Text style={styles.colTotal}>{formatCurrency(item.quantity * item.unit_price)}</Text>
+                            <Text style={styles.colTotal}>{formatCurrency(item.total_price)}</Text>
                         </View>
                     ))}
                 </View>
