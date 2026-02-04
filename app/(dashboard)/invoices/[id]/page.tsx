@@ -341,7 +341,7 @@ export default function InvoiceDetailPage() {
                       <td className="p-4 text-center">{item.unit}</td>
                       <td className="p-4 text-right">{formatCurrency(item.unit_price)}</td>
                       <td className="p-4 text-right font-semibold">
-                        {formatCurrency(item.quantity * item.unit_price)}
+                        {formatCurrency(item.total_price)}
                       </td>
                     </tr>
                   ))
