@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { useClients } from '../hooks/useClients'
 import { usePhases } from '../hooks/usePhases'
+import { useProjects } from '../hooks/useProjects'
 import { useSettings } from '../hooks/useSettings'
 import { getTodayDate } from '@/lib/utils/date'
 import { calculateDuration } from '@/lib/utils/time'
@@ -26,6 +27,7 @@ import { useState } from 'react'
 const quickAddSchema = z.object({
   client_id: z.string().min(1, 'Vyberte klienta'),
   phase_id: z.string().optional(),
+  project_id: z.string().optional(),
   date: z.string().min(1, 'Datum je povinné'),
   start_time: z.string().min(1, 'Čas od je povinný'),
   end_time: z.string().min(1, 'Čas do je povinný'),
@@ -50,10 +52,11 @@ const quickAddSchema = z.object({
 type QuickAddFormData = z.infer<typeof quickAddSchema>
 
 // Type for data passed to onSubmit - contains form data plus calculated fields
-export type QuickAddSubmitData = Omit<QuickAddFormData, 'hourly_rate' | 'phase_id'> & {
+export type QuickAddSubmitData = Omit<QuickAddFormData, 'hourly_rate' | 'phase_id' | 'project_id'> & {
   duration_minutes: number
   hourly_rate: number
   phase_id: string | null
+  project_id: string | null
 }
 
 interface QuickAddFormProps {
@@ -66,6 +69,7 @@ export function QuickAddForm({ onSubmit, isLoading }: QuickAddFormProps) {
   const { clients } = useClients()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const { phases } = usePhases(selectedClientId)
+  const { projects } = useProjects(selectedClientId)
   const { settings } = useSettings(user?.id)
 
   const {
@@ -87,6 +91,7 @@ export function QuickAddForm({ onSubmit, isLoading }: QuickAddFormProps) {
 
   const clientId = watch('client_id')
   const phaseId = watch('phase_id')
+  const projectId = watch('project_id')
   const startTime = watch('start_time')
   const endTime = watch('end_time')
   const manualRate = watch('hourly_rate')
@@ -95,30 +100,34 @@ export function QuickAddForm({ onSubmit, isLoading }: QuickAddFormProps) {
     // Calculate duration
     const duration = calculateDuration(data.start_time, data.end_time)
 
-    // Determine hourly rate
+    // Determine hourly rate (priority: manual > project > phase > client > settings)
     const selectedClient = clients.find(c => c.id === data.client_id)
     const selectedPhase = phases.find(p => p.id === data.phase_id)
+    const selectedProject = projects.find(p => p.id === data.project_id)
 
     const hourlyRate = determineHourlyRate(
       data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      selectedProject?.hourly_rate || null,
       selectedPhase?.hourly_rate || null,
       selectedClient?.hourly_rate || null,
       settings?.default_hourly_rate || 850
     )
 
-    // Destructure to handle phase_id type conversion (optional string -> string | null)
-    const { phase_id, hourly_rate: _, ...restData } = data
+    // Destructure to handle phase_id/project_id type conversion (optional string -> string | null)
+    const { phase_id, project_id, hourly_rate: _, ...restData } = data
     await onSubmit({
       ...restData,
       duration_minutes: duration,
       hourly_rate: hourlyRate,
       phase_id: phase_id || null,
+      project_id: project_id || null,
     })
 
     // Reset form after successful submit
     reset({
       client_id: '',
       phase_id: '',
+      project_id: '',
       date: getTodayDate(),
       start_time: '',
       end_time: '',
@@ -139,6 +148,7 @@ export function QuickAddForm({ onSubmit, isLoading }: QuickAddFormProps) {
               setValue('client_id', value)
               setSelectedClientId(value)
               setValue('phase_id', '') // Reset phase when client changes
+              setValue('project_id', '') // Reset project when client changes
             }}
           >
             <SelectTrigger className="mt-1">
@@ -176,6 +186,26 @@ export function QuickAddForm({ onSubmit, isLoading }: QuickAddFormProps) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="project_id">Projekt</Label>
+        <Select
+          value={projectId}
+          onValueChange={(value) => setValue('project_id', value)}
+          disabled={!clientId || projects.length === 0}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder={!clientId ? "Nejprve vyberte klienta" : "Volitelné"} />
+          </SelectTrigger>
+          <SelectContent>
+            {projects.map((project) => (
+              <SelectItem key={project.id} value={project.id}>
+                {project.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

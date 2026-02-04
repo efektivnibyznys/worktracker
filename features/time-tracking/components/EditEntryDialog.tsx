@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select'
 import { useClients } from '../hooks/useClients'
 import { usePhases } from '../hooks/usePhases'
+import { useProjects } from '../hooks/useProjects'
 import { useSettings } from '../hooks/useSettings'
 import { calculateDuration } from '@/lib/utils/time'
 import { determineHourlyRate } from '@/lib/utils/calculations'
@@ -33,6 +34,7 @@ import { EntryWithRelations } from '../types/entry.types'
 const editEntrySchema = z.object({
   client_id: z.string().min(1, 'Vyberte klienta'),
   phase_id: z.string().optional(),
+  project_id: z.string().optional(),
   date: z.string().min(1, 'Datum je povinné'),
   start_time: z.string().min(1, 'Čas od je povinný'),
   end_time: z.string().min(1, 'Čas do je povinný'),
@@ -56,10 +58,11 @@ const editEntrySchema = z.object({
 
 type EditEntryFormData = z.infer<typeof editEntrySchema>
 
-export type EditEntrySubmitData = Omit<EditEntryFormData, 'hourly_rate' | 'phase_id'> & {
+export type EditEntrySubmitData = Omit<EditEntryFormData, 'hourly_rate' | 'phase_id' | 'project_id'> & {
   duration_minutes: number
   hourly_rate: number
   phase_id: string | null
+  project_id: string | null
 }
 
 interface EditEntryDialogProps {
@@ -81,6 +84,7 @@ export function EditEntryDialog({
   const { clients } = useClients()
   const [selectedClientId, setSelectedClientId] = useState<string>('')
   const { phases } = usePhases(selectedClientId)
+  const { projects } = useProjects(selectedClientId)
   const { settings } = useSettings(user?.id)
 
   const {
@@ -96,6 +100,7 @@ export function EditEntryDialog({
 
   const clientId = watch('client_id')
   const phaseId = watch('phase_id')
+  const projectId = watch('project_id')
   const startTime = watch('start_time')
   const endTime = watch('end_time')
 
@@ -104,6 +109,7 @@ export function EditEntryDialog({
     if (entry && open) {
       setValue('client_id', entry.client_id)
       setValue('phase_id', entry.phase_id || '')
+      setValue('project_id', entry.project_id || '')
       setValue('date', entry.date)
       setValue('start_time', entry.start_time)
       setValue('end_time', entry.end_time)
@@ -117,23 +123,26 @@ export function EditEntryDialog({
     // Calculate duration
     const duration = calculateDuration(data.start_time, data.end_time)
 
-    // Determine hourly rate
+    // Determine hourly rate (priority: manual > project > phase > client > settings)
     const selectedClient = clients.find(c => c.id === data.client_id)
     const selectedPhase = phases.find(p => p.id === data.phase_id)
+    const selectedProject = projects.find(p => p.id === data.project_id)
 
     const hourlyRate = determineHourlyRate(
       data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      selectedProject?.hourly_rate || null,
       selectedPhase?.hourly_rate || null,
       selectedClient?.hourly_rate || null,
       settings?.default_hourly_rate || 850
     )
 
-    const { phase_id, hourly_rate: _, ...restData } = data
+    const { phase_id, project_id, hourly_rate: _, ...restData } = data
     await onSubmit({
       ...restData,
       duration_minutes: duration,
       hourly_rate: hourlyRate,
       phase_id: phase_id || null,
+      project_id: project_id || null,
     })
 
     onOpenChange(false)
@@ -156,6 +165,7 @@ export function EditEntryDialog({
                   setValue('client_id', value)
                   setSelectedClientId(value)
                   setValue('phase_id', '') // Reset phase when client changes
+                  setValue('project_id', '') // Reset project when client changes
                 }}
               >
                 <SelectTrigger className="mt-1">
@@ -193,6 +203,26 @@ export function EditEntryDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="project_id">Projekt</Label>
+            <Select
+              value={projectId}
+              onValueChange={(value) => setValue('project_id', value)}
+              disabled={!clientId || projects.length === 0}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder={!clientId ? "Nejprve vyberte klienta" : "Volitelné"} />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

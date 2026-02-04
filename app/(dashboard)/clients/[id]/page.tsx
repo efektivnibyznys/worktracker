@@ -10,7 +10,9 @@ import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 import { useClient } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
+import { useProjects } from '@/features/time-tracking/hooks/useProjects'
 import { PhaseForm, PhaseFormData } from '@/features/time-tracking/components/PhaseForm'
+import { ProjectForm, ProjectFormData } from '@/features/time-tracking/components/ProjectForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -24,6 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatTime } from '@/lib/utils/time'
 import { Phase } from '@/features/time-tracking/types/phase.types'
+import { Project } from '@/features/time-tracking/types/project.types'
 import { useAuthStore } from '@/lib/stores/authStore'
 
 export default function ClientDetailPage() {
@@ -34,10 +37,15 @@ export default function ClientDetailPage() {
 
   const { client, isLoading: clientLoading } = useClient(clientId)
   const { phases, createPhase, updatePhase, deletePhase } = usePhases(clientId)
+  const { projects, createProject, updateProject, deleteProject } = useProjects(clientId)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPhase, setEditingPhase] = useState<Phase | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
 
   const handleCreatePhase = useCallback(async (data: PhaseFormData) => {
     try {
@@ -101,6 +109,70 @@ export default function ClientDetailPage() {
       setDeletingId(null)
     }
   }, [deletePhase])
+
+  // Project handlers
+  const handleCreateProject = useCallback(async (data: ProjectFormData) => {
+    try {
+      await createProject.mutateAsync({
+        ...data,
+        user_id: user!.id,
+        client_id: clientId,
+        hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+      })
+      setIsProjectDialogOpen(false)
+      toast.success('Projekt byl úspěšně přidán')
+    } catch (error) {
+      toast.error('Nepodařilo se přidat projekt')
+      logger.error('Failed to create project', error, {
+        component: 'ClientDetailPage',
+        action: 'handleCreateProject',
+        metadata: { clientId },
+      })
+    }
+  }, [createProject, user, clientId])
+
+  const handleUpdateProject = useCallback(async (data: ProjectFormData) => {
+    if (!editingProject) return
+    try {
+      await updateProject.mutateAsync({
+        id: editingProject.id,
+        data: {
+          ...data,
+          hourly_rate: data.hourly_rate ? parseFloat(data.hourly_rate) : null,
+        },
+      })
+      setEditingProject(null)
+      setIsProjectDialogOpen(false)
+      toast.success('Projekt byl úspěšně upraven')
+    } catch (error) {
+      toast.error('Nepodařilo se upravit projekt')
+      logger.error('Failed to update project', error, {
+        component: 'ClientDetailPage',
+        action: 'handleUpdateProject',
+        metadata: { projectId: editingProject?.id },
+      })
+    }
+  }, [editingProject, updateProject])
+
+  const handleDeleteProject = useCallback(async (id: string) => {
+    if (!confirm('Opravdu chcete smazat tento projekt? Záznamy zůstanou zachovány.')) {
+      return
+    }
+    setDeletingProjectId(id)
+    try {
+      await deleteProject.mutateAsync(id)
+      toast.success('Projekt byl úspěšně smazán')
+    } catch (error) {
+      toast.error('Nepodařilo se smazat projekt')
+      logger.error('Failed to delete project', error, {
+        component: 'ClientDetailPage',
+        action: 'handleDeleteProject',
+        metadata: { projectId: id },
+      })
+    } finally {
+      setDeletingProjectId(null)
+    }
+  }, [deleteProject])
 
   if (clientLoading) {
     return (
@@ -288,6 +360,102 @@ export default function ClientDetailPage() {
         )}
       </div>
 
+      {/* Projects */}
+      <div className="space-y-4">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <h3 className="text-2xl font-bold">Projekty</h3>
+          <Button onClick={() => {
+            setEditingProject(null)
+            setIsProjectDialogOpen(true)
+          }}>
+            + Přidat projekt
+          </Button>
+        </div>
+
+        {projects.length === 0 ? (
+          <Card className="bg-white p-8 shadow-md">
+            <CardContent className="p-0 py-8 text-center">
+              <p className="text-gray-700 text-lg mb-4">Zatím nejsou žádné projekty</p>
+              <Button onClick={() => setIsProjectDialogOpen(true)}>
+                Přidat první projekt
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-8 md:grid-cols-2">
+            {projects.map((project) => (
+              <Card key={project.id} className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <CardHeader className="p-0 mb-4">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl font-bold mb-1">{project.name}</CardTitle>
+                      {project.description && (
+                        <CardDescription className="text-gray-700">
+                          {project.description}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <div className="shrink-0">
+                      {getStatusBadge(project.status)}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="space-y-2 text-sm">
+                    {project.hourly_rate && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Sazba:</span>
+                        <span className="font-semibold text-gray-900">
+                          {formatCurrency(project.hourly_rate)}/h
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Odpracováno:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatTime(project.totalHours * 60)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Celkem:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(project.totalAmount)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Záznamů:</span>
+                      <span className="font-semibold text-gray-900">{project.entriesCount}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setEditingProject(project)
+                        setIsProjectDialogOpen(true)
+                      }}
+                    >
+                      Upravit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => handleDeleteProject(project.id)}
+                      disabled={deletingProjectId === project.id}
+                    >
+                      {deletingProjectId === project.id ? 'Mazání...' : 'Smazat'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Phase Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -309,6 +477,31 @@ export default function ClientDetailPage() {
               setEditingPhase(null)
             }}
             isLoading={createPhase.isPending || updatePhase.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Project Dialog */}
+      <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingProject ? 'Upravit projekt' : 'Přidat projekt'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProject
+                ? 'Upravte údaje projektu'
+                : 'Vyplňte údaje nového projektu'}
+            </DialogDescription>
+          </DialogHeader>
+          <ProjectForm
+            project={editingProject || undefined}
+            onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
+            onCancel={() => {
+              setIsProjectDialogOpen(false)
+              setEditingProject(null)
+            }}
+            isLoading={createProject.isPending || updateProject.isPending}
           />
         </DialogContent>
       </Dialog>

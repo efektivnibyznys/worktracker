@@ -95,12 +95,59 @@ export interface Database {
           }
         ]
       }
+      projects: {
+        Row: {
+          id: string
+          user_id: string
+          client_id: string
+          name: string
+          description: string | null
+          hourly_rate: number | null
+          status: 'active' | 'completed' | 'paused'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          client_id: string
+          name: string
+          description?: string | null
+          hourly_rate?: number | null
+          status?: 'active' | 'completed' | 'paused'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          client_id?: string
+          name?: string
+          description?: string | null
+          hourly_rate?: number | null
+          status?: 'active' | 'completed' | 'paused'
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       entries: {
         Row: {
           id: string
           user_id: string
           client_id: string
           phase_id: string | null
+          project_id: string | null
           date: string
           start_time: string
           end_time: string
@@ -116,6 +163,7 @@ export interface Database {
           user_id: string
           client_id: string
           phase_id?: string | null
+          project_id?: string | null
           date: string
           start_time: string
           end_time: string
@@ -131,6 +179,7 @@ export interface Database {
           user_id?: string
           client_id?: string
           phase_id?: string | null
+          project_id?: string | null
           date?: string
           start_time?: string
           end_time?: string
@@ -158,6 +207,12 @@ export interface Database {
             foreignKeyName: "entries_phase_id_fkey"
             columns: ["phase_id"]
             referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entries_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -314,6 +369,7 @@ export interface Database {
           invoice_id: string
           entry_id: string | null
           phase_id: string | null
+          project_id: string | null
           description: string
           quantity: number
           unit: string
@@ -327,6 +383,7 @@ export interface Database {
           invoice_id: string
           entry_id?: string | null
           phase_id?: string | null
+          project_id?: string | null
           description: string
           quantity?: number
           unit?: string
@@ -340,6 +397,7 @@ export interface Database {
           invoice_id?: string
           entry_id?: string | null
           phase_id?: string | null
+          project_id?: string | null
           description?: string
           quantity?: number
           unit?: string
@@ -365,6 +423,12 @@ export interface Database {
             foreignKeyName: "invoice_items_phase_id_fkey"
             columns: ["phase_id"]
             referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_items_project_id_fkey"
+            columns: ["project_id"]
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           }
         ]
