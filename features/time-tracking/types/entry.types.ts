@@ -13,6 +13,10 @@ export interface EntryWithRelations extends Entry {
     id: string
     name: string
   } | null
+  project?: {
+    id: string
+    name: string
+  } | null
 }
 
 export type BillingStatus = 'unbilled' | 'billed' | 'paid'
@@ -20,6 +24,7 @@ export type BillingStatus = 'unbilled' | 'billed' | 'paid'
 export interface EntryFilters {
   clientId?: string
   phaseId?: string
+  projectId?: string
   dateFrom?: string
   dateTo?: string
   billingStatus?: BillingStatus

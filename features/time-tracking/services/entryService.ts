@@ -19,7 +19,8 @@ export class EntryService extends BaseService<'entries'> {
       .select(`
         *,
         client:clients(id, name),
-        phase:phases(id, name)
+        phase:phases(id, name),
+        project:projects(id, name)
       `)
 
     // Apply filters
@@ -28,6 +29,9 @@ export class EntryService extends BaseService<'entries'> {
     }
     if (filters.phaseId) {
       query = query.eq('phase_id', filters.phaseId)
+    }
+    if (filters.projectId) {
+      query = query.eq('project_id', filters.projectId)
     }
     if (filters.dateFrom) {
       query = query.gte('date', filters.dateFrom)

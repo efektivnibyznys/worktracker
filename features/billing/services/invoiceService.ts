@@ -178,7 +178,7 @@ export class InvoiceService extends BaseService<'invoices'> {
     // 1. Fetch the entries to invoice
     const { data: entries, error: entriesError } = await this.supabase
       .from('entries')
-      .select('*, phase:phases(id, name)')
+      .select('*, phase:phases(id, name), project:projects(id, name)')
       .in('id', entry_ids)
       .eq('billing_status', 'unbilled')
 
@@ -247,6 +247,7 @@ export class InvoiceService extends BaseService<'invoices'> {
         invoice_id: invoice.id,
         entry_id: item.entry_id,
         phase_id: item.phase_id,
+        project_id: item.project_id,
         description: item.description,
         quantity: item.quantity,
         unit: 'hod',
@@ -448,7 +449,7 @@ export class InvoiceService extends BaseService<'invoices'> {
    */
   private groupEntriesForInvoice(
     entries: any[],
-    groupBy: 'entry' | 'phase' | 'day'
+    groupBy: 'entry' | 'phase' | 'project' | 'day'
   ): GroupedEntryForInvoice[] {
     const items: GroupedEntryForInvoice[] = []
 
@@ -458,6 +459,7 @@ export class InvoiceService extends BaseService<'invoices'> {
         items.push({
           entry_id: entry.id,
           phase_id: entry.phase_id,
+          project_id: entry.project_id,
           description: entry.description || `Práce ${entry.date}`,
           quantity: entry.duration_minutes / 60,
           unit_price: entry.hourly_rate
@@ -490,6 +492,37 @@ export class InvoiceService extends BaseService<'invoices'> {
         items.push({
           phase_id: group.phase_id || undefined,
           description: group.phase_name,
+          quantity: group.total_minutes / 60,
+          unit_price: group.hourly_rate
+        })
+      })
+    } else if (groupBy === 'project') {
+      // Group by project
+      const grouped = new Map<string, {
+        project_id: string | null
+        project_name: string
+        total_minutes: number
+        hourly_rate: number
+      }>()
+
+      entries.forEach(entry => {
+        const key = entry.project_id || 'no-project'
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            project_id: entry.project_id,
+            project_name: entry.project?.name || 'Bez projektu',
+            total_minutes: 0,
+            hourly_rate: entry.hourly_rate
+          })
+        }
+        const group = grouped.get(key)!
+        group.total_minutes += entry.duration_minutes
+      })
+
+      grouped.forEach(group => {
+        items.push({
+          project_id: group.project_id || undefined,
+          description: group.project_name,
           quantity: group.total_minutes / 60,
           unit_price: group.hourly_rate
         })

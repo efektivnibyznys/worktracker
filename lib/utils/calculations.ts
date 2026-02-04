@@ -35,13 +35,14 @@ export function calculateStats(entries: Entry[]): Stats {
 }
 
 /**
- * Determine hourly rate with priority: entry > phase > client > default
+ * Determine hourly rate with priority: entry > project > phase > client > default
  */
 export function determineHourlyRate(
   entryRate: number | null,
+  projectRate: number | null,
   phaseRate: number | null,
   clientRate: number | null,
   defaultRate: number
 ): number {
-  return entryRate ?? phaseRate ?? clientRate ?? defaultRate
+  return entryRate ?? projectRate ?? phaseRate ?? clientRate ?? defaultRate
 }

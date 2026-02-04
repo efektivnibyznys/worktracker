@@ -29,7 +29,7 @@ import type { EntryWithRelations } from '@/features/time-tracking/types/entry.ty
 
 const linkedInvoiceSchema = z.object({
   client_id: z.string().optional(), // Validated manually when not preselected
-  group_by: z.enum(['entry', 'phase', 'day']),
+  group_by: z.enum(['entry', 'phase', 'project', 'day']),
   issue_date: z.string().min(1, 'Datum vystavení je povinné'),
   due_date: z.string().min(1, 'Datum splatnosti je povinné'),
   tax_rate: z.string().optional(),
@@ -333,7 +333,7 @@ export function LinkedInvoiceForm({
             <Label htmlFor="group_by">Seskupení položek</Label>
             <Select
               value={watch('group_by')}
-              onValueChange={(value: 'entry' | 'phase' | 'day') =>
+              onValueChange={(value: 'entry' | 'phase' | 'project' | 'day') =>
                 setValue('group_by', value)
               }
             >
@@ -343,6 +343,7 @@ export function LinkedInvoiceForm({
               <SelectContent>
                 <SelectItem value="entry">Každý záznam zvlášť</SelectItem>
                 <SelectItem value="phase">Seskupit podle fáze</SelectItem>
+                <SelectItem value="project">Seskupit podle projektu</SelectItem>
                 <SelectItem value="day">Seskupit podle dne</SelectItem>
               </SelectContent>
             </Select>

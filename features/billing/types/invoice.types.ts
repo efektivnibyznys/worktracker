@@ -72,7 +72,7 @@ export interface InvoiceStats {
 export interface CreateLinkedInvoiceInput {
   client_id: string
   entry_ids: string[]
-  group_by: 'entry' | 'phase' | 'day'
+  group_by: 'entry' | 'phase' | 'project' | 'day'
   issue_date: string
   due_date: string
   tax_rate?: number
@@ -109,6 +109,7 @@ export interface StandaloneInvoiceItemInput {
 export interface GroupedEntryForInvoice {
   entry_id?: string
   phase_id?: string
+  project_id?: string
   description: string
   quantity: number
   unit_price: number
