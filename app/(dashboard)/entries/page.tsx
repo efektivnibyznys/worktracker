@@ -450,6 +450,9 @@ export default function EntriesPage() {
                           {entry.phase && (
                             <Badge variant="secondary">{entry.phase.name}</Badge>
                           )}
+                          {entry.project && (
+                            <Badge variant="outline">{entry.project.name}</Badge>
+                          )}
                           <BillingStatusBadge status={entry.billing_status} />
                         </div>
                         <p className="text-gray-700 mb-3">{entry.description}</p>
