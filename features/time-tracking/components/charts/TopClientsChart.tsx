@@ -132,20 +132,20 @@ export function TopClientsChart({
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Celkem výnosy</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Celkem výnosy:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(data.reduce((sum, item) => sum + item.amount, 0), currency)}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Celkem hodin</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Celkem hodin:</p>
               <p className="text-2xl font-bold">
                 {data.reduce((sum, item) => sum + item.hours, 0).toFixed(1)}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Počet klientů</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Počet klientů:</p>
               <p className="text-2xl font-bold">
                 {data.length}
               </p>
