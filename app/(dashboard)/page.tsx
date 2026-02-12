@@ -28,16 +28,23 @@ import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { EntryFilters } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { TimelineChart } from '@/features/time-tracking/components/charts/TimelineChart'
-import { DistributionChart } from '@/features/time-tracking/components/charts/DistributionChart'
+import { BillingStatusChart } from '@/features/time-tracking/components/charts/BillingStatusChart'
+import { MonthlyHoursChart } from '@/features/time-tracking/components/charts/MonthlyHoursChart'
+import { TopClientsChart } from '@/features/time-tracking/components/charts/TopClientsChart'
+import { MonthlyRevenueChart } from '@/features/time-tracking/components/charts/MonthlyRevenueChart'
+import { WeeklyActivityChart } from '@/features/time-tracking/components/charts/WeeklyActivityChart'
+import { AverageRateChart } from '@/features/time-tracking/components/charts/AverageRateChart'
 import { YearSelector } from '@/features/time-tracking/components/YearSelector'
 import { ArchiveSection } from '@/features/time-tracking/components/ArchiveSection'
 import {
-  prepareTimelineData,
-  prepareDistributionData,
-  enrichDistributionDataWithNames,
-  determineTimelineGrouping
+  prepareBillingStatusData,
+  prepareMonthlyHoursData,
+  prepareTopClientsData,
+  prepareMonthlyRevenueData,
+  prepareWeeklyActivityData,
+  prepareAverageRateData,
 } from '@/lib/utils/chartData'
+import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 
 export default function DashboardPage() {
   usePageMetadata({
@@ -48,6 +55,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore()
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const { todayEntries, weekEntries, monthEntries, yearEntries, isCurrentYear } = useDashboardEntries(selectedYear)
+  const { settings } = useSettings()
 
   const [filters, setFilters] = useState<EntryFilters>({})
   const [selectedClientId, setSelectedClientId] = useState<string>('')
@@ -85,34 +93,36 @@ export default function DashboardPage() {
     [entries]
   )
 
-  // Prepare chart data
-  const timelineGrouping = useMemo(
-    () => determineTimelineGrouping(filters.dateFrom, filters.dateTo),
-    [filters.dateFrom, filters.dateTo]
+  // Prepare chart data - vždy pro celý rok (ne pro filtrované entries)
+  const billingStatusData = useMemo(
+    () => prepareBillingStatusData(yearEntries),
+    [yearEntries]
   )
 
-  const timelineData = useMemo(
-    () => prepareTimelineData(entries, timelineGrouping, filters.dateFrom, filters.dateTo),
-    [entries, timelineGrouping, filters.dateFrom, filters.dateTo]
+  const monthlyHoursData = useMemo(
+    () => prepareMonthlyHoursData(yearEntries, selectedYear),
+    [yearEntries, selectedYear]
   )
 
-  const distributionData = useMemo(() => {
-    // Pokud je vybraný klient, zobrazíme fáze, jinak klienty
-    const groupBy = filters.clientId ? 'phase' : 'client'
-    const rawData = prepareDistributionData(entries, groupBy)
+  const topClientsData = useMemo(
+    () => prepareTopClientsData(yearEntries, clients, 8),
+    [yearEntries, clients]
+  )
 
-    // Vytvoříme mapu ID -> jméno
-    const nameMap = new Map<string, string>()
+  const monthlyRevenueData = useMemo(
+    () => prepareMonthlyRevenueData(yearEntries, clients, selectedYear, 5),
+    [yearEntries, clients, selectedYear]
+  )
 
-    if (groupBy === 'client') {
-      clients.forEach(client => nameMap.set(client.id, client.name))
-    } else {
-      phases.forEach(phase => nameMap.set(phase.id, phase.name))
-      nameMap.set('no-phase', 'Bez fáze')
-    }
+  const weeklyActivityData = useMemo(
+    () => prepareWeeklyActivityData(yearEntries),
+    [yearEntries]
+  )
 
-    return enrichDistributionDataWithNames(rawData, nameMap)
-  }, [entries, filters.clientId, clients, phases])
+  const averageRateData = useMemo(
+    () => prepareAverageRateData(yearEntries, selectedYear, settings?.default_hourly_rate),
+    [yearEntries, selectedYear, settings]
+  )
 
   const handleQuickAdd = useCallback(async (data: QuickAddSubmitData) => {
     try {
@@ -291,135 +301,36 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
-        <CardHeader className="p-0 mb-6">
-          <CardTitle className="text-2xl font-bold">Filtry</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="client">Klient</Label>
-              <Select
-                value={filters.clientId || 'all'}
-                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Všichni klienti" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Všichni klienti</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="phase">Fáze</Label>
-              <Select
-                value={filters.phaseId || 'all'}
-                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
-                disabled={!selectedClientId || phases.length === 0}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={!selectedClientId ? "Nejprve vyberte klienta" : "Všechny fáze"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Všechny fáze</SelectItem>
-                  {phases.map((phase) => (
-                    <SelectItem key={phase.id} value={phase.id}>
-                      {phase.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="dateFrom">Od data</Label>
-              <Input
-                id="dateFrom"
-                type="date"
-                value={filters.dateFrom || ''}
-                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                className="mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="dateTo">Do data</Label>
-              <Input
-                id="dateTo"
-                type="date"
-                value={filters.dateTo || ''}
-                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                className="mt-1"
-              />
-            </div>
-          </div>
-
-          {(filters.clientId || filters.phaseId || filters.dateFrom || filters.dateTo) && (
-            <div className="mt-4">
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                Vymazat filtry
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Summary for Filtered Entries */}
-      <div className="grid gap-8 md:grid-cols-3">
-        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardContent className="p-0">
-            <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
-            <div className="text-3xl font-bold">
-              {formatTime(totalMinutes)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardContent className="p-0">
-            <div className="text-sm text-gray-600 font-medium mb-2">Celková částka</div>
-            <div className="text-3xl font-bold">
-              {formatCurrency(totalAmount)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
-          <CardContent className="p-0">
-            <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
-            <div className="text-3xl font-bold">
-              {entries.length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Section */}
+      {/* Charts Section - New Layout */}
       <div className="space-y-8">
-        {/* Timeline Chart - Full Width */}
-        <TimelineChart
-          data={timelineData}
-          title="Hodiny a výnosy v čase"
-          description={`Zobrazení podle ${timelineGrouping === 'day' ? 'dnů' : timelineGrouping === 'week' ? 'týdnů' : 'měsíců'}`}
-        />
+        {/* Billing Status - Full Width */}
+        <BillingStatusChart data={billingStatusData} />
 
-        {/* Distribution Chart */}
-        <DistributionChart
-          data={distributionData}
-          title={filters.clientId ? 'Rozdělení práce podle fází' : 'Rozdělení práce podle klientů'}
-          description={filters.clientId ? 'Jak se práce rozděluje mezi jednotlivé fáze' : 'Jak se práce rozděluje mezi jednotlivé klienty'}
+        {/* Monthly Hours + Top Clients - 2 columns */}
+        <div className="grid gap-8 md:grid-cols-2">
+          <MonthlyHoursChart data={monthlyHoursData} year={selectedYear} />
+          <TopClientsChart data={topClientsData} />
+        </div>
+
+        {/* Monthly Revenue + Weekly Activity - 2 columns */}
+        <div className="grid gap-8 md:grid-cols-2">
+          <MonthlyRevenueChart
+            data={monthlyRevenueData.data}
+            clientKeys={monthlyRevenueData.clientKeys}
+            year={selectedYear}
+          />
+          <WeeklyActivityChart data={weeklyActivityData} />
+        </div>
+
+        {/* Average Rate - Full Width */}
+        <AverageRateChart
+          data={averageRateData.data}
+          defaultRate={averageRateData.defaultRate}
+          year={selectedYear}
         />
       </div>
 
-      {/* Entries List */}
+      {/* Entries List with Filters */}
       <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
         <CardHeader
           className="cursor-pointer p-0 mb-6"
@@ -429,7 +340,7 @@ export default function DashboardPage() {
             <div>
               <CardTitle className="text-2xl font-bold">Seznam záznamů ({entries.length})</CardTitle>
               <CardDescription className="text-gray-700 mt-1">
-                Všechny záznamy odpovídající filtrům
+                Filtrujte a procházejte všechny záznamy
               </CardDescription>
             </div>
             {isEntriesListOpen ? (
@@ -440,7 +351,109 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         {isEntriesListOpen && (
-          <CardContent className="p-0">
+          <CardContent className="p-0 space-y-6">
+            {/* Filters Section */}
+            <div className="border border-border rounded-lg p-6 bg-gray-50">
+              <h3 className="text-lg font-semibold mb-4">Filtry</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="client">Klient</Label>
+                  <Select
+                    value={filters.clientId || 'all'}
+                    onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Všichni klienti" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Všichni klienti</SelectItem>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="phase">Fáze</Label>
+                  <Select
+                    value={filters.phaseId || 'all'}
+                    onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
+                    disabled={!selectedClientId || phases.length === 0}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder={!selectedClientId ? "Nejprve vyberte klienta" : "Všechny fáze"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Všechny fáze</SelectItem>
+                      {phases.map((phase) => (
+                        <SelectItem key={phase.id} value={phase.id}>
+                          {phase.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dateFrom">Od data</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={filters.dateFrom || ''}
+                    onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="dateTo">Do data</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={filters.dateTo || ''}
+                    onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {(filters.clientId || filters.phaseId || filters.dateFrom || filters.dateTo) && (
+                <div className="mt-4">
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    Vymazat filtry
+                  </Button>
+                </div>
+              )}
+
+              {/* Summary for Filtered Entries */}
+              {entries.length > 0 && (
+                <div className="grid gap-4 md:grid-cols-3 mt-6 pt-6 border-t border-border">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 font-medium mb-1">Celkem hodin</div>
+                    <div className="text-2xl font-bold">
+                      {formatTime(totalMinutes)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 font-medium mb-1">Celková částka</div>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(totalAmount)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 font-medium mb-1">Počet záznamů</div>
+                    <div className="text-2xl font-bold">
+                      {entries.length}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Entries List */}
             {entries.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-gray-600">
