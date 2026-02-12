@@ -86,8 +86,8 @@ export function TopClientsChart({
         <ResponsiveContainer width="100%" height={Math.max(300, data.length * 50)}>
           <BarChart
             data={data}
-            layout="horizontal"
-            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            layout="vertical"
+            margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
 
@@ -103,13 +103,13 @@ export function TopClientsChart({
               dataKey="name"
               tick={{ fontSize: 12 }}
               className="text-muted-foreground"
-              width={120}
             />
 
             <Tooltip content={<CustomTooltip />} />
 
             <Bar
               dataKey="amount"
+              fill="#3b82f6"
               radius={[0, 4, 4, 0]}
               onClick={onClientClick ? (data: any) => {
                 if (data && data.payload) {
