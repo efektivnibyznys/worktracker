@@ -115,15 +115,15 @@ export function BillingStatusChart({
             {data.map((item) => {
               const percentage = totalAmount > 0 ? Math.round((item.amount / totalAmount) * 100) : 0
               return (
-                <div key={item.status} className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
+                <div key={item.status} className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                  <div className="flex items-center gap-2 whitespace-nowrap">
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: item.color }}
                     />
-                    <p className="text-sm text-muted-foreground">{item.label}</p>
+                    <p className="text-sm text-muted-foreground">{item.label}:</p>
                   </div>
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+                  <div className="flex flex-col">
                     <p className="text-xl font-bold">{formatCurrency(item.amount, currency)}</p>
                     <p className="text-xs text-muted-foreground">
                       {percentage}% • {item.hours.toFixed(1)}h

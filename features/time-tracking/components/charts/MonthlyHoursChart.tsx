@@ -116,20 +116,20 @@ export function MonthlyHoursChart({
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Celkem hodin</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Celkem hodin:</p>
               <p className="text-2xl font-bold">
                 {data.reduce((sum, item) => sum + item.hours, 0).toFixed(1)}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Průměr/měsíc</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Průměr/měsíc:</p>
               <p className="text-2xl font-bold">
                 {(data.reduce((sum, item) => sum + item.hours, 0) / 12).toFixed(1)}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Celkem záznamů</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Celkem záznamů:</p>
               <p className="text-2xl font-bold">
                 {data.reduce((sum, item) => sum + item.count, 0)}
               </p>

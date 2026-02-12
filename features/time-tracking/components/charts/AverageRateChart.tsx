@@ -160,8 +160,8 @@ export function AverageRateChart({
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Průměrná sazba</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Průměrná sazba:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(
                   dataWithValues.length > 0
@@ -171,14 +171,14 @@ export function AverageRateChart({
                 )}/h
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Minimální</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Minimální:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(rates.length > 0 ? Math.min(...rates) : 0, currency)}/h
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <p className="text-sm text-muted-foreground">Maximální</p>
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+              <p className="text-sm text-muted-foreground whitespace-nowrap">Maximální:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(rates.length > 0 ? Math.max(...rates) : 0, currency)}/h
               </p>
