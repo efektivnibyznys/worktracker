@@ -150,7 +150,7 @@ export function MonthlyRevenueChart({
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <p className="text-sm text-muted-foreground whitespace-nowrap">Celkem výnosy:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(
@@ -164,7 +164,7 @@ export function MonthlyRevenueChart({
                 )}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <p className="text-sm text-muted-foreground whitespace-nowrap">Průměr/měsíc:</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(
