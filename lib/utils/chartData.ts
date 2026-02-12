@@ -530,7 +530,8 @@ export function prepareMonthlyRevenueData(
 
     // Agregujeme výnosy pro každého klienta
     monthEntries.forEach(entry => {
-      const revenue = Math.round((entry.duration_minutes / 60) * entry.hourly_rate)
+      // Nezaokrouhlujeme jednotlivé záznamy, zaokrouhlíme až celkovou sumu za měsíc
+      const revenue = (entry.duration_minutes / 60) * entry.hourly_rate
 
       if (topClientIds.has(entry.client_id)) {
         // Top klient
@@ -539,6 +540,11 @@ export function prepareMonthlyRevenueData(
         // Ostatní
         dataPoint['others'] = (dataPoint['others'] as number || 0) + revenue
       }
+    })
+
+    // Zaokrouhlíme hodnoty až po sečtení všech záznamů za měsíc
+    clientKeys.forEach(({ id }) => {
+      dataPoint[id] = Math.round(dataPoint[id] as number)
     })
 
     return dataPoint

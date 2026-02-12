@@ -19,23 +19,27 @@ interface TopClientsChartProps {
   title?: string
   description?: string
   currency?: string
+  year?: number
   onClientClick?: (client: TopClientDataPoint) => void
 }
 
 export function TopClientsChart({
   data,
   title = 'Top klienti podle výnosů',
-  description = 'Přehled nejvýnosnějších klientů',
+  description,
   currency = 'Kč',
+  year,
   onClientClick
 }: TopClientsChartProps) {
+  const defaultDescription = year ? `Přehled nejvýnosnějších klientů za rok ${year}` : 'Přehled nejvýnosnějších klientů'
+
   // Prázdný stav
   if (data.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          {description && <CardDescription>{description}</CardDescription>}
+          <CardDescription>{description || defaultDescription}</CardDescription>
         </CardHeader>
         <CardContent className="h-[400px] flex items-center justify-center">
           <div className="text-center text-muted-foreground">
@@ -80,7 +84,7 @@ export function TopClientsChart({
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
+        <CardDescription>{description || defaultDescription}</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={Math.max(300, data.length * 50)}>

@@ -309,7 +309,7 @@ export default function DashboardPage() {
         {/* Monthly Hours + Top Clients - 2 columns */}
         <div className="grid gap-8 md:grid-cols-2">
           <MonthlyHoursChart data={monthlyHoursData} year={selectedYear} />
-          <TopClientsChart data={topClientsData} />
+          <TopClientsChart data={topClientsData} year={selectedYear} />
         </div>
 
         {/* Monthly Revenue + Weekly Activity - 2 columns */}
