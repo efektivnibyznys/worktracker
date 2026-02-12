@@ -159,8 +159,8 @@ export function AverageRateChart({
 
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-foreground">Průměrná sazba</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(
@@ -171,13 +171,13 @@ export function AverageRateChart({
                 )}/h
               </p>
             </div>
-            <div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-foreground">Minimální</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(rates.length > 0 ? Math.min(...rates) : 0, currency)}/h
               </p>
             </div>
-            <div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-foreground">Maximální</p>
               <p className="text-2xl font-bold">
                 {formatCurrency(rates.length > 0 ? Math.max(...rates) : 0, currency)}/h

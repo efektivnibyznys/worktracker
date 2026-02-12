@@ -111,22 +111,24 @@ export function BillingStatusChart({
 
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {data.map((item) => {
               const percentage = totalAmount > 0 ? Math.round((item.amount / totalAmount) * 100) : 0
               return (
-                <div key={item.status} className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
+                <div key={item.status} className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
                     <div
-                      className="w-3 h-3 rounded-full"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: item.color }}
                     />
                     <p className="text-sm text-muted-foreground">{item.label}</p>
                   </div>
-                  <p className="text-xl font-bold">{formatCurrency(item.amount, currency)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {percentage}% • {item.hours.toFixed(1)}h
-                  </p>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+                    <p className="text-xl font-bold">{formatCurrency(item.amount, currency)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {percentage}% • {item.hours.toFixed(1)}h
+                    </p>
+                  </div>
                 </div>
               )
             })}
