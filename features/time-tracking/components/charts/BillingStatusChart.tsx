@@ -115,7 +115,7 @@ export function BillingStatusChart({
             {data.map((item) => {
               const percentage = totalAmount > 0 ? Math.round((item.amount / totalAmount) * 100) : 0
               return (
-                <div key={item.status} className="flex flex-col md:flex-row md:items-baseline md:gap-2">
+                <div key={item.status} className="flex flex-col md:flex-row md:items-center md:gap-2">
                   <div className="flex items-center gap-2 whitespace-nowrap">
                     <div
                       className="w-3 h-3 rounded-full flex-shrink-0"
