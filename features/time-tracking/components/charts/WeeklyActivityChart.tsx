@@ -127,14 +127,14 @@ export function WeeklyActivityChart({
 
         {/* Statistika celkem */}
         <div className="mt-4 pt-4 border-t border-border">
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-foreground">Nejproduktivnější den</p>
               <p className="text-xl font-bold">
                 {data.reduce((max, item) => item.hours > max.hours ? item : max, data[0]).day}
               </p>
             </div>
-            <div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <p className="text-sm text-muted-foreground">Průměr/den</p>
               <p className="text-xl font-bold">
                 {(data.reduce((sum, item) => sum + item.hours, 0) / 7).toFixed(1)} h
