@@ -31,6 +31,14 @@ export function MonthlyRevenueChart({
   currency = 'Kč',
   year
 }: MonthlyRevenueChartProps) {
+  // Vypočítáme počet měsíců pro průměr
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1 // 1-12
+
+  // Pro aktuální rok použijeme počet měsíců do teď, pro minulé roky celý rok
+  const monthsForAverage = year === currentYear ? currentMonth : 12
+
   // Prázdný stav
   if (data.length === 0 || clientKeys.length === 0) {
     return (
@@ -173,7 +181,7 @@ export function MonthlyRevenueChart({
                       (clientSum, client) => clientSum + (month[client.id] as number || 0),
                       0
                     )
-                  }, 0) / 12,
+                  }, 0) / monthsForAverage,
                   currency
                 )}
               </p>
