@@ -25,6 +25,14 @@ export function MonthlyHoursChart({
   description = 'Odpracované hodiny za jednotlivé měsíce',
   year
 }: MonthlyHoursChartProps) {
+  // Vypočítáme počet měsíců pro průměr
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1 // 1-12
+
+  // Pro aktuální rok použijeme počet měsíců do teď, pro minulé roky celý rok
+  const monthsForAverage = year === currentYear ? currentMonth : 12
+
   // Prázdný stav
   if (data.length === 0) {
     return (
@@ -125,7 +133,7 @@ export function MonthlyHoursChart({
             <div className="flex flex-col md:flex-row md:items-center md:gap-2">
               <p className="text-sm text-muted-foreground whitespace-nowrap">Průměr/měsíc:</p>
               <p className="text-2xl font-bold">
-                {(data.reduce((sum, item) => sum + item.hours, 0) / 12).toFixed(1)}
+                {(data.reduce((sum, item) => sum + item.hours, 0) / monthsForAverage).toFixed(1)}
               </p>
             </div>
             <div className="flex flex-col md:flex-row md:items-center md:gap-2">
