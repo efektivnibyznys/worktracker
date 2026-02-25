@@ -1,191 +1,331 @@
-# ⏱️ Work Tracker
+# Work Tracker
 
-Modern time tracking and project management application built with Next.js 15.
+Moderní aplikace pro sledování času a fakturaci, postavená na Next.js 16, React 19 a TypeScript. Určena primárně pro freelancery a OSVČ v českém prostředí.
 
-**Framework:** Next.js 15 + React 19 + TypeScript
-**Database:** Supabase (PostgreSQL)
 **Status:** ✅ Production Ready
 
 ---
 
-## ✨ Features
+## Obsah
 
-- 📊 **Dashboard** with real-time statistics and charts
-- 👥 **Client Management** with custom hourly rates
-- 🎯 **Project Phases** for organizing work
-- ⏰ **Time Tracking** with automatic duration calculation
-- 📈 **Reports** with Notion export
-- ☁️ **Cloud Sync** via Supabase
-- 🔄 **Real-time** synchronization across devices
-- 🔐 **Secure Authentication** (Supabase Auth)
-- 🎨 **Modern UI** (Tailwind CSS + shadcn/ui)
+- [Funkce](#funkce)
+- [Tech Stack](#tech-stack)
+- [Architektura](#architektura)
+- [Struktura projektu](#struktura-projektu)
+- [Databáze](#databáze)
+- [Rychlý start](#rychlý-start)
+- [Vývoj](#vývoj)
+- [Nasazení](#nasazení)
+- [Bezpečnost](#bezpečnost)
 
 ---
 
-## 🚀 Quick Start
+## Funkce
 
-### Prerequisites
+### Sledování času
+- **Rychlé zadání záznamu** – Formulář s automatickým výpočtem doby trvání z časů zahájení/ukončení
+- **Správa záznamů** – Přehled, editace a mazání záznamů s pokročilými filtry (klient, fáze, projekt, stav fakturace, datum)
+- **Hromadný výběr** – Multi-select záznamů s plovoucí akcní lištou
 
-- Node.js 18+ installed
-- Supabase account and project
+### Klienti a projekty
+- **Správa klientů** – Vytváření a editace klientů s hodinovou sazbou, adresou, IČO
+- **Fáze projektu** – Organizace práce do fází s vlastní hodinovou sazbou a stavem (aktivní / dokončeno / pozastaveno)
+- **Projekty** – Správa projektů přiřazených ke klientům
 
-### Setup
+### Fakturace
+- **Faktura z vybraných záznamů** – Automatické vytvoření faktury z označených záznamů s volbou seskupení (po záznamu / fázi / dni)
+- **Standalone faktura** – Manuální vytvoření faktury s vlastními položkami
+- **Správa faktur** – Přehled, detail, změna stavu (draft → vydaná → odeslaná → zaplacená / zrušená / po splatnosti)
+- **Export do PDF** – Generování PDF faktury přes `@react-pdf/renderer`
+- **QR kód platby** – Automatický QR kód pro českou platbu s variabilním symbolem
+- **Sledování stavu fakturace** – Workflow: Nevyfakturováno → Vyfakturováno → Zaplaceno
 
-1. **Clone the repository**
+### Dashboard a analytika
+- **Statistiky** – Přehled za dnes / týden / měsíc / rok
+- **8 interaktivních grafů** (Recharts):
+  - Přehled v čase (hodiny/příjmy)
+  - Distribuce podle klienta/fáze
+  - Měsíční hodiny a příjmy
+  - Týdenní aktivita
+  - Průměrná hodinová sazba
+  - Stav fakturace
+  - Top klienti
+- **Výběr roku** – Filtrování statistik podle roku
+
+### Nastavení
+- Výchozí hodinová sazba a měna
+- Fakturační údaje: název firmy, adresa, IČO, DIČ, bankovní účet
+- Výchozí splatnost a sazba DPH
+
+### Autentizace
+- Přihlášení a registrace (email + heslo)
+- Správa relací přes Supabase Auth
+- Ochrana routes pomocí Next.js middleware
+
+---
+
+## Tech Stack
+
+### Frontend
+| Technologie | Verze | Účel |
+|---|---|---|
+| Next.js | 16.1.0 | Framework (App Router) |
+| React | 19.0.0 | UI knihovna |
+| TypeScript | 5 | Typová bezpečnost (strict mode) |
+| Tailwind CSS | 3.4 | Utility-first stylování |
+| shadcn/ui + Radix UI | – | Headless UI komponenty |
+| Recharts | 3.6 | Grafy |
+
+### State Management
+| Technologie | Účel |
+|---|---|
+| Zustand 5 | Globální stav (autentizace) |
+| TanStack React Query 5 | Server state, caching, synchronizace |
+
+### Formuláře a validace
+| Technologie | Účel |
+|---|---|
+| React Hook Form 7 | Správa stavu formulářů |
+| Zod 4 | TypeScript-first validace schémat |
+
+### Backend a databáze
+| Technologie | Účel |
+|---|---|
+| Supabase (PostgreSQL) | Databáze s Row Level Security |
+| Supabase Auth | Autentizace uživatelů |
+| Supabase SSR | Server-side rendering podpora |
+
+### Utility knihovny
+| Knihovna | Účel |
+|---|---|
+| @react-pdf/renderer 4 | Generování PDF faktur |
+| date-fns 4 | Práce s datumy |
+| qrcode | QR kódy pro platby |
+| sonner | Toast notifikace |
+| lucide-react | Ikony |
+
+---
+
+## Architektura
+
+### Feature-Based modularita
+
+Aplikace je rozdělena do feature modulů. Každý modul obsahuje vlastní typy, služby, hooks a komponenty:
+
+```
+features/
+├── time-tracking/      # Sledování času, klienti, fáze, projekty
+│   ├── types/
+│   ├── services/
+│   ├── hooks/
+│   └── components/
+└── billing/            # Fakturace a správa faktur
+    ├── types/
+    ├── services/
+    ├── hooks/
+    └── components/
+```
+
+### Service Pattern
+
+Abstraktní `BaseService<TableName>` poskytuje typované CRUD operace. Feature služby ji rozšiřují:
+
+```typescript
+class EntryService extends BaseService<'entries'> {
+  protected readonly tableName = 'entries'
+  // Doménové metody: getAllWithFilters(), getToday(), getThisMonth()
+}
+```
+
+### Hook + Service vzor
+
+Hooks obalují služby pomocí React Query. Instance služeb jsou vždy memoizované:
+
+```typescript
+const supabase = useMemo(() => createSupabaseClient(), [])
+const entryService = useMemo(() => new EntryService(supabase), [supabase])
+```
+
+### Priorita hodinové sazby
+
+Při vytváření záznamu se sazba určuje takto:
+```
+záznam > fáze > klient > výchozí sazba v nastavení
+```
+
+---
+
+## Struktura projektu
+
+```
+worktracker/
+├── app/                            # Next.js App Router
+│   ├── (auth)/                     # Veřejné stránky
+│   │   ├── login/
+│   │   └── register/
+│   └── (dashboard)/                # Chráněné stránky
+│       ├── layout.tsx
+│       ├── page.tsx                # Dashboard
+│       ├── entries/                # Záznamy
+│       ├── clients/                # Klienti
+│       │   └── [id]/               # Detail klienta
+│       ├── invoices/               # Faktury
+│       │   └── [id]/               # Detail faktury
+│       ├── reports/                # Reporty
+│       └── settings/               # Nastavení
+├── components/
+│   ├── providers/                  # AuthProvider, QueryProvider
+│   ├── layout/                     # Header, Navigation
+│   └── ui/                         # shadcn/ui komponenty
+├── features/
+│   ├── time-tracking/
+│   │   ├── types/                  # Entry, Client, Phase, Project, Settings types
+│   │   ├── services/               # EntryService, ClientService, PhaseService…
+│   │   ├── hooks/                  # useEntries, useClients, usePhases…
+│   │   └── components/             # QuickAddForm, EditEntryDialog, charts/…
+│   └── billing/
+│       ├── types/                  # Invoice types
+│       ├── services/               # InvoiceService
+│       ├── hooks/                  # useInvoices, useEntrySelection
+│       └── components/             # InvoiceCard, CreateInvoiceDialog, InvoicePdf…
+├── lib/
+│   ├── supabase/                   # Client, server, BaseService
+│   ├── stores/                     # authStore (Zustand)
+│   ├── hooks/                      # useAuth, usePageMetadata
+│   └── utils/                      # date, time, currency, calculations, chartData…
+├── types/
+│   └── database.ts                 # Auto-generované Supabase typy
+├── supabase-setup.sql              # Hlavní databázové schéma
+├── middleware.ts                   # Ochrana routes + session refresh
+├── next.config.ts                  # Konfigurace + security headers
+└── vercel.json                     # Vercel security headers
+```
+
+---
+
+## Databáze
+
+### Tabulky
+
+| Tabulka | Klíčová pole |
+|---|---|
+| `clients` | id, user_id, name, address, ico, hourly_rate |
+| `phases` | id, user_id, client_id, name, hourly_rate, status |
+| `projects` | id, user_id, client_id, name, hourly_rate, status |
+| `entries` | id, user_id, client_id, phase_id?, project_id?, date, start_time, end_time, duration_minutes, hourly_rate, billing_status, invoice_id? |
+| `settings` | user_id (PK), default_hourly_rate, currency, company_name, company_ico, company_dic, bank_account, default_due_days, default_tax_rate |
+| `invoices` | id, user_id, client_id?, invoice_number (YYYY-NNNN), status, invoice_type, subtotal, tax_rate, total_amount, variable_symbol, bank_account |
+| `invoice_items` | id, invoice_id, entry_id?, phase_id?, description, quantity, unit_price, total_price |
+
+### Enums
+
+```
+billing_status:  'unbilled' | 'billed' | 'paid'
+invoice_status:  'draft' | 'issued' | 'sent' | 'paid' | 'cancelled' | 'overdue'
+invoice_type:    'linked' | 'standalone'
+phase_status:    'active' | 'completed' | 'paused'
+```
+
+Všechny tabulky mají povolené **Row Level Security (RLS)** s políčkami vázanými na `auth.uid()`.
+
+---
+
+## Rychlý start
+
+### Požadavky
+
+- Node.js 18+
+- Účet a projekt na Supabase
+
+### Instalace
+
+1. **Klonování repozitáře**
    ```bash
-   git clone <your-repo-url>
-   cd work-tracker
+   git clone <repo-url>
+   cd worktracker
    ```
 
-2. **Install dependencies**
+2. **Instalace závislostí**
    ```bash
    npm install
    ```
 
-3. **Setup environment variables**
+3. **Nastavení environment variables**
    ```bash
    cp .env.example .env.local
    ```
 
-   Edit `.env.local` and add your Supabase credentials:
+   Editujte `.env.local` a přidejte přihlašovací údaje Supabase:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your-project-url
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    ```
 
-4. **Setup database**
-   - Open Supabase SQL Editor
-   - Run the SQL from `supabase-setup.sql`
+4. **Nastavení databáze**
+   - Otevřete Supabase SQL Editor
+   - Spusťte SQL z `supabase-setup.sql`
+   - Pro fakturaci spusťte také migraci `supabase/migrations/002_billing.sql`
 
-5. **Run development server**
+5. **Spuštění vývojového serveru**
    ```bash
    npm run dev
    ```
 
-   Open [http://localhost:3000](http://localhost:3000)
+   Otevřete [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📊 Tech Stack
-
-### Frontend
-- **Framework:** Next.js 15 (App Router)
-- **UI Library:** React 19
-- **Language:** TypeScript (strict mode)
-- **Styling:** Tailwind CSS + shadcn/ui
-- **State Management:** Zustand (auth) + React Query (server state)
-- **Forms:** React Hook Form + Zod validation
-- **Charts:** Recharts
-
-### Backend
-- **Database:** Supabase (PostgreSQL)
-- **Auth:** Supabase Auth
-- **Real-time:** Supabase Realtime
-- **Row Level Security:** Enabled
-
-### DevOps
-- **Hosting:** Vercel
-- **CI/CD:** Automatic deployment on push
-
----
-
-## 📁 Project Structure
-
-```
-work-tracker/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Authentication pages
-│   └── (dashboard)/       # Dashboard pages
-├── components/            # Shared components
-│   ├── ui/               # shadcn/ui components
-│   ├── forms/            # Form components
-│   └── layout/           # Layout components
-├── features/             # Feature modules
-│   └── time-tracking/   # Time tracking feature
-│       ├── components/
-│       ├── hooks/
-│       ├── services/
-│       └── types/
-├── lib/                  # Shared libraries
-│   ├── supabase/        # Supabase client & services
-│   ├── hooks/           # Global hooks
-│   ├── stores/          # Zustand stores
-│   └── utils/           # Utility functions
-├── types/                # TypeScript types
-└── supabase-setup.sql   # Database schema
-```
-
----
-
-## 🛠️ Development
+## Vývoj
 
 ```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Type check
-npm run type-check
-
-# Lint
-npm run lint
+npm run dev          # Dev server s Turbopack
+npm run build        # Produkční build
+npm start            # Spuštění produkčního serveru
+npm run lint         # ESLint
+npm run type-check   # TypeScript kontrola (tsc --noEmit)
 ```
 
 ---
 
-## 🚀 Deployment
+## Nasazení
 
-### Vercel (Recommended)
+### Vercel (doporučeno)
 
-1. **Connect to Vercel**
-   - Import your GitHub repository
-   - Vercel will auto-detect Next.js
+1. **Propojení s Vercel**
+   - Importujte GitHub repozitář do Vercel
+   - Vercel automaticky detekuje Next.js
 
-2. **Set Environment Variables**
-   - Go to Project Settings → Environment Variables
-   - Add `NEXT_PUBLIC_SUPABASE_URL`
-   - Add `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. **Nastavení environment variables**
+   - Project Settings → Environment Variables
+   - Přidejte `NEXT_PUBLIC_SUPABASE_URL`
+   - Přidejte `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-3. **Deploy**
-   - Push to main branch → automatic deployment
-   - Or use Vercel CLI: `vercel --prod`
-
----
-
-## 🔐 Security
-
-- ✅ Row Level Security (RLS) in database
-- ✅ Automatic XSS escaping (React)
-- ✅ CSRF protection (Supabase JWT)
-- ✅ Error boundaries
-- ✅ TypeScript type safety
-- ✅ Security headers (CSP, X-Frame-Options, etc.)
-- ✅ Database constraints for data integrity
-
-**Security Score:** 9.0/10
+3. **Nasazení**
+   - Push na main → automatické nasazení
+   - nebo: `vercel --prod`
 
 ---
 
-## 📝 License
+## Bezpečnost
 
-MIT License - free to use and modify.
+- ✅ **Row Level Security** – všechna data jsou izolována na úrovni uživatele v databázi
+- ✅ **CSRF ochrana** – Supabase JWT tokeny
+- ✅ **XSS ochrana** – React automatické escapování + CSP hlavičky
+- ✅ **Security headers** – CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- ✅ **TypeScript strict mode** – typová bezpečnost v celé aplikaci
+- ✅ **Zod validace** – validace všech formulářových vstupů
+- ✅ **Error boundaries** – ošetření chyb na úrovni komponent i globálně
+- ✅ **Databázová integrita** – constrainty a indexy na klíčových sloupcích
 
 ---
 
-## 📧 Support
+## Dokumentace
 
-For issues and questions, please open a GitHub issue.
+- `docs/ARCHITECTURE.md` – Kompletní technická dokumentace architektury
+- `CLAUDE.md` – Instrukce pro práci s kódem (pro Claude Code)
+- `supabase-setup.sql` – Databázové schéma
+- `supabase/migrations/` – Migrace databáze
 
 ---
 
-**Version:** 2.0.0
-**Last Updated:** December 2025
-**Status:** ✅ Production Ready
+**Verze:** 2.0.0 | **Next.js:** 16 | **React:** 19 | **TypeScript:** strict
