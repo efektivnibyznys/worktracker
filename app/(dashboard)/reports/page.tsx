@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
+import { usePhases } from '@/features/time-tracking/hooks/usePhases'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -31,12 +32,14 @@ export default function ReportsPage() {
   const [showReport, setShowReport] = useState(false)
 
   const { clients } = useClients()
+  const { phases } = usePhases(filters.clientId)
   const { entries, isLoading } = useEntries(filters)
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined,
+      ...(key === 'clientId' ? { phaseId: undefined } : {}),
     }))
   }, [])
 
@@ -55,6 +58,11 @@ export default function ReportsPage() {
       notionText += `**Klient:** ${client?.name}\n\n`
     }
 
+    if (filters.phaseId) {
+      const phase = phases.find(p => p.id === filters.phaseId)
+      notionText += `**Fáze:** ${phase?.name}\n\n`
+    }
+
     notionText += '## Souhrn\n\n'
     notionText += `- **Celkem hodin:** ${formatTime(stats.totalMinutes)}\n`
     notionText += `- **K fakturaci:** ${formatCurrency(stats.amount)}\n`
@@ -71,7 +79,7 @@ export default function ReportsPage() {
     // Copy to clipboard
     navigator.clipboard.writeText(notionText)
     alert('Report zkopírován do schránky! Můžete ho vložit do Notionu.')
-  }, [entries, filters, clients])
+  }, [entries, filters, clients, phases])
 
   // Calculate stats - memoized to avoid recalculation on every render
   const stats = useMemo(() => calculateStats(entries), [entries])
@@ -92,7 +100,7 @@ export default function ReportsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="client">Klient</Label>
               <Select
@@ -107,6 +115,27 @@ export default function ReportsPage() {
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="phase">Fáze</Label>
+              <Select
+                value={filters.phaseId || 'all'}
+                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
+                disabled={!filters.clientId || phases.length === 0}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={!filters.clientId ? 'Nejprve vyberte klienta' : 'Všechny fáze'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Všechny fáze</SelectItem>
+                  {phases.map((phase) => (
+                    <SelectItem key={phase.id} value={phase.id}>
+                      {phase.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
