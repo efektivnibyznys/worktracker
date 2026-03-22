@@ -12,8 +12,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/lib/stores/authStore'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
+import { LogoUpload } from '@/components/LogoUpload'
 
 const settingsSchema = z.object({
   // Základní nastavení
@@ -43,6 +44,8 @@ export default function SettingsPage() {
 
   const { user } = useAuthStore()
   const { settings, isLoading, updateSettings } = useSettings(user?.id)
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   const {
     register,
@@ -78,6 +81,7 @@ export default function SettingsPage() {
         default_due_days: settings.default_due_days?.toString() || '14',
         default_tax_rate: settings.default_tax_rate?.toString() || '21',
       })
+      setLogoUrl(settings.logo_url || null)
     }
   }, [settings, reset])
 
@@ -97,6 +101,7 @@ export default function SettingsPage() {
           bank_account: data.bank_account || null,
           default_due_days: data.default_due_days ? parseInt(data.default_due_days) : 14,
           default_tax_rate: data.default_tax_rate ? parseFloat(data.default_tax_rate) : 21,
+          logo_url: logoUrl,
         },
       })
       toast.success('Nastavení bylo úspěšně uloženo')
@@ -238,6 +243,25 @@ export default function SettingsPage() {
                 Zobrazí se na fakturách jako platební údaje
               </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Logo firmy */}
+        <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="p-0 mb-6">
+            <CardTitle className="text-2xl font-bold">Logo firmy</CardTitle>
+            <CardDescription className="text-gray-700 mt-1">
+              Logo se zobrazí na vašich fakturách
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {user && (
+              <LogoUpload
+                userId={user.id}
+                currentLogoUrl={logoUrl}
+                onLogoChange={setLogoUrl}
+              />
+            )}
           </CardContent>
         </Card>
 
