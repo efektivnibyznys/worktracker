@@ -116,7 +116,7 @@ interface InvoicePdfProps {
     invoice: InvoiceWithRelations
     settings: Settings | null
     qrCodeUrl: string | null
-    logoUrl: string
+    logoUrl?: string | null
 }
 
 export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdfProps) {
@@ -243,21 +243,24 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
 
                     <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 10 }}>
                         {/* Logo */}
-                        <View style={{ marginRight: 20 }}>
-                            <Image src={logoUrl} style={{ width: 40, height: 40, objectFit: 'contain' }} />
-                        </View>
+                        {logoUrl && (
+                            <View style={{ marginRight: 20 }}>
+                                <Image src={logoUrl} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                            </View>
+                        )}
 
                         {/* Address */}
                         <View style={{ flex: 1 }}>
-                            <Text style={{ fontWeight: 700 }}>Jakub Vaněk</Text>
-                            <Text>Dr. Nováka 496</Text>
-                            <Text>294 71 Benátky nad Jizerou</Text>
+                            {settings?.company_name && <Text style={{ fontWeight: 700 }}>{settings.company_name}</Text>}
+                            {settings?.company_address && settings.company_address.split('\n').map((line, i) => (
+                                <Text key={i}>{line}</Text>
+                            ))}
                         </View>
 
-                        {/* Contact */}
+                        {/* Info */}
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                            <Text>www.efektivnibyznys.cz</Text>
-                            <Text>+420 705 911 414</Text>
+                            {settings?.company_ico && <Text>IČO: {settings.company_ico}</Text>}
+                            {settings?.bank_account && <Text>Účet: {settings.bank_account}</Text>}
                             <Text style={{ marginTop: 5, fontSize: 6, color: '#999' }}>Faktura byla vystavena elektronicky.</Text>
                         </View>
                     </View>

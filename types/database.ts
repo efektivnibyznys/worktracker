@@ -236,6 +236,7 @@ export interface Database {
           bank_account: string | null
           default_due_days: number
           default_tax_rate: number
+          logo_url: string | null
         }
         Insert: {
           user_id: string
@@ -249,6 +250,7 @@ export interface Database {
           bank_account?: string | null
           default_due_days?: number
           default_tax_rate?: number
+          logo_url?: string | null
         }
         Update: {
           user_id?: string
@@ -262,6 +264,7 @@ export interface Database {
           bank_account?: string | null
           default_due_days?: number
           default_tax_rate?: number
+          logo_url?: string | null
         }
         Relationships: [
           {
