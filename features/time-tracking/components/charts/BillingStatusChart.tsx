@@ -86,17 +86,17 @@ export function BillingStatusChart({
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
 
-            <XAxis type="number" tick={{ fontSize: 12 }} className="text-muted-foreground" />
+            <XAxis type="number" tick={{ fontSize: 11 }} className="text-muted-foreground" />
             <YAxis
               type="category"
               dataKey="label"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
               className="text-muted-foreground"
-              width={110}
+              width={95}
             />
 
             <Tooltip content={<CustomTooltip />} />
