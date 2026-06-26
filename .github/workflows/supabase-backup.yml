@@ -26,9 +26,10 @@ jobs:
           timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
           mkdir -p backups
 
-          pg_dump \
+          PGCONNECT_TIMEOUT=20 timeout 60s pg_dump \
             --dbname "$SUPABASE_DB_URL" \
             --format custom \
+            --no-password \
             --no-owner \
             --no-acl \
             --file "backups/worktracker-$timestamp.dump"
