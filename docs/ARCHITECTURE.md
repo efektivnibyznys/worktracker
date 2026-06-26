@@ -949,6 +949,14 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 3. Add GitHub Actions secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY`
 4. Run the workflow manually once and confirm it succeeds
 
+#### 8. Backing up Supabase production data
+**Cause:** Work entries, clients, and invoices need an independent recovery path beyond Supabase project restore
+**Solution:**
+1. Enable `.github/workflows/supabase-backup.yml`
+2. Add GitHub Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE`
+3. Run the workflow manually and confirm it uploads an encrypted artifact
+4. See `docs/BACKUPS.md` for decrypt and restore commands
+
 ### Debug Techniques
 
 1. **React Query DevTools** - Check query states, cache

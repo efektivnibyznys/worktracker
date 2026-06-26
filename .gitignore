@@ -16,6 +16,14 @@
 # production
 /build
 
+# database backups
+/backups/
+*.dump
+*.dump.gz
+*.dump.gpg
+*.sql.gz
+*.sql.gpg
+
 # misc
 .DS_Store
 *.pem
