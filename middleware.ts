@@ -1,10 +1,26 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const AUTH_TIMEOUT_MS = 3000
+
+function hasSupabaseAuthCookie(request: NextRequest) {
+  return request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith('sb-') && name.includes('auth-token'))
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
+
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/register')
+  const hasAuthCookie = hasSupabaseAuthCookie(request)
+
+  if (isAuthRoute && !hasAuthCookie) {
+    return supabaseResponse
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,27 +45,42 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired - required for Server Components
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Refresh session if expired - required for Server Components.
+  // Keep this bounded so a paused/unavailable Supabase project cannot take down
+  // the whole app with a Vercel middleware timeout.
+  const getUser = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-  // Protected routes - require authentication
-  const isProtectedRoute = !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/register')
+      return user
+    } catch {
+      return null
+    }
+  }
 
-  if (isProtectedRoute && !user) {
+  const user = await Promise.race([
+    getUser(),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), AUTH_TIMEOUT_MS)),
+  ])
+
+  // Redirect authenticated users away from auth pages when Supabase responds.
+  // If Supabase is down or slow, keep auth pages reachable instead of timing out.
+  if (isAuthRoute) {
+    if (user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  }
+
+  if (!user) {
     // Redirect to login if not authenticated
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  // Redirect to home if already authenticated and trying to access auth pages
-  if ((request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/register')) && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

@@ -933,6 +933,22 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 2. Verify `handleDirectSubmit` is used (bypasses form validation)
 3. Ensure all entries from same client
 
+#### 6. Production login/data unavailable after Supabase email
+**Cause:** Supabase project is paused or unavailable while Vercel still serves the static Next.js frontend
+**Solution:**
+1. Confirm `/login` loads from Vercel but Supabase Auth/PostgREST requests fail
+2. Resume or restore the Supabase project in the Supabase dashboard
+3. Verify Vercel environment variables still point to the active project
+4. If restore is not possible, create a new Supabase project, run `supabase-setup.sql` plus migrations, update Vercel env vars, and redeploy
+
+#### 7. Preventing Supabase free project pauses
+**Cause:** Free Supabase projects can be paused after inactivity
+**Solution:**
+1. Prefer Supabase Pro for production apps because Pro projects are not paused
+2. For free projects, enable `.github/workflows/supabase-keepalive.yml`
+3. Add GitHub Actions secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+4. Run the workflow manually once and confirm it succeeds
+
 ### Debug Techniques
 
 1. **React Query DevTools** - Check query states, cache
