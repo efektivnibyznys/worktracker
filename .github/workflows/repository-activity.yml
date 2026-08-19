@@ -1,0 +1,39 @@
+name: Keep scheduled workflows active
+
+on:
+  schedule:
+    - cron: '37 5 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  record-activity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record monthly repository activity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          activity_branch="github-actions-keepalive"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git ls-remote --exit-code --heads origin "$activity_branch"; then
+            git fetch origin "$activity_branch"
+            git switch --detach FETCH_HEAD
+          else
+            git switch --create "$activity_branch"
+          fi
+
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > .github-actions-activity
+          git add .github-actions-activity
+          git commit -m "chore: keep scheduled workflows active"
+          git push origin "HEAD:refs/heads/$activity_branch"

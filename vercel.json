@@ -1,4 +1,9 @@
 {
+  "git": {
+    "deploymentEnabled": {
+      "github-actions-keepalive": false
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
