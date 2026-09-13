@@ -32,7 +32,7 @@ export function useEntries(filters?: EntryFilters) {
   const queryClient = useQueryClient()
 
   // Get all entries with filters
-  const { data: entries, isLoading, error } = useQuery({
+  const { data: entries, isLoading, error, refetch } = useQuery({
     queryKey: [ENTRIES_KEY, filters],
     queryFn: () => entryService.getAllWithFilters(filters),
   })
@@ -66,6 +66,7 @@ export function useEntries(filters?: EntryFilters) {
     entries: entries || [],
     isLoading,
     error,
+    refetch,
     createEntry,
     updateEntry,
     deleteEntry,

@@ -68,25 +68,33 @@ worktracker/
 │   │           ├── TimelineChart.tsx
 │   │           └── DistributionChart.tsx
 │   │
-│   └── billing/                     # Billing/invoicing feature
-│       ├── types/
-│       │   └── invoice.types.ts
-│       ├── services/
-│       │   └── invoiceService.ts
-│       ├── hooks/
-│       │   ├── useInvoices.ts
-│       │   ├── useInvoice.ts
-│       │   └── useEntrySelection.ts
-│       └── components/
-│           ├── InvoiceCard.tsx
-│           ├── InvoiceFilters.tsx
-│           ├── InvoiceStats.tsx
-│           ├── CreateInvoiceDialog.tsx
-│           ├── LinkedInvoiceForm.tsx
-│           ├── StandaloneInvoiceForm.tsx
-│           ├── EntrySelector.tsx
-│           ├── InvoiceStatusBadge.tsx
-│           └── BillingStatusBadge.tsx
+│   ├── billing/                     # Billing/invoicing feature
+│   │   ├── types/
+│   │   │   └── invoice.types.ts
+│   │   ├── services/
+│   │   │   └── invoiceService.ts
+│   │   ├── hooks/
+│   │   │   ├── useInvoices.ts
+│   │   │   ├── useInvoice.ts
+│   │   │   └── useEntrySelection.ts
+│   │   └── components/
+│   │       ├── InvoiceCard.tsx
+│   │       ├── InvoiceFilters.tsx
+│   │       ├── InvoiceStats.tsx
+│   │       ├── CreateInvoiceDialog.tsx
+│   │       ├── LinkedInvoiceForm.tsx
+│   │       ├── StandaloneInvoiceForm.tsx
+│   │       ├── EntrySelector.tsx
+│   │       ├── InvoiceStatusBadge.tsx
+│   │       └── BillingStatusBadge.tsx
+│   │
+│   └── reports/                     # Client work reports
+│       ├── components/
+│       │   ├── ReportEntrySelector.tsx
+│       │   ├── ReportColumnDialog.tsx
+│       │   └── ReportPdf.tsx
+│       └── lib/
+│           └── reportExport.ts      # Export validation, columns, totals, filename
 │
 ├── lib/                             # Core utilities
 │   ├── supabase/
@@ -524,6 +532,14 @@ interface InvoiceStats {
    └── Refetch invoices and entries lists
 ```
 
+### Reports Module (`features/reports/`)
+
+The reports page filters time entries, initializes all visible rows as selected, and lets the user narrow the export selection. PDF column preferences live only in React state for the current browser session; they are never written to Supabase.
+
+`reportExport.ts` is the pure boundary for export preparation. It validates that at least one entry and column are selected, keeps the database query order, calculates totals from the selected rows, and returns columns in the canonical PDF order. `ReportPdf` renders the resulting data client-side through `@react-pdf/renderer`.
+
+Available PDF columns are date, client, project, phase, time range, description, duration, hourly rate, and amount. The total duration is shown only when the duration column is present, and the financial total is shown only when the amount column is present.
+
 ---
 
 ## Services Architecture
@@ -688,6 +704,14 @@ const SETTINGS_KEY = 'settings'
 | `InvoiceStatusBadge` | Status badge | `status` |
 | `BillingStatusBadge` | Billing status badge | `status` |
 
+#### Reports
+
+| Component | Purpose | Key Props |
+|-----------|---------|-----------|
+| `ReportEntrySelector` | Select rows from the filtered report | `entries`, `selectedIds`, selection callbacks |
+| `ReportColumnDialog` | Choose columns for the current PDF export | `selectedColumnIds`, `onGenerate` |
+| `ReportPdf` | Render the client-facing A4 landscape document | `entries`, `columns`, `stats`, report metadata |
+
 ---
 
 ## Data Flow Diagrams
@@ -774,6 +798,18 @@ const SETTINGS_KEY = 'settings'
 │ - closeDialog()                         │
 │ - toast.success()                       │
 └─────────────────────────────────────────┘
+```
+
+### Creating a PDF Work Report
+
+```
+Reports filters → useEntries(filters) → select visible entry IDs
+       ↓
+ReportColumnDialog → choose temporary column IDs
+       ↓
+createReportExport(entries, entry IDs, column IDs)
+       ↓ validate + calculate selected totals
+ReportPdf → @react-pdf/renderer → browser PDF download
 ```
 
 ---
@@ -956,6 +992,14 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 2. Add GitHub Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE`
 3. Run the workflow manually and confirm it uploads an encrypted artifact
 4. See `docs/BACKUPS.md` for decrypt and restore commands
+
+#### 9. Turbopack rejects direct WOFF imports for React PDF
+**Cause:** Turbopack does not treat direct `.woff` imports as JavaScript modules without a custom loader
+**Solution:**
+1. Keep the Czech Roboto font files sourced from the pinned `@fontsource/roboto` package
+2. Let the `predev` and `prebuild` hooks run `scripts/prepare-report-fonts.mjs`
+3. Register `/fonts/report-roboto-400.woff` and `/fonts/report-roboto-700.woff` in the React PDF document
+4. Do not replace these same-origin URLs with a runtime CDN dependency
 
 ### Debug Techniques
 

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { useEntries } from '@/features/time-tracking/hooks/useEntries'
 import { useClients } from '@/features/time-tracking/hooks/useClients'
 import { usePhases } from '@/features/time-tracking/hooks/usePhases'
+import { useEntrySelection } from '@/features/billing/hooks/useEntrySelection'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -19,103 +21,192 @@ import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
 import { formatTime } from '@/lib/utils/time'
 import { calculateStats } from '@/lib/utils/calculations'
-import { EntryFilters } from '@/features/time-tracking/types/entry.types'
+import type { EntryFilters } from '@/features/time-tracking/types/entry.types'
 import { usePageMetadata } from '@/lib/hooks/usePageMetadata'
+import { logger } from '@/lib/utils/logger'
+import { ReportColumnDialog } from '@/features/reports/components/ReportColumnDialog'
+import { ReportEntrySelector } from '@/features/reports/components/ReportEntrySelector'
+import {
+  createReportFileName,
+  createReportExport,
+  DEFAULT_REPORT_COLUMN_IDS,
+  type ReportColumnId,
+} from '@/features/reports/lib/reportExport'
 
 export default function ReportsPage() {
   usePageMetadata({
     title: 'Reporty | Work Tracker',
-    description: 'Generování reportů a export do Notionu'
+    description: 'Generování reportů a export do PDF nebo Notionu',
   })
 
   const [filters, setFilters] = useState<EntryFilters>({})
   const [showReport, setShowReport] = useState(false)
+  const [isColumnDialogOpen, setIsColumnDialogOpen] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [selectedColumnIds, setSelectedColumnIds] = useState<ReportColumnId[]>(
+    [...DEFAULT_REPORT_COLUMN_IDS],
+  )
 
   const { clients } = useClients()
   const { phases } = usePhases(filters.clientId)
-  const { entries, isLoading } = useEntries(filters)
+  const { entries, isLoading, error: entriesError, refetch } = useEntries(filters)
+  const {
+    selectedIds,
+    selectedCount,
+    toggle,
+    selectAll,
+    clearSelection,
+  } = useEntrySelection()
 
   const handleFilterChange = useCallback((key: keyof EntryFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
+    setFilters(previous => ({
+      ...previous,
       [key]: value || undefined,
       ...(key === 'clientId' ? { phaseId: undefined } : {}),
     }))
-  }, [])
+    setShowReport(false)
+    clearSelection()
+  }, [clearSelection])
 
   const generateReport = useCallback(() => {
+    selectAll(entries.map(entry => entry.id))
     setShowReport(true)
-  }, [])
+  }, [entries, selectAll])
 
-  const exportToNotion = useCallback(() => {
-    const stats = calculateStats(entries)
+  const selectedEntries = useMemo(() => {
+    const selectedSet = new Set(selectedIds)
+    return entries.filter(entry => selectedSet.has(entry.id))
+  }, [entries, selectedIds])
 
-    let notionText = '# 📊 Report odpracované doby\n\n'
-    notionText += `**Období:** ${filters.dateFrom ? formatDate(filters.dateFrom) : 'Začátek'} - ${filters.dateTo ? formatDate(filters.dateTo) : 'Dnes'}\n\n`
+  const stats = useMemo(() => calculateStats(selectedEntries), [selectedEntries])
 
+  const clientLabel = useMemo(() => {
     if (filters.clientId) {
-      const client = clients.find(c => c.id === filters.clientId)
-      notionText += `**Klient:** ${client?.name}\n\n`
+      return clients.find(client => client.id === filters.clientId)?.name || 'Vybraný klient'
     }
 
+    const clientNames = [...new Set(
+      selectedEntries
+        .map(entry => entry.client?.name)
+        .filter((name): name is string => Boolean(name)),
+    )]
+
+    if (clientNames.length === 1) return clientNames[0]
+    if (clientNames.length > 1) return 'Více klientů'
+    return 'Bez klienta'
+  }, [clients, filters.clientId, selectedEntries])
+
+  const exportToNotion = useCallback(async () => {
+    if (selectedEntries.length === 0) {
+      toast.error('Vyberte alespoň jeden záznam.')
+      return
+    }
+
+    const selectedStats = calculateStats(selectedEntries)
+    let notionText = '# 📊 Report odpracované doby\n\n'
+    notionText += `**Období:** ${filters.dateFrom ? formatDate(filters.dateFrom) : 'Začátek'} - ${filters.dateTo ? formatDate(filters.dateTo) : 'Dnes'}\n\n`
+    notionText += `**Klient:** ${clientLabel}\n\n`
+
     if (filters.phaseId) {
-      const phase = phases.find(p => p.id === filters.phaseId)
+      const phase = phases.find(item => item.id === filters.phaseId)
       notionText += `**Fáze:** ${phase?.name}\n\n`
     }
 
     notionText += '## Souhrn\n\n'
-    notionText += `- **Celkem hodin:** ${formatTime(stats.totalMinutes)}\n`
-    notionText += `- **K fakturaci:** ${formatCurrency(stats.amount)}\n`
-    notionText += `- **Počet záznamů:** ${stats.count}\n\n`
-
+    notionText += `- **Celkem hodin:** ${formatTime(selectedStats.totalMinutes)}\n`
+    notionText += `- **K fakturaci:** ${formatCurrency(selectedStats.amount)}\n`
+    notionText += `- **Počet záznamů:** ${selectedStats.count}\n\n`
     notionText += '## Detaily\n\n'
     notionText += '| Datum | Čas | Popis | Hodiny | Částka |\n'
     notionText += '|-------|-----|-------|--------|--------|\n'
 
-    entries.forEach(entry => {
-      notionText += `| ${formatDate(entry.date)} | ${entry.start_time}-${entry.end_time} | ${entry.description} | ${formatTime(entry.duration_minutes)} | ${formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)} |\n`
+    selectedEntries.forEach(entry => {
+      notionText += `| ${formatDate(entry.date)} | ${entry.start_time.slice(0, 5)}-${entry.end_time.slice(0, 5)} | ${entry.description} | ${formatTime(entry.duration_minutes)} | ${formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)} |\n`
     })
 
-    // Copy to clipboard
-    navigator.clipboard.writeText(notionText)
-    alert('Report zkopírován do schránky! Můžete ho vložit do Notionu.')
-  }, [entries, filters, clients, phases])
+    try {
+      await navigator.clipboard.writeText(notionText)
+      toast.success('Report byl zkopírován do schránky.')
+    } catch (error) {
+      toast.error('Report se nepodařilo zkopírovat.')
+      logger.error('Failed to copy report to clipboard', error, {
+        component: 'ReportsPage',
+        action: 'exportToNotion',
+      })
+    }
+  }, [clientLabel, filters, phases, selectedEntries])
 
-  // Calculate stats - memoized to avoid recalculation on every render
-  const stats = useMemo(() => calculateStats(entries), [entries])
+  const downloadPdf = useCallback(async () => {
+    setIsGeneratingPdf(true)
+
+    try {
+      const report = createReportExport(entries, selectedIds, selectedColumnIds)
+      const [{ pdf }, { ReportPdf }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/features/reports/components/ReportPdf'),
+      ])
+      const blob = await pdf(
+        <ReportPdf
+          entries={report.entries}
+          columns={report.columns}
+          stats={report.stats}
+          clientLabel={clientLabel}
+          dateFrom={filters.dateFrom}
+          dateTo={filters.dateTo}
+        />,
+      ).toBlob()
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = createReportFileName(clientLabel, filters)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setIsColumnDialogOpen(false)
+      toast.success('PDF report byl vygenerován.')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'PDF se nepodařilo vygenerovat.'
+      toast.error(message)
+      logger.error('Failed to generate report PDF', error, {
+        component: 'ReportsPage',
+        action: 'downloadPdf',
+      })
+    } finally {
+      setIsGeneratingPdf(false)
+    }
+  }, [clientLabel, entries, filters, selectedColumnIds, selectedIds])
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl md:text-4xl font-bold mb-2">Reporty</h2>
+        <h2 className="mb-2 text-3xl font-bold md:text-4xl">Reporty</h2>
         <p className="text-lg text-gray-700">Generování reportů odpracované doby</p>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
-        <CardHeader className="p-0 mb-6">
+      <Card className="bg-white p-8 shadow-md transition-shadow duration-200 hover:shadow-lg">
+        <CardHeader className="mb-6 p-0">
           <CardTitle className="text-2xl font-bold">Parametry reportu</CardTitle>
-          <CardDescription className="text-gray-700 mt-1">
+          <CardDescription className="mt-1 text-gray-700">
             Vyberte období a klienta pro generování reportu
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label htmlFor="client">Klient</Label>
               <Select
                 value={filters.clientId || 'all'}
-                onValueChange={(value) => handleFilterChange('clientId', value === 'all' ? '' : value)}
+                onValueChange={value => handleFilterChange('clientId', value === 'all' ? '' : value)}
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger id="client" className="mt-1">
                   <SelectValue placeholder="Všichni klienti" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Všichni klienti</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
+                  {clients.map(client => (
+                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -125,136 +216,131 @@ export default function ReportsPage() {
               <Label htmlFor="phase">Fáze</Label>
               <Select
                 value={filters.phaseId || 'all'}
-                onValueChange={(value) => handleFilterChange('phaseId', value === 'all' ? '' : value)}
+                onValueChange={value => handleFilterChange('phaseId', value === 'all' ? '' : value)}
                 disabled={!filters.clientId || phases.length === 0}
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger id="phase" className="mt-1">
                   <SelectValue placeholder={!filters.clientId ? 'Nejprve vyberte klienta' : 'Všechny fáze'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Všechny fáze</SelectItem>
-                  {phases.map((phase) => (
-                    <SelectItem key={phase.id} value={phase.id}>
-                      {phase.name}
-                    </SelectItem>
+                  {phases.map(phase => (
+                    <SelectItem key={phase.id} value={phase.id}>{phase.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="dateFrom">Od data *</Label>
+              <Label htmlFor="dateFrom">Od data</Label>
               <Input
                 id="dateFrom"
                 type="date"
                 value={filters.dateFrom || ''}
-                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                onChange={event => handleFilterChange('dateFrom', event.target.value)}
                 className="mt-1"
               />
             </div>
 
             <div>
-              <Label htmlFor="dateTo">Do data *</Label>
+              <Label htmlFor="dateTo">Do data</Label>
               <Input
                 id="dateTo"
                 type="date"
                 value={filters.dateTo || ''}
-                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                onChange={event => handleFilterChange('dateTo', event.target.value)}
                 className="mt-1"
               />
             </div>
           </div>
 
           <div className="mt-4 flex gap-3">
-            <Button onClick={generateReport}>
-              📊 Vygenerovat report
+            <Button onClick={generateReport} disabled={isLoading || Boolean(entriesError)}>
+              {isLoading ? 'Načítám…' : '📊 Zobrazit záznamy'}
             </Button>
-            {showReport && entries.length > 0 && (
-              <Button variant="outline" onClick={exportToNotion}>
-                📋 Export pro Notion
-              </Button>
-            )}
           </div>
+          {entriesError && (
+            <div className="mt-4 flex flex-wrap items-center gap-3" role="alert">
+              <p className="text-sm text-red-600">Záznamy se nepodařilo načíst.</p>
+              <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                Zkusit znovu
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Report Results */}
       {showReport && (
         <>
-          {/* Summary */}
           <div className="grid gap-8 md:grid-cols-3">
-            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+            <Card className="bg-white p-6 shadow-md">
               <CardContent className="p-0">
-                <div className="text-sm text-gray-600 font-medium mb-2">Celkem hodin</div>
-                <div className="text-3xl font-bold">
-                  {formatTime(stats.totalMinutes)}
-                </div>
+                <div className="mb-2 text-sm font-medium text-gray-600">Vybraný čas</div>
+                <div className="text-3xl font-bold">{formatTime(stats.totalMinutes)}</div>
               </CardContent>
             </Card>
-
-            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+            <Card className="bg-white p-6 shadow-md">
               <CardContent className="p-0">
-                <div className="text-sm text-gray-600 font-medium mb-2">K fakturaci</div>
-                <div className="text-3xl font-bold">
-                  {formatCurrency(stats.amount)}
-                </div>
+                <div className="mb-2 text-sm font-medium text-gray-600">Vybraná částka</div>
+                <div className="text-3xl font-bold">{formatCurrency(stats.amount)}</div>
               </CardContent>
             </Card>
-
-            <Card className="bg-white p-6 shadow-md hover:shadow-lg transition-shadow duration-200">
+            <Card className="bg-white p-6 shadow-md">
               <CardContent className="p-0">
-                <div className="text-sm text-gray-600 font-medium mb-2">Počet záznamů</div>
-                <div className="text-3xl font-bold">
-                  {stats.count}
-                </div>
+                <div className="mb-2 text-sm font-medium text-gray-600">Vybrané záznamy</div>
+                <div className="text-3xl font-bold">{selectedCount}</div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Details */}
-          <Card className="bg-white p-8 shadow-md hover:shadow-lg transition-shadow duration-200">
-            <CardHeader className="p-0 mb-6">
-              <CardTitle className="text-2xl font-bold">Detaily</CardTitle>
-              <CardDescription className="text-gray-700 mt-1">
-                Kompletní seznam záznamů v reportu
-              </CardDescription>
+          <Card className="bg-white p-8 shadow-md">
+            <CardHeader className="mb-6 p-0">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                <div>
+                  <CardTitle className="text-2xl font-bold">Záznamy v reportu</CardTitle>
+                  <CardDescription className="mt-1 text-gray-700">
+                    Vyberte záznamy, které chcete předat klientovi
+                  </CardDescription>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={exportToNotion}
+                    disabled={selectedCount === 0}
+                  >
+                    📋 Export pro Notion
+                  </Button>
+                  <Button
+                    onClick={() => setIsColumnDialogOpen(true)}
+                    disabled={selectedCount === 0}
+                  >
+                    📄 Připravit PDF
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              {entries.length === 0 ? (
-                <p className="text-gray-700 text-center py-8">
-                  Žádné záznamy pro vybrané období
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {entries.map((entry) => (
-                    <div
-                      key={entry.id}
-                      className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-3 border-b last:border-0"
-                    >
-                      <div className="flex-1">
-                        <div className="font-semibold text-gray-900">{entry.description}</div>
-                        <div className="text-sm text-gray-600">
-                          📅 {formatDate(entry.date)} • 🕐 {entry.start_time} - {entry.end_time}
-                          {entry.client && ` • ${entry.client.name}`}
-                          {entry.phase && ` • ${entry.phase.name}`}
-                        </div>
-                      </div>
-                      <div className="text-left md:text-right">
-                        <div className="font-bold text-lg text-gray-900">
-                          {formatCurrency((entry.duration_minutes / 60) * entry.hourly_rate)}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          ⏱️ {formatTime(entry.duration_minutes)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ReportEntrySelector
+                entries={entries}
+                selectedIds={selectedIds}
+                onToggle={toggle}
+                onSelectAll={selectAll}
+                onClearSelection={clearSelection}
+                isLoading={isLoading}
+              />
             </CardContent>
           </Card>
         </>
       )}
+
+      <ReportColumnDialog
+        open={isColumnDialogOpen}
+        onOpenChange={setIsColumnDialogOpen}
+        selectedColumnIds={selectedColumnIds}
+        onSelectedColumnIdsChange={setSelectedColumnIds}
+        onGenerate={downloadPdf}
+        isGenerating={isGeneratingPdf}
+      />
     </div>
   )
 }

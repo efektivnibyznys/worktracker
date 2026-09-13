@@ -27,6 +27,7 @@
 # misc
 .DS_Store
 *.pem
+/public/fonts/report-roboto-*.woff
 
 # debug
 npm-debug.log*
@@ -49,3 +50,4 @@ supabase/.temp/
 
 # Development plans (not for production)
 IMPLEMENTATION_PLAN.md
+.codex/config.toml
