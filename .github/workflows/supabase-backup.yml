@@ -105,10 +105,11 @@ jobs:
             sleep 1
           done
           docker cp "$restore_dir/database.dump" "$container:/tmp/database.dump"
-          docker exec "$container" pg_restore -U supabase_admin -d postgres \
-            --no-owner --no-acl --clean --if-exists --exit-on-error \
+          docker exec "$container" createdb -U supabase_admin -T template0 worktracker_restore
+          docker exec "$container" pg_restore -U supabase_admin -d worktracker_restore \
+            --no-owner --no-acl --exit-on-error \
             /tmp/database.dump
-          docker exec "$container" psql -U supabase_admin -d postgres -At \
+          docker exec "$container" psql -U supabase_admin -d worktracker_restore -At \
             -c "SELECT 'restored clients=' || count(*) FROM public.clients" \
             -c "SELECT 'restored entries=' || count(*) FROM public.entries" \
             -c "SELECT 'restored invoices=' || count(*) FROM public.invoices" \
