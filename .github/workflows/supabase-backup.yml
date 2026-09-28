@@ -114,3 +114,13 @@ jobs:
             -c "SELECT 'restored entries=' || count(*) FROM public.entries" \
             -c "SELECT 'restored invoices=' || count(*) FROM public.invoices" \
             -c "SELECT 'restored invoice items=' || count(*) FROM public.invoice_items"
+
+          docker cp tests/sql/production_row_digest.sql "$container:/tmp/production_row_digest.sql"
+          docker cp supabase/migrations/20260928_secure_invoices.sql "$container:/tmp/secure_invoices.sql"
+          docker cp supabase/migrations/20260928_secure_logos.sql "$container:/tmp/secure_logos.sql"
+          before="$(docker exec "$container" psql -U supabase_admin -d worktracker_restore -At -v ON_ERROR_STOP=1 -f /tmp/production_row_digest.sql)"
+          docker exec "$container" psql -U supabase_admin -d worktracker_restore -v ON_ERROR_STOP=1 -f /tmp/secure_invoices.sql
+          docker exec "$container" psql -U supabase_admin -d worktracker_restore -v ON_ERROR_STOP=1 -f /tmp/secure_logos.sql
+          after="$(docker exec "$container" psql -U supabase_admin -d worktracker_restore -At -v ON_ERROR_STOP=1 -f /tmp/production_row_digest.sql)"
+          test "$before" = "$after"
+          echo 'Security migrations passed on restored production data; all existing business and Storage metadata rows match.'

@@ -4,7 +4,7 @@ The `Supabase encrypted backup` GitHub Actions workflow saves a PostgreSQL dump 
 
 ## Safety gate before deploying the security migrations
 
-Do not change the production schema until a fresh database **and** Storage backup has completed and a restore into a separate project has been checked. Set up the new Supabase secret key and run the backup workflow manually before deploying the migrations. Download the encrypted artifact, verify that it contains `database.dump` and `logos/manifest.json`, and perform the restore rehearsal below. Keep that artifact outside the production project until the new version is verified.
+Do not change the production schema until a fresh database **and** Storage backup has completed and a restore into a disposable database has been checked. Set up the new Supabase secret key and run the backup workflow manually before deploying the migrations. A manual run decrypts its own archive, verifies the logo manifest and checksums, restores the database into a fresh local Supabase PostgreSQL database, applies the security migrations there, and checks that every preexisting business and Storage metadata row is unchanged. Download the encrypted artifact and keep a copy outside the production project until the new version is verified.
 
 Record counts of `clients`, `phases`, `projects`, `entries`, `settings`, `invoices`, `invoice_items`, and logo objects before and after deployment. Check for duplicate `(user_id, invoice_number)` pairs before applying `20260928_secure_invoices.sql`; if any exist, the migration aborts as one transaction and leaves existing invoices untouched. Apply both SQL migrations together with the application release, then confirm historical invoices and logos can still be opened. The local preservation test in `tests/sql/migration_preservation_before.sql` and `migration_preservation_after.sql` verifies that the migrations leave preexisting business and logo metadata rows unchanged on PostgreSQL 17.
 
@@ -18,12 +18,13 @@ Record counts of `clients`, `phases`, `projects`, `entries`, `settings`, `invoic
 
 ## Restore rehearsal
 
-Restore into a separate Supabase project first. Use its database URL, project URL, and new secret key as the target values. Download the encrypted artifact and run:
+The manual GitHub Actions workflow performs the tested database restore into a disposable PostgreSQL database created from `template0`. A default initialized database already contains Supabase system objects such as `graphql`, causing duplicate object errors during full restore. The workflow checks restored row counts and rehearses both migrations against the production snapshot. Keep the successful workflow run and its encrypted artifact together as recovery evidence.
+
+To restore into a new hosted Supabase project during a real recovery, use the current [Supabase platform restore guidance](https://supabase.com/docs/guides/self-hosting/restore-from-platform) and test the full procedure on a separate project first. A raw `pg_restore --clean` against an initialized hosted project can conflict with managed schemas and must not be run against the production project. After the database restore, use the new project's URL and secret key to restore Storage objects:
 
 ```bash
 mkdir -p restore-worktracker
 gpg --decrypt worktracker-YYYYMMDDTHHMMSSZ.tar.gz.gpg | tar -xz -C restore-worktracker
-pg_restore --dbname "$TARGET_DATABASE_URL" --clean --if-exists --no-owner --no-acl restore-worktracker/database.dump
 SUPABASE_URL="$TARGET_SUPABASE_URL" \
 SUPABASE_SECRET_KEY="$TARGET_SUPABASE_SECRET_KEY" \
 node scripts/logo-storage-archive.mjs restore restore-worktracker/logos

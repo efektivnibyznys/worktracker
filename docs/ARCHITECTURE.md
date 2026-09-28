@@ -984,8 +984,8 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 **Solution:**
 1. Enable `.github/workflows/supabase-backup.yml`
 2. Add GitHub Actions secrets `SUPABASE_DB_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `BACKUP_PASSPHRASE` (a new `sb_secret_...` key)
-3. Run the workflow manually and confirm it uploads an encrypted artifact
-4. Restore into a separate project and verify a historical invoice logo; see `docs/BACKUPS.md`
+3. Run the workflow manually and confirm it uploads an encrypted artifact, decrypts it, restores into a disposable database created from `template0`, and checks that both security migrations preserve existing rows
+4. For a hosted recovery, rehearse separately with the current Supabase restore guidance and verify a historical invoice logo; see `docs/BACKUPS.md`
 
 #### 9. Turbopack rejects direct WOFF imports for React PDF
 **Cause:** Turbopack does not treat direct `.woff` imports as JavaScript modules without a custom loader
@@ -1010,6 +1010,10 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 #### 13. A short work entry or special numeric value distorts an invoice
 **Cause:** Rounding fractional hours to two decimals in a line description can disagree with a price calculated from exact minutes. PostgreSQL `numeric` also accepts `NaN`, which passes a nonnegative check.
 **Solution:** Linked invoice lines describe exact minutes and hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
+
+#### 14. A full Supabase dump conflicts with managed schemas during a restore rehearsal
+**Cause:** An initialized test database already contains Supabase-managed objects such as `graphql`, which are also in the full database dump.
+**Solution:** Create a disposable database from `template0` and restore with `pg_restore --no-owner --no-acl --exit-on-error`. The manual backup workflow follows this procedure and then checks row preservation after the security migrations. Never run a destructive full restore against production.
 
 ### Debug Techniques
 

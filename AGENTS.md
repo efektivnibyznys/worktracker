@@ -232,6 +232,10 @@ Historical logo MIME types or sizes can exceed the new bucket limits. The restor
 ### Turbopack rejects direct WOFF imports used by React PDF
 Next.js 16 Turbopack reports `Unknown module type` when a client component directly imports `.woff` files for `@react-pdf/renderer`. Keep `@fontsource/roboto` as a dependency, run `scripts/prepare-report-fonts.mjs` from the `predev` and `prebuild` hooks, and register the resulting same-origin `/fonts/report-roboto-*.woff` URLs with React PDF. This preserves Czech glyphs without a runtime CDN dependency or a custom Turbopack loader.
 
+### A full Supabase dump fails to restore into an initialized test database
+
+An initialized Supabase PostgreSQL database already has managed schemas such as `graphql`; restoring a full platform dump there can fail with duplicate-object errors. For the backup rehearsal, create a disposable database with `createdb -T template0`, then run `pg_restore --no-owner --no-acl --exit-on-error` against that fresh database. The manual backup workflow performs this restore, compares row counts, applies the security migrations to the restored production data, and verifies unchanged business and Storage metadata rows. Do not use `pg_restore --clean` against the live project.
+
 ## Environment Variables
 
 Required in `.env.local`:
