@@ -79,7 +79,7 @@ export async function backupLogos(client, directory, sourceUrl, pageSize = PAGE_
   return manifest
 }
 
-export async function restoreLogos(client, directory) {
+export async function verifyLogoArchive(directory) {
   const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8'))
   if (manifest.schemaVersion !== 1 || manifest.bucket !== BUCKET || !Array.isArray(manifest.objects)) {
     throw new Error('Invalid logo archive manifest')
@@ -102,6 +102,11 @@ export async function restoreLogos(client, directory) {
     verified.push({ ...object, bytes })
   }
 
+  return { manifest, verified }
+}
+
+export async function restoreLogos(client, directory) {
+  const { manifest, verified } = await verifyLogoArchive(directory)
   const storage = client.storage ?? client
   const { data: original, error: bucketError } = await storage.getBucket(BUCKET)
   if (bucketError) throw bucketError
@@ -189,10 +194,15 @@ async function rewriteStoredUrls(client, sourceUrl, targetUrl) {
 
 async function main() {
   const [mode, directory] = process.argv.slice(2)
+  if (mode === 'verify' && directory) {
+    const { manifest } = await verifyLogoArchive(directory)
+    process.stdout.write(`Verified ${manifest.objects.length} logo objects\n`)
+    return
+  }
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_SECRET_KEY
   if (!url || !key || !directory || !['backup', 'restore'].includes(mode)) {
-    throw new Error('Usage: SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/logo-storage-archive.mjs backup|restore DIRECTORY')
+    throw new Error('Usage: node scripts/logo-storage-archive.mjs verify DIRECTORY, or SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/logo-storage-archive.mjs backup|restore DIRECTORY')
   }
   const { createClient } = await import('@supabase/supabase-js')
   const client = createClient(url, key, {

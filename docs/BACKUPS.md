@@ -14,7 +14,7 @@ Record counts of `clients`, `phases`, `projects`, `entries`, `settings`, `invoic
 - Encrypted `.tar.gz.gpg` artifacts are retained for 90 days.
 - Set GitHub Actions secrets `SUPABASE_DB_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `BACKUP_PASSPHRASE`. Create a new `sb_secret_...` key for the backup job in Supabase Project Settings → API Keys. It has administrative access and must never be exposed as a `NEXT_PUBLIC_` variable. Legacy `service_role` keys may be disabled and should not be re-enabled for backups.
 - Keep a copy of the passphrase outside GitHub, such as in a password manager.
-- Run one manual workflow after adding the new secrets. A missing secret or failed Storage download makes the job fail instead of publishing a database-only archive.
+- Run one manual workflow after adding the new secrets. A missing secret or failed Storage download makes the job fail instead of publishing a database-only archive. Manual runs also decrypt the resulting archive, verify every logo checksum, and restore the database into a disposable local Supabase PostgreSQL container before reporting success.
 
 ## Restore rehearsal
 

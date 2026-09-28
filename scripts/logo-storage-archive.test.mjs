@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { backupLogos, restoreLogos, rewriteLogoUrl } from './logo-storage-archive.mjs'
+import { backupLogos, restoreLogos, rewriteLogoUrl, verifyLogoArchive } from './logo-storage-archive.mjs'
 
 function fakeStorage(objects, contentTypes = {}, initialBucket = {}) {
   const uploaded = new Map()
@@ -64,6 +64,7 @@ test('backup walks folders and pages, then restores verified bytes', async () =>
     const source = fakeStorage(original)
     const manifest = await backupLogos(source, directory, 'https://source.supabase.co', 1)
     assert.equal(manifest.objects.length, 3)
+    assert.equal((await verifyLogoArchive(directory)).manifest.objects.length, 3)
     const destination = fakeStorage({})
     await restoreLogos(destination, directory)
     for (const [path, bytes] of Object.entries(original)) {

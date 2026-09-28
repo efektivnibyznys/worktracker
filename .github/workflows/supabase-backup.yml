@@ -8,7 +8,7 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -73,3 +73,43 @@ jobs:
           path: backups/*.tar.gz.gpg
           if-no-files-found: error
           retention-days: 90
+
+      - name: Rehearse encrypted archive restore on manual runs
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          restore_dir="$(mktemp -d)"
+          container="worktracker-restore-${GITHUB_RUN_ID}"
+          cleanup() {
+            docker rm -f "$container" >/dev/null 2>&1 || true
+            rm -rf "$restore_dir"
+          }
+          trap cleanup EXIT
+
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase "$BACKUP_PASSPHRASE" \
+            --decrypt --output "$restore_dir/archive.tar.gz" backups/*.tar.gz.gpg
+          tar -xzf "$restore_dir/archive.tar.gz" -C "$restore_dir"
+          test -s "$restore_dir/database.dump"
+          node scripts/logo-storage-archive.mjs verify "$restore_dir/logos"
+
+          docker run --rm --detach --name "$container" \
+            -e POSTGRES_PASSWORD=restore-test-only \
+            public.ecr.aws/supabase/postgres:17.6.1.166
+          for attempt in $(seq 1 60); do
+            if docker exec "$container" pg_isready -U supabase_admin -d postgres >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          docker cp "$restore_dir/database.dump" "$container:/tmp/database.dump"
+          docker exec "$container" pg_restore -U supabase_admin -d postgres \
+            --no-owner --no-acl --clean --if-exists --exit-on-error \
+            /tmp/database.dump
+          docker exec "$container" psql -U supabase_admin -d postgres -At \
+            -c "SELECT 'restored clients=' || count(*) FROM public.clients" \
+            -c "SELECT 'restored entries=' || count(*) FROM public.entries" \
+            -c "SELECT 'restored invoices=' || count(*) FROM public.invoices" \
+            -c "SELECT 'restored invoice items=' || count(*) FROM public.invoice_items"
