@@ -21,6 +21,7 @@ import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import { useInvoice, useInvoices } from '@/features/billing/hooks/useInvoices'
 import { InvoiceStatusBadge, InvoicePdf } from '@/features/billing/components'
+import { resolveInvoiceSupplier } from '@/features/billing/lib/invoiceSupplier'
 import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { formatCurrency } from '@/lib/utils/currency'
 import { generateSpaydString } from '@/lib/utils/payment'
@@ -84,7 +85,7 @@ export default function InvoiceDetailPage() {
     try {
       // Generate QR Code if possible
       let qrCodeUrl: string | null = null
-      const bankAccount = invoice.bank_account || settings?.bank_account || '4482411352/6363'
+      const { bankAccount } = resolveInvoiceSupplier(invoice, settings || null)
       const variableSymbol = invoice.variable_symbol || invoice.invoice_number.replace(/-/g, '')
 
       try {
@@ -126,7 +127,7 @@ export default function InvoiceDetailPage() {
       toast.success('Faktura byla stažena')
     } catch (error) {
       console.error(error)
-      toast.error('Nepodařilo se vygenerovat PDF')
+      toast.error(error instanceof Error ? error.message : 'Nepodařilo se vygenerovat PDF')
       logger.error('Failed to generate PDF', error, {
         component: 'InvoiceDetailPage',
         action: 'handleDownloadPdf',

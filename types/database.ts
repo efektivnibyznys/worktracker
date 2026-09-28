@@ -441,7 +441,22 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_linked_invoice: {
+        Args: { p_input: Json }
+        Returns: Database['public']['Tables']['invoices']['Row']
+      }
+      create_standalone_invoice: {
+        Args: { p_input: Json }
+        Returns: Database['public']['Tables']['invoices']['Row']
+      }
+      update_invoice_status: {
+        Args: { p_invoice_id: string; p_status: string }
+        Returns: Database['public']['Tables']['invoices']['Row']
+      }
+      delete_invoice: {
+        Args: { p_invoice_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

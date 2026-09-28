@@ -23,9 +23,11 @@ import type { CreateStandaloneInvoiceInput } from '../types/invoice.types'
 
 const itemSchema = z.object({
   description: z.string().min(1, 'Popis je povinný'),
-  quantity: z.string().min(1, 'Množství je povinné'),
+  quantity: z.string().refine(value => Number.isFinite(Number(value)) && Number(value) > 0,
+    'Množství musí být větší než 0'),
   unit: z.string().min(1, 'Jednotka je povinná'),
-  unit_price: z.string().min(1, 'Cena je povinná')
+  unit_price: z.string().refine(value => value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0,
+    'Cena musí být nezáporné číslo')
 })
 
 const standaloneInvoiceSchema = z.object({
@@ -207,7 +209,7 @@ export function StandaloneInvoiceForm({
                     <Input
                       type="number"
                       step="0.01"
-                      min="0"
+                      min="0.01"
                       {...register(`items.${index}.quantity`)}
                       className="mt-1"
                     />

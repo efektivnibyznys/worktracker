@@ -25,12 +25,12 @@ export default function RootLayout({
   return (
     <html lang="cs">
       <body className="antialiased">
-        <QueryProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <QueryProvider>
             {children}
             <Toaster />
-          </AuthProvider>
-        </QueryProvider>
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

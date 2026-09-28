@@ -1,6 +1,7 @@
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer'
 import { InvoiceWithRelations } from '../types/invoice.types'
+import { resolveInvoiceSupplier } from '../lib/invoiceSupplier'
 import { Settings } from '@/features/time-tracking/types/settings.types'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
@@ -120,6 +121,7 @@ interface InvoicePdfProps {
 }
 
 export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdfProps) {
+    const supplier = resolveInvoiceSupplier(invoice, settings)
     const isOverdue = invoice.status !== 'paid' &&
         invoice.status !== 'cancelled' &&
         new Date(invoice.due_date) < new Date()
@@ -142,22 +144,22 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
                 <View style={styles.row}>
                     <View style={styles.column}>
                         <Text style={styles.label}>DODAVATEL:</Text>
-                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{settings?.company_name || 'Jakub Vaněk'}</Text>
-                        <Text>{settings?.company_address || 'Dr. Nováka 496, 294 71, Benátky nad Jizerou'}</Text>
+                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{supplier.companyName}</Text>
+                        <Text>{supplier.companyAddress}</Text>
                         <View style={{ marginTop: 5 }}>
-                            <Text>IČO: {settings?.company_ico || '88699030'}</Text>
+                            <Text>IČO: {supplier.companyIco}</Text>
                             {settings?.company_dic && <Text>DIČ: {settings?.company_dic}</Text>}
                         </View>
                         <View style={{ marginTop: 10 }}>
                             <Text style={styles.label}>BANKOVNÍ SPOJENÍ:</Text>
-                            <Text>Číslo účtu: {invoice.bank_account || settings?.bank_account || '4482411352/6363'}</Text>
+                            <Text>Číslo účtu: {supplier.bankAccount}</Text>
                             <Text style={{ marginTop: 2 }}>Variabilní symbol: {invoice.variable_symbol || invoice.invoice_number.replace('-', '')}</Text>
                         </View>
                     </View>
 
                     <View style={styles.column}>
                         <Text style={styles.label}>ODBĚRATEL:</Text>
-                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{invoice.client?.name || invoice.client_name}</Text>
+                        <Text style={{ fontWeight: 700, fontSize: 12 }}>{invoice.client_name || invoice.client?.name}</Text>
                         <Text>{invoice.client_address}</Text>
                         <View style={{ marginTop: 5 }}>
                             {invoice.client_ico && <Text>IČO: {invoice.client_ico}</Text>}
@@ -251,16 +253,16 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
 
                         {/* Address */}
                         <View style={{ flex: 1 }}>
-                            {settings?.company_name && <Text style={{ fontWeight: 700 }}>{settings.company_name}</Text>}
-                            {settings?.company_address && settings.company_address.split('\n').map((line, i) => (
+                            <Text style={{ fontWeight: 700 }}>{supplier.companyName}</Text>
+                            {supplier.companyAddress.split('\n').map((line, i) => (
                                 <Text key={i}>{line}</Text>
                             ))}
                         </View>
 
                         {/* Info */}
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                            {settings?.company_ico && <Text>IČO: {settings.company_ico}</Text>}
-                            {settings?.bank_account && <Text>Účet: {settings.bank_account}</Text>}
+                            <Text>IČO: {supplier.companyIco}</Text>
+                            <Text>Účet: {supplier.bankAccount}</Text>
                             <Text style={{ marginTop: 5, fontSize: 6, color: '#999' }}>Faktura byla vystavena elektronicky.</Text>
                         </View>
                     </View>

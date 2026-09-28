@@ -1,23 +1,17 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useAuthStore } from '@/lib/stores/authStore'
+import { AccountQueryCache } from './accountQueryCache'
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 60 * 1000, // 1 minute
-            refetchOnWindowFocus: true,
-          },
-        },
-      })
-  )
+  const userId = useAuthStore(state => state.user?.id ?? null)
+  const [cache] = useState(() => new AccountQueryCache())
+  const queryClient = cache.forUser(userId)
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider key={userId ?? 'signed-out'} client={queryClient}>
       {children}
     </QueryClientProvider>
   )

@@ -426,9 +426,7 @@ class InvoiceService extends BaseService<'invoices'> {
   updateStatus(id: string, status: InvoiceStatus): Promise<Invoice>
   deleteInvoice(id: string): Promise<void>
 
-  // Helpers
-  generateInvoiceNumber(): Promise<string>  // Format: YYYY-NNNN
-  groupEntriesForInvoice(entries, groupBy): InvoiceItemData[]
+  // Mutations call PostgreSQL RPCs; numbering and item grouping live in SQL.
 }
 ```
 
@@ -519,14 +517,12 @@ interface InvoiceStats {
    └── Submit triggers handleDirectSubmit()
 
 4. InvoiceService.createLinkedInvoice()
-   ├── Fetch entries by IDs
-   ├── Validate all unbilled, same client
-   ├── Calculate subtotal, tax, total
-   ├── Generate invoice_number (YYYY-NNNN)
-   ├── INSERT invoice
-   ├── Group entries by strategy (entry/phase/day)
-   ├── INSERT invoice_items
-   └── UPDATE entries SET billing_status='billed', invoice_id=...
+   └── Calls create_linked_invoice RPC, which atomically:
+       ├── Validates ownership and locks all unbilled entries
+       ├── Allocates next user/year invoice number
+       ├── Creates header and rate-correct items (entry/phase/project/day)
+       ├── Derives subtotal from stored item amounts
+       └── Updates entry billing_status and invoice_id
 
 5. React Query invalidation
    └── Refetch invoices and entries lists
@@ -781,12 +777,10 @@ const SETTINGS_KEY = 'settings'
                     ↓
 ┌─────────────────────────────────────────┐
 │ InvoiceService.createLinkedInvoice()    │
-│ 1. Fetch entries                        │
-│ 2. Calculate totals                     │
-│ 3. Generate invoice_number              │
-│ 4. INSERT invoice                       │
-│ 5. INSERT invoice_items (grouped)       │
-│ 6. UPDATE entries billing_status        │
+│ 1. Call create_linked_invoice RPC       │
+│ 2. Database validates and locks entries │
+│ 3. Header/items/entry state commit      │
+│    together with a unique number        │
 └─────────────────────────────────────────┘
                     │
                     ↓
@@ -986,12 +980,12 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 4. Run the workflow manually once and confirm it succeeds
 
 #### 8. Backing up Supabase production data
-**Cause:** Work entries, clients, and invoices need an independent recovery path beyond Supabase project restore
+**Cause:** Work entries, clients, invoices, and Storage logo bytes need an independent recovery path beyond Supabase project restore
 **Solution:**
 1. Enable `.github/workflows/supabase-backup.yml`
-2. Add GitHub Actions secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE`
-3. Run the workflow manually and confirm it uploads an encrypted artifact
-4. See `docs/BACKUPS.md` for decrypt and restore commands
+2. Add GitHub Actions secrets `SUPABASE_DB_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `BACKUP_PASSPHRASE` (a new `sb_secret_...` key)
+3. Run the workflow manually and confirm it uploads an encrypted artifact, decrypts it, restores into a disposable database created from `template0`, and checks that both security migrations preserve existing rows
+4. For a hosted recovery, rehearse separately with the current Supabase restore guidance and verify a historical invoice logo; see `docs/BACKUPS.md`
 
 #### 9. Turbopack rejects direct WOFF imports for React PDF
 **Cause:** Turbopack does not treat direct `.woff` imports as JavaScript modules without a custom loader
@@ -1000,6 +994,26 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 2. Let the `predev` and `prebuild` hooks run `scripts/prepare-report-fonts.mjs`
 3. Register `/fonts/report-roboto-400.woff` and `/fonts/report-roboto-700.woff` in the React PDF document
 4. Do not replace these same-origin URLs with a runtime CDN dependency
+
+#### 10. Invoice creation or status changes leave inconsistent data
+**Cause:** Browser-side multi-request writes can commit a header before items or allow two requests to claim the same entry.
+**Solution:** Apply `supabase/migrations/20260928_secure_invoices.sql` and deploy the matching `InvoiceService` RPC calls together. The database locks selected entries, validates ownership, allocates monotonic numbers, and commits all invoice changes in one transaction. The migration refuses historical duplicate numbers; resolve those manually. A billed entry must be released by deleting its invoice before its financial details are edited.
+
+#### 11. A PDF shows unexpected payment or supplier details
+**Cause:** Older PDFs used fixed fallback details when Settings was empty.
+**Solution:** Configure company name, address, IČO and bank account in Settings. PDF generation now stops with a message until the real details are present. An invoice's stored bank account takes precedence over the current setting.
+
+#### 12. Logo upload is rejected or old logos are missing after restore
+**Cause:** New uploads use a canonical `<user-id>/logo` path with bucket MIME/size limits; a database dump alone has no Storage bytes.
+**Solution:** Apply `supabase/migrations/20260928_secure_logos.sql`, back up the Storage objects with the encrypted workflow, and restore using `scripts/logo-storage-archive.mjs`. The restore verifies checksums, temporarily adjusts the target bucket for legacy MIME types or larger files, resets its restrictions afterward, and rewrites logo URLs when the project host changes. If interrupted, inspect the target bucket limits before use.
+
+#### 13. A short work entry or special numeric value distorts an invoice
+**Cause:** Rounding fractional hours to two decimals in a line description can disagree with a price calculated from exact minutes. PostgreSQL `numeric` also accepts `NaN`, which passes a nonnegative check.
+**Solution:** Linked invoice lines describe exact minutes and hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
+
+#### 14. A full Supabase dump conflicts with managed schemas during a restore rehearsal
+**Cause:** An initialized test database already contains Supabase-managed objects such as `graphql`, which are also in the full database dump.
+**Solution:** Create a disposable database from `template0` and restore with `pg_restore --no-owner --no-acl --exit-on-error`. The manual backup workflow follows this procedure and then checks row preservation after the security migrations. Never run a destructive full restore against production.
 
 ### Debug Techniques
 

@@ -9,9 +9,9 @@
     "prebuild": "npm run prepare:report-fonts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "node --import tsx --test features/reports/lib/*.test.mjs features/reports/components/*.test.tsx"
+    "test": "node --import tsx --test components/providers/*.test.mjs features/billing/lib/*.test.mjs features/reports/lib/*.test.mjs features/reports/components/*.test.tsx scripts/*.test.mjs"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.0.8",
@@ -30,7 +30,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
-    "next": "^16.1.0",
+    "next": "^16.3.6",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -48,9 +48,9 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.16",
     "eslint": "^9",
-    "eslint-config-next": "^15.1.0",
+    "eslint-config-next": "^16.3.6",
     "postcss": "^8.4.31",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.23.13",
     "typescript": "^5"
