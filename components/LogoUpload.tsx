@@ -40,8 +40,7 @@ export function LogoUpload({ userId, currentLogoUrl, onLogoChange }: LogoUploadP
     setIsUploading(true)
     try {
       const supabase = createClient()
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${userId}/logo.${fileExt}`
+      const filePath = `${userId}/logo`
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
@@ -49,6 +48,7 @@ export function LogoUpload({ userId, currentLogoUrl, onLogoChange }: LogoUploadP
         .upload(filePath, file, {
           upsert: true,
           cacheControl: '3600',
+          contentType: file.type,
         })
 
       if (uploadError) throw uploadError
@@ -85,13 +85,15 @@ export function LogoUpload({ userId, currentLogoUrl, onLogoChange }: LogoUploadP
       const supabase = createClient()
 
       // List files in user's folder and delete them
-      const { data: files } = await supabase.storage
+      const { data: files, error: listError } = await supabase.storage
         .from('logos')
         .list(userId)
+      if (listError) throw listError
 
       if (files && files.length > 0) {
         const filePaths = files.map(f => `${userId}/${f.name}`)
-        await supabase.storage.from('logos').remove(filePaths)
+        const { error: removeError } = await supabase.storage.from('logos').remove(filePaths)
+        if (removeError) throw removeError
       }
 
       setPreview(null)
@@ -113,7 +115,7 @@ export function LogoUpload({ userId, currentLogoUrl, onLogoChange }: LogoUploadP
     <div className="space-y-3">
       <Label>Logo firmy</Label>
       <p className="text-sm text-gray-600">
-        Logo se zobrazí na fakturách. Doporučený formát: PNG nebo SVG, max 2 MB.
+        Logo se zobrazí na fakturách. Podporované formáty: PNG, JPG, SVG nebo WebP, max 2 MB.
       </p>
 
       {preview && (

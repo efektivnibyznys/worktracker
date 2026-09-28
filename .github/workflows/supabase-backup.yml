@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --omit=dev
+
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
@@ -21,15 +28,22 @@ jobs:
           sudo apt-get install --yes postgresql-client-17
           /usr/lib/postgresql/17/bin/pg_dump --version
 
-      - name: Create encrypted database backup
+      - name: Create encrypted database and logo backup
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
+          set -euo pipefail
           test -n "$SUPABASE_DB_URL"
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_SECRET_KEY"
           test -n "$BACKUP_PASSPHRASE"
 
           timestamp="$(date -u +'%Y%m%dT%H%M%SZ')"
+          work_dir="$(mktemp -d)"
+          trap 'rm -rf "$work_dir"' EXIT
           mkdir -p backups
 
           PGCONNECT_TIMEOUT=20 timeout 60s /usr/lib/postgresql/17/bin/pg_dump \
@@ -38,7 +52,10 @@ jobs:
             --no-password \
             --no-owner \
             --no-acl \
-            --file "backups/worktracker-$timestamp.dump"
+            --file "$work_dir/database.dump"
+
+          node scripts/logo-storage-archive.mjs backup "$work_dir/logos"
+          tar -C "$work_dir" -czf "$work_dir/worktracker-$timestamp.tar.gz" database.dump logos
 
           gpg \
             --batch \
@@ -46,15 +63,13 @@ jobs:
             --symmetric \
             --cipher-algo AES256 \
             --passphrase "$BACKUP_PASSPHRASE" \
-            --output "backups/worktracker-$timestamp.dump.gpg" \
-            "backups/worktracker-$timestamp.dump"
-
-          rm "backups/worktracker-$timestamp.dump"
+            --output "backups/worktracker-$timestamp.tar.gz.gpg" \
+            "$work_dir/worktracker-$timestamp.tar.gz"
 
       - name: Upload encrypted backup artifact
         uses: actions/upload-artifact@v4
         with:
           name: supabase-backup-${{ github.run_id }}
-          path: backups/*.dump.gpg
+          path: backups/*.tar.gz.gpg
           if-no-files-found: error
           retention-days: 90
