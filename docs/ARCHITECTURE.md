@@ -1009,11 +1009,15 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 
 #### 13. A short work entry or special numeric value distorts an invoice
 **Cause:** Rounding fractional hours to two decimals in a line description can disagree with a price calculated from exact minutes. PostgreSQL `numeric` also accepts `NaN`, which passes a nonnegative check.
-**Solution:** Linked invoice lines describe exact minutes and hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
+**Solution:** Linked invoice lines use fixed-price items calculated from exact minutes, with separate groups for different hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
 
 #### 14. A full Supabase dump conflicts with managed schemas during a restore rehearsal
 **Cause:** An initialized test database already contains Supabase-managed objects such as `graphql`, which are also in the full database dump.
 **Solution:** Create a disposable database from `template0` and restore with `pg_restore --no-owner --no-acl --exit-on-error`. The manual backup workflow follows this procedure and then checks row preservation after the security migrations. Never run a destructive full restore against production.
+
+#### 15. Invoice descriptions or footer contain redundant details
+**Cause:** The September 2026 linked-invoice RPC appended duration and rate text to stored descriptions, and the PDF footer repeated supplier IČO and bank account.
+**Solution:** Apply `supabase/migrations/20261002_clean_invoice_descriptions.sql` after `20260928_secure_invoices.sql`. The RPC preserves original work/group descriptions and retains the existing exact-minute amounts, rate grouping, locking and ownership checks. Historical linked fixed-price descriptions are formatted by `features/billing/lib/invoiceItemDescription.ts` in the detail page and PDF; stored invoice rows remain unchanged. Standalone invoice descriptions are preserved. Supplier IČO and account appear only in the PDF supplier section.
 
 ### Debug Techniques
 

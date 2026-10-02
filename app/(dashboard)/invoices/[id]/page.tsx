@@ -21,6 +21,7 @@ import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import { useInvoice, useInvoices } from '@/features/billing/hooks/useInvoices'
 import { InvoiceStatusBadge, InvoicePdf } from '@/features/billing/components'
+import { formatInvoiceItemDescription } from '@/features/billing/lib/invoiceItemDescription'
 import { resolveInvoiceSupplier } from '@/features/billing/lib/invoiceSupplier'
 import { useSettings } from '@/features/time-tracking/hooks/useSettings'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -337,7 +338,7 @@ export default function InvoiceDetailPage() {
                 {invoice.items && invoice.items.length > 0 ? (
                   invoice.items.map((item, index) => (
                     <tr key={item.id || index} className="hover:bg-gray-50">
-                      <td className="p-4">{item.description}</td>
+                      <td className="p-4">{formatInvoiceItemDescription(item, invoice.invoice_type)}</td>
                       <td className="p-4 text-right">{item.quantity}</td>
                       <td className="p-4 text-center">{item.unit}</td>
                       <td className="p-4 text-right">{formatCurrency(item.unit_price)}</td>

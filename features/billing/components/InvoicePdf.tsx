@@ -2,6 +2,7 @@ import React from 'react'
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer'
 import { InvoiceWithRelations } from '../types/invoice.types'
 import { resolveInvoiceSupplier } from '../lib/invoiceSupplier'
+import { formatInvoiceItemDescription } from '../lib/invoiceItemDescription'
 import { Settings } from '@/features/time-tracking/types/settings.types'
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatDate } from '@/lib/utils/date'
@@ -200,7 +201,7 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
 
                     {invoice.items?.map((item, index) => (
                         <View key={index} style={styles.tableRow}>
-                            <Text style={styles.colDesc}>{item.description}</Text>
+                            <Text style={styles.colDesc}>{formatInvoiceItemDescription(item, invoice.invoice_type)}</Text>
                             <Text style={styles.colQty}>{item.quantity}</Text>
                             <Text style={styles.colUnit}>{item.unit}</Text>
                             <Text style={styles.colPrice}>{formatCurrency(item.unit_price)}</Text>
@@ -261,8 +262,6 @@ export function InvoicePdf({ invoice, settings, qrCodeUrl, logoUrl }: InvoicePdf
 
                         {/* Info */}
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                            <Text>IČO: {supplier.companyIco}</Text>
-                            <Text>Účet: {supplier.bankAccount}</Text>
                             <Text style={{ marginTop: 5, fontSize: 6, color: '#999' }}>Faktura byla vystavena elektronicky.</Text>
                         </View>
                     </View>
