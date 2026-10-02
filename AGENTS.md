@@ -130,7 +130,8 @@ interface InvoiceWithRelations extends Invoice {
 interface CreateLinkedInvoiceInput {
   client_id: string
   entry_ids: string[]
-  group_by: 'entry' | 'phase' | 'day'  // How to group entries into invoice items
+  group_by: 'entry' | 'phase' | 'project' | 'day' | 'custom'
+  custom_description?: string  // Required for one custom-text summary item
   issue_date: string
   due_date: string
   tax_rate?: number
@@ -208,7 +209,7 @@ When passing data to dialog components:
 Check:
 1. `preselectedEntries` has `client_id` field (not just `client.id`)
 2. All entries are from same client
-3. `handleDirectSubmit` bypasses form validation for preselected flow
+3. `handleFormSubmit` resolves the client from preselected entries; the shared schema leaves the form client optional and validates all description fields in both flows
 
 ### Production login/data unavailable after Supabase email
 If production still serves `/login` from Vercel but sign-in, registration, or dashboard data fails, check Supabase first. A paused Supabase project makes Auth/PostgREST unavailable while the static Next.js frontend can still load. Resume/restore the project in the Supabase dashboard, then verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel still point to the active project. If the old project cannot be restored, create a new Supabase project, run `supabase-setup.sql` and migrations, then update the Vercel environment variables and redeploy.
@@ -224,6 +225,9 @@ PostgreSQL accepts `NaN` as a `numeric` value, so a lower-bound-only check does 
 
 ### Invoice descriptions contain duration/rate suffixes or the footer repeats payment details
 The September 2026 invoice RPC appended ` (159 min při sazbě 850.00 Kč/h)` to work descriptions. Apply `supabase/migrations/20261002_clean_invoice_descriptions.sql` after the secure invoice migration to keep new descriptions clean while retaining exact-minute prices and separate rate groups. `formatInvoiceItemDescription` hides only the generated trailing suffix on historical linked fixed-price items in both the detail page and PDF, without modifying stored invoices. Standalone descriptions remain untouched. Keep supplier IČO and bank account in the PDF supplier section only; the footer retains the logo, name/address, notes and electronic-issuance text.
+
+### Custom invoice text is rejected or its total differs from short entries
+Select `Vlastní text (jedna položka)` under `Seskupení položek` and enter a nonblank description of at most 1000 characters. Both manual and preselected forms use `linkedInvoiceSchema` through React Hook Form validation. The RPC requires the same text for `group_by=custom`, makes one `ks` item with the sum of per-entry rounded amounts, and retains entry invoice links. The preview uses `calculateCustomInvoiceSubtotal` with the same cent rounding. Apply `20261002_clean_invoice_descriptions.sql` with this release; without it, the RPC rejects the new grouping mode. Custom text is preserved verbatim apart from surrounding whitespace and is never cleaned as a historical generated suffix.
 
 ### PDF download asks for supplier details
 Enter company name, address, IČO and bank account in Settings. The app refuses a payable PDF until these are present; it never substitutes hardcoded personal or bank details. New invoices snapshot the configured bank account, while old invoices can use the current setting.

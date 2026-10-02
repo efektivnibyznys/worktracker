@@ -32,3 +32,7 @@ test('work description parentheses and billing details inside the text stay inta
 test('new clean descriptions remain unchanged', () => {
   assert.equal(formatInvoiceItemDescription({ ...item, description: 'Realizace webu' }, 'linked'), 'Realizace webu')
 })
+
+test('custom summary descriptions retain text resembling the historical generated suffix', () => {
+  assert.equal(formatInvoiceItemDescription({ ...item, unit: 'ks' }, 'linked'), item.description)
+})

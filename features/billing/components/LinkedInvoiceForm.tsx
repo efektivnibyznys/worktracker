@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { linkedInvoiceSchema, type LinkedInvoiceFormData } from '../lib/linkedInvoiceSchema'
+import { calculateCustomInvoiceSubtotal } from '../lib/linkedInvoicePricing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,17 +27,6 @@ import { formatTime } from '@/lib/utils/time'
 import { formatDate } from '@/lib/utils/date'
 import type { CreateLinkedInvoiceInput } from '../types/invoice.types'
 import type { EntryWithRelations } from '@/features/time-tracking/types/entry.types'
-
-const linkedInvoiceSchema = z.object({
-  client_id: z.string().optional(), // Validated manually when not preselected
-  group_by: z.enum(['entry', 'phase', 'project', 'day']),
-  issue_date: z.string().min(1, 'Datum vystavení je povinné'),
-  due_date: z.string().min(1, 'Datum splatnosti je povinné'),
-  tax_rate: z.string().optional(),
-  notes: z.string().optional()
-})
-
-type LinkedInvoiceFormData = z.infer<typeof linkedInvoiceSchema>
 
 interface LinkedInvoiceFormProps {
   onSubmit: (input: CreateLinkedInvoiceInput) => Promise<void>
@@ -140,6 +130,7 @@ export function LinkedInvoiceForm({
     defaultValues: {
       client_id: preselectedClientId || '',
       group_by: 'entry',
+      custom_description: '',
       issue_date: today,
       due_date: defaultDueDate,
       tax_rate: String(settings?.default_tax_rate || 0),
@@ -154,9 +145,11 @@ export function LinkedInvoiceForm({
     }
   }, [hasPreselectedEntries, preselectedClientId, setValue])
 
+  const groupBy = watch('group_by')
+  const subtotal = groupBy === 'custom' ? calculateCustomInvoiceSubtotal(effectiveEntries) : totals.subtotal
   const taxRate = parseFloat(watch('tax_rate') || '0')
-  const taxAmount = totals.subtotal * (taxRate / 100)
-  const totalAmount = totals.subtotal + taxAmount
+  const taxAmount = subtotal * (taxRate / 100)
+  const totalAmount = subtotal + taxAmount
 
   const handleClientChange = (clientId: string) => {
     setManualClientId(clientId)
@@ -181,34 +174,12 @@ export function LinkedInvoiceForm({
       client_id: clientId,
       entry_ids: effectiveEntryIds,
       group_by: data.group_by,
+      custom_description: data.group_by === 'custom' ? data.custom_description : undefined,
       issue_date: data.issue_date,
       due_date: data.due_date,
       tax_rate: parseFloat(data.tax_rate || '0'),
       notes: data.notes
     })
-  }
-
-  // Direct submit handler that bypasses react-hook-form validation for preselected entries
-  const handleDirectSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!hasPreselectedEntries) {
-      // Use react-hook-form validation for manual selection
-      handleSubmit(handleFormSubmit)(e)
-      return
-    }
-
-    // For preselected entries, submit directly with form values
-    const formData = {
-      client_id: preselectedClientId,
-      group_by: watch('group_by'),
-      issue_date: watch('issue_date'),
-      due_date: watch('due_date'),
-      tax_rate: watch('tax_rate'),
-      notes: watch('notes')
-    }
-
-    await handleFormSubmit(formData as LinkedInvoiceFormData)
   }
 
   // Get client name for display - prefer from preselected entries, fallback to clients list
@@ -242,7 +213,7 @@ export function LinkedInvoiceForm({
   }
 
   return (
-    <form onSubmit={handleDirectSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Client - show as read-only when preselected */}
       {hasPreselectedEntries ? (
         <div>
@@ -332,12 +303,12 @@ export function LinkedInvoiceForm({
           <div>
             <Label htmlFor="group_by">Seskupení položek</Label>
             <Select
-              value={watch('group_by')}
-              onValueChange={(value: 'entry' | 'phase' | 'project' | 'day') =>
+              value={groupBy}
+              onValueChange={(value: CreateLinkedInvoiceInput['group_by']) =>
                 setValue('group_by', value)
               }
             >
-              <SelectTrigger className="mt-1">
+              <SelectTrigger id="group_by" className="mt-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -345,9 +316,34 @@ export function LinkedInvoiceForm({
                 <SelectItem value="phase">Seskupit podle fáze</SelectItem>
                 <SelectItem value="project">Seskupit podle projektu</SelectItem>
                 <SelectItem value="day">Seskupit podle dne</SelectItem>
+                <SelectItem value="custom">Vlastní text (jedna položka)</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {groupBy === 'custom' && (
+            <div>
+              <Label htmlFor="custom_description">Vlastní popis položky *</Label>
+              <Textarea
+                id="custom_description"
+                {...register('custom_description')}
+                className="mt-1"
+                rows={3}
+                maxLength={1000}
+                placeholder="Např. Vývoj a údržba webu za září 2026"
+                aria-invalid={!!errors.custom_description}
+                aria-describedby={errors.custom_description ? 'custom-description-error' : 'custom-description-help'}
+              />
+              <p id="custom-description-help" className="text-sm text-gray-500 mt-1">
+                Vybrané záznamy se spojí do jedné položky s tímto popisem a celkovou cenou.
+              </p>
+              {errors.custom_description && (
+                <p id="custom-description-error" className="text-sm text-red-600 mt-1">
+                  {errors.custom_description.message}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Dates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -414,7 +410,7 @@ export function LinkedInvoiceForm({
             </div>
             <div className="flex justify-between text-sm">
               <span>Mezisoučet:</span>
-              <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
             {taxRate > 0 && (
               <div className="flex justify-between text-sm">

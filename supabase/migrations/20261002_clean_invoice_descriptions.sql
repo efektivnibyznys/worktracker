@@ -1,4 +1,4 @@
--- Remove the generated duration/rate suffix from new linked invoice items.
+-- Keep linked descriptions clean and support one custom-text summary item.
 -- Historical invoice rows and all financial calculations remain unchanged.
 -- Apply after 20260928_secure_invoices.sql.
 
@@ -18,6 +18,7 @@ DECLARE
   v_locked integer;
   v_changed integer;
   v_group_by text;
+  v_custom_description text;
   v_issue_date date;
   v_due_date date;
   v_tax_rate numeric;
@@ -34,13 +35,19 @@ BEGIN
   END IF;
   v_client_id := (p_input->>'client_id')::uuid;
   v_group_by := p_input->>'group_by';
+  v_custom_description := regexp_replace(p_input->>'custom_description', '^\s+|\s+$', '', 'g');
   v_issue_date := (p_input->>'issue_date')::date;
   v_due_date := (p_input->>'due_date')::date;
   v_tax_rate := round(COALESCE((p_input->>'tax_rate')::numeric, 0), 2);
-  IF v_client_id IS NULL OR v_group_by NOT IN ('entry', 'phase', 'project', 'day')
+  IF v_client_id IS NULL OR v_group_by NOT IN ('entry', 'phase', 'project', 'day', 'custom')
      OR v_group_by IS NULL OR v_issue_date IS NULL OR v_due_date IS NULL
      OR v_due_date < v_issue_date OR v_tax_rate < 0 OR v_tax_rate > 100 THEN
     RAISE EXCEPTION 'Invalid invoice details';
+  END IF;
+  IF v_group_by = 'custom' AND (
+    v_custom_description IS NULL OR char_length(v_custom_description) NOT BETWEEN 1 AND 1000
+  ) THEN
+    RAISE EXCEPTION 'Vlastní popis položky musí obsahovat 1 až 1000 znaků.';
   END IF;
   IF jsonb_typeof(p_input->'entry_ids') IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'Entry IDs must be an array';
@@ -118,7 +125,18 @@ BEGIN
 
   -- Keep work descriptions clean. Fixed-price amounts still use exact minutes
   -- and separate hourly-rate groups to preserve fractional-hour totals.
-  IF v_group_by = 'entry' THEN
+  IF v_group_by = 'custom' THEN
+    -- One custom line totals the rounded amounts of all selected work entries,
+    -- including entries with different hourly rates. Entry links remain below.
+    -- Use the manual-item unit so historical suffix formatting leaves this text intact.
+    INSERT INTO public.invoice_items(
+      invoice_id, description, quantity, unit, unit_price, total_price, sort_order
+    )
+    SELECT v_invoice.id, v_custom_description, 1, 'ks',
+           SUM(round(e.duration_minutes::numeric * e.hourly_rate / 60, 2)),
+           SUM(round(e.duration_minutes::numeric * e.hourly_rate / 60, 2)), 0
+    FROM public.entries e WHERE e.id = ANY(v_entry_ids);
+  ELSIF v_group_by = 'entry' THEN
     INSERT INTO public.invoice_items(
       invoice_id, entry_id, phase_id, project_id, description, quantity,
       unit, unit_price, total_price, sort_order

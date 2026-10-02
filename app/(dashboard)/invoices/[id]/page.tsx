@@ -338,7 +338,7 @@ export default function InvoiceDetailPage() {
                 {invoice.items && invoice.items.length > 0 ? (
                   invoice.items.map((item, index) => (
                     <tr key={item.id || index} className="hover:bg-gray-50">
-                      <td className="p-4">{formatInvoiceItemDescription(item, invoice.invoice_type)}</td>
+                      <td className="p-4 whitespace-pre-wrap break-words">{formatInvoiceItemDescription(item, invoice.invoice_type)}</td>
                       <td className="p-4 text-right">{item.quantity}</td>
                       <td className="p-4 text-center">{item.unit}</td>
                       <td className="p-4 text-right">{formatCurrency(item.unit_price)}</td>
