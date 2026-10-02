@@ -130,7 +130,8 @@ interface InvoiceWithRelations extends Invoice {
 interface CreateLinkedInvoiceInput {
   client_id: string
   entry_ids: string[]
-  group_by: 'entry' | 'phase' | 'day'  // How to group entries into invoice items
+  group_by: 'entry' | 'phase' | 'project' | 'day' | 'custom'
+  custom_description?: string  // Required for one custom-text summary item
   issue_date: string
   due_date: string
   tax_rate?: number
@@ -208,7 +209,7 @@ When passing data to dialog components:
 Check:
 1. `preselectedEntries` has `client_id` field (not just `client.id`)
 2. All entries are from same client
-3. `handleDirectSubmit` bypasses form validation for preselected flow
+3. `handleFormSubmit` resolves the client from preselected entries; the shared schema leaves the form client optional and validates all description fields in both flows
 
 ### Production login/data unavailable after Supabase email
 If production still serves `/login` from Vercel but sign-in, registration, or dashboard data fails, check Supabase first. A paused Supabase project makes Auth/PostgREST unavailable while the static Next.js frontend can still load. Resume/restore the project in the Supabase dashboard, then verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel still point to the active project. If the old project cannot be restored, create a new Supabase project, run `supabase-setup.sql` and migrations, then update the Vercel environment variables and redeploy.
@@ -220,7 +221,13 @@ With Next.js 16, use `npm run lint` (ESLint flat configuration); `next lint` was
 Apply `supabase/migrations/20260928_secure_invoices.sql` before deploying the matching client code. Invoice writes use authenticated RPCs, not direct table mutations. The migration stops if historical `(user_id, invoice_number)` duplicates exist; resolve them manually without silently changing issued invoices. To edit a billed work entry, delete its invoice first so the entry returns to `unbilled`, then edit and create a new invoice. A failed RPC rolls back its header, items, number allocation and entry changes together.
 
 ### Short work entries or invalid numeric inputs produce confusing invoice amounts
-PostgreSQL accepts `NaN` as a `numeric` value, so a lower-bound-only check does not protect invoice totals. The invoice RPCs validate both lower and finite upper bounds on amounts and rates. Linked invoice lines show exact minutes and the hourly rate in their description; rounding hours to two decimals made a one-minute entry appear as `0.02 hod` even though the amount was calculated from exactly one minute.
+PostgreSQL accepts `NaN` as a `numeric` value, so a lower-bound-only check does not protect invoice totals. The invoice RPCs validate both lower and finite upper bounds on amounts and rates. Linked invoice lines use fixed-price items calculated from exact minutes; rounding hours to two decimals made a one-minute entry appear as `0.02 hod` even though the amount was calculated from exactly one minute.
+
+### Invoice descriptions contain duration/rate suffixes or the footer repeats payment details
+The September 2026 invoice RPC appended ` (159 min při sazbě 850.00 Kč/h)` to work descriptions. Apply `supabase/migrations/20261002_clean_invoice_descriptions.sql` after the secure invoice migration to keep new descriptions clean while retaining exact-minute prices and separate rate groups. `formatInvoiceItemDescription` hides only the generated trailing suffix on historical linked fixed-price items in both the detail page and PDF, without modifying stored invoices. Standalone descriptions remain untouched. Keep supplier IČO and bank account in the PDF supplier section only; the footer retains the logo, name/address, notes and electronic-issuance text.
+
+### Custom invoice text is rejected or its total differs from short entries
+Select `Vlastní text (jedna položka)` under `Seskupení položek` and enter a nonblank description of at most 1000 characters. Both manual and preselected forms use `linkedInvoiceSchema` through React Hook Form validation. The RPC requires the same text for `group_by=custom`, makes one `ks` item with the sum of per-entry rounded amounts, and retains entry invoice links. The preview uses `calculateCustomInvoiceSubtotal` with the same cent rounding. Apply `20261002_clean_invoice_descriptions.sql` with this release; without it, the RPC rejects the new grouping mode. Custom text is preserved verbatim apart from surrounding whitespace and is never cleaned as a historical generated suffix.
 
 ### PDF download asks for supplier details
 Enter company name, address, IČO and bank account in Settings. The app refuses a payable PDF until these are present; it never substitutes hardcoded personal or bank details. New invoices snapshot the configured bank account, while old invoices can use the current setting.
@@ -235,6 +242,10 @@ Next.js 16 Turbopack reports `Unknown module type` when a client component direc
 ### A full Supabase dump fails to restore into an initialized test database
 
 An initialized Supabase PostgreSQL database already has managed schemas such as `graphql`; restoring a full platform dump there can fail with duplicate-object errors. For the backup rehearsal, create a disposable database with `createdb -T template0`, then run `pg_restore --no-owner --no-acl --exit-on-error` against that fresh database. The manual backup workflow performs this restore, compares row counts, applies the security migrations to the restored production data, and verifies unchanged business and Storage metadata rows. Do not use `pg_restore --clean` against the live project.
+
+### Backup restore rehearsal loses the database connection during initialization
+
+The Supabase PostgreSQL image starts a temporary socket-only server and stops it before starting the final server. A socket-based `pg_isready` can succeed too early, causing the restore rehearsal to fail with `the database system is shutting down`. Wait for `pg_isready -h 127.0.0.1` and fail explicitly on timeout before restoring. The workflow also rehearses the custom invoice description migration against the restored snapshot.
 
 ## Environment Variables
 

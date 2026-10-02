@@ -20,6 +20,8 @@ Record counts of `clients`, `phases`, `projects`, `entries`, `settings`, `invoic
 
 The manual GitHub Actions workflow performs the tested database restore into a disposable PostgreSQL database created from `template0`. A default initialized database already contains Supabase system objects such as `graphql`, causing duplicate object errors during full restore. The workflow checks restored row counts and rehearses both migrations against the production snapshot. Keep the successful workflow run and its encrypted artifact together as recovery evidence.
 
+Wait for TCP readiness (`pg_isready -h 127.0.0.1`) before the restore. The image's temporary initialization server accepts socket connections but shuts down before the final server starts; socket readiness can therefore report success too early. The rehearsal also applies `20261002_clean_invoice_descriptions.sql` and checks that the snapshot's existing rows remain unchanged.
+
 To restore into a new hosted Supabase project during a real recovery, use the current [Supabase platform restore guidance](https://supabase.com/docs/guides/self-hosting/restore-from-platform) and test the full procedure on a separate project first. A raw `pg_restore --clean` against an initialized hosted project can conflict with managed schemas and must not be run against the production project. After the database restore, use the new project's URL and secret key to restore Storage objects:
 
 ```bash

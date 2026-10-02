@@ -436,7 +436,7 @@ class InvoiceService extends BaseService<'invoices'> {
 // invoice.types.ts
 type InvoiceStatus = 'draft' | 'issued' | 'sent' | 'paid' | 'cancelled' | 'overdue'
 type InvoiceType = 'linked' | 'standalone'
-type GroupBy = 'entry' | 'phase' | 'day'
+type GroupBy = 'entry' | 'phase' | 'project' | 'day' | 'custom'
 
 interface Invoice {
   id: string
@@ -470,6 +470,7 @@ interface CreateLinkedInvoiceInput {
   client_id: string
   entry_ids: string[]
   group_by: GroupBy
+  custom_description?: string
   issue_date: string
   due_date: string
   tax_rate?: number
@@ -513,8 +514,8 @@ interface InvoiceStats {
 3. LinkedInvoiceForm
    ├── Auto-detects client from entries
    ├── Shows entries summary (read-only)
-   ├── User sets: group_by, dates, tax_rate, notes
-   └── Submit triggers handleDirectSubmit()
+   ├── User sets: group_by, optional custom_description, dates, tax_rate, notes
+   └── Submit triggers handleSubmit(handleFormSubmit)
 
 4. InvoiceService.createLinkedInvoice()
    └── Calls create_linked_invoice RPC, which atomically:
@@ -765,10 +766,10 @@ const SETTINGS_KEY = 'settings'
 │ LinkedInvoiceForm                        │
 │ - Auto-detect clientId from entries      │
 │ - Show entries summary                   │
-│ - Collect: group_by, dates, tax, notes   │
+│ - Collect: grouping, text, dates, tax    │
 └─────────────────────────────────────────┘
                     │
-                    ↓ handleDirectSubmit()
+                    ↓ handleSubmit(handleFormSubmit)
 ┌─────────────────────────────────────────┐
 │ useInvoices().createLinkedInvoice       │
 │ .mutateAsync(input)                     │
@@ -960,7 +961,7 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 **Cause:** Client ID not being set properly
 **Solution:**
 1. Check `preselectedEntries` has `client_id` field
-2. Verify `handleDirectSubmit` is used (bypasses form validation)
+2. Verify `handleFormSubmit` takes the client from preselected entries and the shared schema permits an optional form client ID
 3. Ensure all entries from same client
 
 #### 6. Production login/data unavailable after Supabase email
@@ -1009,11 +1010,19 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 
 #### 13. A short work entry or special numeric value distorts an invoice
 **Cause:** Rounding fractional hours to two decimals in a line description can disagree with a price calculated from exact minutes. PostgreSQL `numeric` also accepts `NaN`, which passes a nonnegative check.
-**Solution:** Linked invoice lines describe exact minutes and hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
+**Solution:** Linked invoice lines use fixed-price items calculated from exact minutes, with separate groups for different hourly rates. The invoice RPCs reject special numeric values with finite upper-bound checks before creating headers or items.
 
 #### 14. A full Supabase dump conflicts with managed schemas during a restore rehearsal
 **Cause:** An initialized test database already contains Supabase-managed objects such as `graphql`, which are also in the full database dump.
 **Solution:** Create a disposable database from `template0` and restore with `pg_restore --no-owner --no-acl --exit-on-error`. The manual backup workflow follows this procedure and then checks row preservation after the security migrations. Never run a destructive full restore against production.
+
+#### 15. Invoice descriptions or footer contain redundant details
+**Cause:** The September 2026 linked-invoice RPC appended duration and rate text to stored descriptions, and the PDF footer repeated supplier IČO and bank account.
+**Solution:** Apply `supabase/migrations/20261002_clean_invoice_descriptions.sql` after `20260928_secure_invoices.sql`. The RPC preserves original work/group descriptions and retains the existing exact-minute amounts, rate grouping, locking and ownership checks. Historical linked fixed-price descriptions are formatted by `features/billing/lib/invoiceItemDescription.ts` in the detail page and PDF; stored invoice rows remain unchanged. Standalone invoice descriptions are preserved. Supplier IČO and account appear only in the PDF supplier section.
+
+#### 16. Custom invoice text or summary amounts fail validation
+**Cause:** The frontend supports `group_by=custom` only with the matching invoice RPC; preselected entries previously bypassed field validation, and short entries need per-entry cent rounding before summation.
+**Solution:** Apply `20261002_clean_invoice_descriptions.sql`. The form shows `Vlastní text (jedna položka)` with a required multiline description (1–1000 characters). Both selection flows use `linkedInvoiceSchema`. The RPC validates the text, creates one `ks` item totaling rounded entry amounts across rates, and bills all selected entries atomically. `calculateCustomInvoiceSubtotal` mirrors this cent rounding in the preview. Text is stored on the item and displayed unchanged in detail/PDF, except for trimming surrounding whitespace. Existing grouping choices keep their behavior.
 
 ### Debug Techniques
 

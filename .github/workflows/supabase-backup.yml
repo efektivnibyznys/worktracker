@@ -98,12 +98,17 @@ jobs:
           docker run --rm --detach --name "$container" \
             -e POSTGRES_PASSWORD=restore-test-only \
             public.ecr.aws/supabase/postgres:17.6.1.166
+          # The temporary initialization server accepts socket connections, then stops.
+          # TCP becomes available only after initialization has finished.
+          ready=false
           for attempt in $(seq 1 60); do
-            if docker exec "$container" pg_isready -U supabase_admin -d postgres >/dev/null 2>&1; then
+            if docker exec "$container" pg_isready -h 127.0.0.1 -U supabase_admin -d postgres >/dev/null 2>&1; then
+              ready=true
               break
             fi
             sleep 1
           done
+          test "$ready" = true
           docker cp "$restore_dir/database.dump" "$container:/tmp/database.dump"
           docker exec "$container" createdb -U supabase_admin -T template0 worktracker_restore
           docker exec "$container" pg_restore -U supabase_admin -d worktracker_restore \
@@ -118,9 +123,11 @@ jobs:
           docker cp tests/sql/production_row_digest.sql "$container:/tmp/production_row_digest.sql"
           docker cp supabase/migrations/20260928_secure_invoices.sql "$container:/tmp/secure_invoices.sql"
           docker cp supabase/migrations/20260928_secure_logos.sql "$container:/tmp/secure_logos.sql"
+          docker cp supabase/migrations/20261002_clean_invoice_descriptions.sql "$container:/tmp/invoice_descriptions.sql"
           before="$(docker exec "$container" psql -U supabase_admin -d worktracker_restore -At -v ON_ERROR_STOP=1 -f /tmp/production_row_digest.sql)"
           docker exec "$container" psql -U supabase_admin -d worktracker_restore -v ON_ERROR_STOP=1 -f /tmp/secure_invoices.sql
           docker exec "$container" psql -U supabase_admin -d worktracker_restore -v ON_ERROR_STOP=1 -f /tmp/secure_logos.sql
+          docker exec "$container" psql -U supabase_admin -d worktracker_restore -v ON_ERROR_STOP=1 -f /tmp/invoice_descriptions.sql
           after="$(docker exec "$container" psql -U supabase_admin -d worktracker_restore -At -v ON_ERROR_STOP=1 -f /tmp/production_row_digest.sql)"
           test "$before" = "$after"
-          echo 'Security migrations passed on restored production data; all existing business and Storage metadata rows match.'
+          echo 'Invoice and logo migrations passed on restored production data; all existing business and Storage metadata rows match.'

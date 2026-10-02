@@ -50,9 +50,11 @@ BEGIN
   ));
   IF again.subtotal <> 14.17 OR NOT EXISTS (
     SELECT 1 FROM public.invoice_items
-    WHERE invoice_id = again.id AND description LIKE '%1 min při sazbě 850.00 Kč/h%'
+    WHERE invoice_id = again.id AND description = 'One minute'
+      AND quantity = 1 AND unit = 'položka'
+      AND unit_price = 14.17 AND total_price = 14.17
   ) THEN
-    RAISE EXCEPTION 'one-minute line misstates the billable duration or total';
+    RAISE EXCEPTION 'one-minute line changes the work description or exact total';
   END IF;
   PERFORM public.delete_invoice(again.id);
   BEGIN
