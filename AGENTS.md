@@ -243,6 +243,10 @@ Next.js 16 Turbopack reports `Unknown module type` when a client component direc
 
 An initialized Supabase PostgreSQL database already has managed schemas such as `graphql`; restoring a full platform dump there can fail with duplicate-object errors. For the backup rehearsal, create a disposable database with `createdb -T template0`, then run `pg_restore --no-owner --no-acl --exit-on-error` against that fresh database. The manual backup workflow performs this restore, compares row counts, applies the security migrations to the restored production data, and verifies unchanged business and Storage metadata rows. Do not use `pg_restore --clean` against the live project.
 
+### Backup restore rehearsal loses the database connection during initialization
+
+The Supabase PostgreSQL image starts a temporary socket-only server and stops it before starting the final server. A socket-based `pg_isready` can succeed too early, causing the restore rehearsal to fail with `the database system is shutting down`. Wait for `pg_isready -h 127.0.0.1` and fail explicitly on timeout before restoring. The workflow also rehearses the custom invoice description migration against the restored snapshot.
+
 ## Environment Variables
 
 Required in `.env.local`:
