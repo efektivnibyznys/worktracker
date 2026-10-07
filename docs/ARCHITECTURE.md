@@ -634,6 +634,7 @@ const SETTINGS_KEY = 'settings'
 ['phases', clientId]           // Phases for client
 
 ['invoices']                   // All invoices (with filters in object)
+['invoices', 'dashboard']       // Standalone financial data for dashboard/archive
 ['invoices', 'stats']          // Invoice statistics
 ['invoices', id]               // Single invoice
 
@@ -1023,6 +1024,10 @@ determineTimelineGrouping(dateRange): 'day' | 'week' | 'month'
 #### 16. Custom invoice text or summary amounts fail validation
 **Cause:** The frontend supports `group_by=custom` only with the matching invoice RPC; preselected entries previously bypassed field validation, and short entries need per-entry cent rounding before summation.
 **Solution:** Apply `20261002_clean_invoice_descriptions.sql`. The form shows `Vlastní text (jedna položka)` with a required multiline description (1–1000 characters). Both selection flows use `linkedInvoiceSchema`. The RPC validates the text, creates one `ks` item totaling rounded entry amounts across rates, and bills all selected entries atomically. `calculateCustomInvoiceSubtotal` mirrors this cent rounding in the preview. Text is stored on the item and displayed unchanged in detail/PDF, except for trimming surrounding whitespace. Existing grouping choices keep their behavior.
+
+#### 17. Standalone invoices do not appear in dashboard income
+**Cause:** Dashboard cards and financial charts used only time entries, so standalone invoices had no source record in their calculations.
+**Solution:** `useDashboardInvoices` loads paginated standalone financial fields under `['invoices', 'dashboard']`; all invoice mutations invalidate that key through the existing `['invoices']` prefix. `getDashboardFinancialRecords` combines entry value and non-cancelled standalone invoice `subtotal` by `issue_date`. Drafts are included in unbilled value, paid invoices in paid value, and all other active statuses in billed value. Linked invoices are excluded to prevent double counting. Summary cards, billing status, top clients, monthly revenue and archive amounts include this data; invoice-only years appear in the dashboard selector/archive. Hours, entry counts, filtered entry-list totals and hourly-rate statistics remain based on time entries. Invoice and archive query failures show an error and suppress incomplete financial amounts. The current weekly summary includes preceding December entries and standalone invoices when the first January week crosses a year boundary; annual charts remain scoped to the selected year. No database migration is needed.
 
 ### Debug Techniques
 

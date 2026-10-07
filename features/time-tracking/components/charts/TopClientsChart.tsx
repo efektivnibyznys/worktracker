@@ -73,6 +73,12 @@ export function TopClientsChart({
             <span className="text-muted-foreground">Záznamy:</span>
             <span className="font-medium">{data.count}</span>
           </div>
+          {data.invoiceCount > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Samostatné faktury:</span>
+              <span className="font-medium">{data.invoiceCount}</span>
+            </div>
+          )}
         </div>
       </div>
     )

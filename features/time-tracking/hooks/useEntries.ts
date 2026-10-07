@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { format, startOfWeek } from 'date-fns'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { EntryService } from '../services/entryService'
@@ -11,16 +12,14 @@ const ENTRIES_KEY = 'entries'
 
 // Helper functions for client-side filtering
 function filterToday(entries: Entry[]): Entry[] {
-  const today = new Date().toISOString().split('T')[0]
+  const today = format(new Date(), 'yyyy-MM-dd')
   return entries.filter(entry => entry.date === today)
 }
 
 function filterThisWeek(entries: Entry[]): Entry[] {
   const now = new Date()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))
-  const mondayStr = monday.toISOString().split('T')[0]
-  const todayStr = now.toISOString().split('T')[0]
+  const mondayStr = format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+  const todayStr = format(now, 'yyyy-MM-dd')
 
   return entries.filter(entry => entry.date >= mondayStr && entry.date <= todayStr)
 }
@@ -82,13 +81,21 @@ export function useDashboardEntries(year?: number) {
   const entryService = useMemo(() => new EntryService(supabase), [supabase])
 
   // Fetch entries for selected year (single DB query)
-  const { data: yearEntries } = useQuery({
+  const { data: yearEntries, isLoading, error } = useQuery({
     queryKey: [ENTRIES_KEY, 'year', selectedYear],
     queryFn: () => entryService.getByYear(selectedYear),
   })
 
-  // Filter on client side for current periods
-  const isCurrentYear = selectedYear === new Date().getFullYear()
+  // The first week of January can contain December work entries.
+  const now = new Date()
+  const isCurrentYear = selectedYear === now.getFullYear()
+  const weekStartYear = startOfWeek(now, { weekStartsOn: 1 }).getFullYear()
+  const crossesYear = isCurrentYear && weekStartYear < selectedYear
+  const { data: previousYearEntries, isLoading: previousYearLoading, error: previousYearError } = useQuery({
+    queryKey: [ENTRIES_KEY, 'year', selectedYear - 1],
+    queryFn: () => entryService.getByYear(selectedYear - 1),
+    enabled: crossesYear,
+  })
 
   const todayEntries = useMemo(
     () => isCurrentYear ? filterToday(yearEntries || []) : [],
@@ -96,8 +103,8 @@ export function useDashboardEntries(year?: number) {
   )
 
   const weekEntries = useMemo(
-    () => isCurrentYear ? filterThisWeek(yearEntries || []) : [],
-    [yearEntries, isCurrentYear]
+    () => isCurrentYear ? filterThisWeek([...(yearEntries || []), ...(crossesYear ? previousYearEntries || [] : [])]) : [],
+    [yearEntries, previousYearEntries, crossesYear, isCurrentYear]
   )
 
   const monthEntries = useMemo(
@@ -109,6 +116,8 @@ export function useDashboardEntries(year?: number) {
     todayEntries,
     weekEntries,
     monthEntries,
+    isLoading: isLoading || (crossesYear && previousYearLoading),
+    error: error || (crossesYear ? previousYearError : null),
     yearEntries: yearEntries || [],
     selectedYear,
     isCurrentYear,
@@ -119,8 +128,8 @@ export function useDashboardEntries(year?: number) {
 function filterThisMonth(entries: Entry[]): Entry[] {
   const now = new Date()
   const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-  const firstDayStr = firstDay.toISOString().split('T')[0]
-  const todayStr = now.toISOString().split('T')[0]
+  const firstDayStr = format(firstDay, 'yyyy-MM-dd')
+  const todayStr = format(now, 'yyyy-MM-dd')
 
   return entries.filter(entry => entry.date >= firstDayStr && entry.date <= todayStr)
 }

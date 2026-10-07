@@ -5,6 +5,9 @@ import { useQuery } from '@tanstack/react-query'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { EntryService } from '../services/entryService'
 
+import { calculateDashboardStats, getDashboardYears } from '@/features/billing/lib/dashboardIncome'
+import type { DashboardInvoice } from '@/features/billing/lib/dashboardIncome'
+
 const ENTRIES_KEY = 'entries'
 
 /**
@@ -51,15 +54,15 @@ export function useAvailableYears() {
 /**
  * Hook for archive - yearly stats for all available years
  */
-export function useArchiveStats() {
+export function useArchiveStats(invoices: DashboardInvoice[] = []) {
     const supabase = useMemo(() => createSupabaseClient(), [])
     const entryService = useMemo(() => new EntryService(supabase), [supabase])
     const { years } = useAvailableYears()
 
     const currentYear = new Date().getFullYear()
-    const pastYears = years.filter(y => y < currentYear)
+    const pastYears = getDashboardYears(years, invoices, currentYear).filter(y => y < currentYear)
 
-    const { data: archiveStats, isLoading } = useQuery({
+    const { data: archiveStats, isLoading, error } = useQuery({
         queryKey: [ENTRIES_KEY, 'archive-stats', pastYears],
         queryFn: async () => {
             const stats = await Promise.all(
@@ -71,7 +74,12 @@ export function useArchiveStats() {
     })
 
     return {
-        archiveStats: archiveStats || [],
+        archiveStats: (archiveStats || []).map(stat => {
+            const standalone = calculateDashboardStats([], invoices, `${stat.year}-01-01`, `${stat.year}-12-31`)
+            return { ...stat, totalAmount: stat.totalAmount + standalone.amount, invoiceCount: standalone.invoiceCount }
+        }),
+        error,
+        yearCount: pastYears.length,
         hasArchive: pastYears.length > 0,
         isLoading,
     }

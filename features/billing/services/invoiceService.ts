@@ -10,6 +10,7 @@ import type {
   CreateLinkedInvoiceInput,
   CreateStandaloneInvoiceInput
 } from '../types/invoice.types'
+import type { DashboardInvoice } from '../lib/dashboardIncome'
 import type { EntryWithRelations } from '@/features/time-tracking/types/entry.types'
 
 export class InvoiceService extends BaseService<'invoices'> {
@@ -56,6 +57,23 @@ export class InvoiceService extends BaseService<'invoices'> {
 
     if (error) throw error
     return (data || []) as InvoiceWithRelations[]
+  }
+
+  /** Financial fields only; paginate so dashboard totals include every standalone invoice. */
+  async getDashboardInvoices(): Promise<DashboardInvoice[]> {
+    const invoices: DashboardInvoice[] = []
+    const pageSize = 1000
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await this.supabase.from(this.tableName)
+        .select('id, invoice_type, status, issue_date, client_id, client_name, subtotal')
+        .eq('invoice_type', 'standalone')
+        .neq('status', 'cancelled')
+        .order('id', { ascending: true })
+        .range(offset, offset + pageSize - 1)
+      if (error) throw error
+      invoices.push(...(data || []))
+      if (!data || data.length < pageSize) return invoices
+    }
   }
 
   /**

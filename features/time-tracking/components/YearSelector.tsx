@@ -12,9 +12,10 @@ import { useAvailableYears } from '../hooks/useYearlyEntries'
 interface YearSelectorProps {
     value: number
     onChange: (year: number) => void
+    additionalYears?: number[]
 }
 
-export function YearSelector({ value, onChange }: YearSelectorProps) {
+export function YearSelector({ value, onChange, additionalYears = [] }: YearSelectorProps) {
     const { years, isLoading } = useAvailableYears()
     const currentYear = new Date().getFullYear()
 
@@ -28,7 +29,7 @@ export function YearSelector({ value, onChange }: YearSelectorProps) {
                 <SelectValue placeholder="Rok" />
             </SelectTrigger>
             <SelectContent>
-                {years.map((year) => (
+                {[...new Set([...years, ...additionalYears, value])].sort((a, b) => b - a).map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                         {year} {year === currentYear && '(aktuální)'}
                     </SelectItem>
