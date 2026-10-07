@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { formatCurrency } from '@/lib/utils/currency'
 import { formatTime, calculateDuration } from '@/lib/utils/time'
 import { formatDate } from '@/lib/utils/date'
-import { calculateStats } from '@/lib/utils/calculations'
+import { calculateDashboardStats, getDashboardPeriodRanges, getDashboardYears } from '@/features/billing/lib/dashboardIncome'
+import { useDashboardInvoices } from '@/features/billing/hooks/useDashboardInvoices'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,7 +55,13 @@ export default function DashboardPage() {
 
   const { user } = useAuthStore()
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-  const { todayEntries, weekEntries, monthEntries, yearEntries, isCurrentYear } = useDashboardEntries(selectedYear)
+  const { yearEntries, weekEntries, isCurrentYear, isLoading: entriesLoading, error: entriesError } = useDashboardEntries(selectedYear)
+  const { invoices: dashboardInvoices, isLoading: invoicesLoading, error: invoicesError } = useDashboardInvoices()
+  const yearInvoices = useMemo(() => dashboardInvoices.filter(invoice => invoice.issue_date.startsWith(`${selectedYear}-`)), [dashboardInvoices, selectedYear])
+  const financialLoading = entriesLoading || invoicesLoading
+  const financialError = entriesError || invoicesError
+  const showAmount = (amount: number) => financialError ? 'Nedostupné' : financialLoading ? 'Načítání…' : formatCurrency(amount)
+  const invoiceYears = useMemo(() => getDashboardYears([], dashboardInvoices, new Date().getFullYear()), [dashboardInvoices])
   const { settings } = useSettings()
 
   const [filters, setFilters] = useState<EntryFilters>({})
@@ -73,12 +80,11 @@ export default function DashboardPage() {
 
   const { entries, createEntry, deleteEntry } = useEntries(entriesFilters)
 
-  // Calculate stats - memoized to avoid recalculation on every render
-  // Calculate stats - memoized to avoid recalculation on every render
-  const todayStats = useMemo(() => calculateStats(todayEntries), [todayEntries])
-  const weekStats = useMemo(() => calculateStats(weekEntries), [weekEntries])
-  const monthStats = useMemo(() => calculateStats(monthEntries), [monthEntries])
-  const yearStats = useMemo(() => calculateStats(yearEntries), [yearEntries])
+  const ranges = getDashboardPeriodRanges(selectedYear)
+  const todayStats = calculateDashboardStats(yearEntries, yearInvoices, ...ranges.today)
+  const weekStats = calculateDashboardStats(weekEntries, dashboardInvoices, ...ranges.week)
+  const monthStats = calculateDashboardStats(yearEntries, yearInvoices, ...ranges.month)
+  const yearStats = useMemo(() => calculateDashboardStats(yearEntries, yearInvoices, `${selectedYear}-01-01`, `${selectedYear}-12-31`), [yearEntries, yearInvoices, selectedYear])
 
   // Calculate totals for filtered entries
   const totalMinutes = useMemo(
@@ -95,8 +101,8 @@ export default function DashboardPage() {
 
   // Prepare chart data - vždy pro celý rok (ne pro filtrované entries)
   const billingStatusData = useMemo(
-    () => prepareBillingStatusData(yearEntries),
-    [yearEntries]
+    () => prepareBillingStatusData(yearEntries, yearInvoices),
+    [yearEntries, yearInvoices]
   )
 
   const monthlyHoursData = useMemo(
@@ -105,13 +111,13 @@ export default function DashboardPage() {
   )
 
   const topClientsData = useMemo(
-    () => prepareTopClientsData(yearEntries, clients, 8),
-    [yearEntries, clients]
+    () => prepareTopClientsData(yearEntries, clients, 8, yearInvoices),
+    [yearEntries, clients, yearInvoices]
   )
 
   const monthlyRevenueData = useMemo(
-    () => prepareMonthlyRevenueData(yearEntries, clients, selectedYear, 5),
-    [yearEntries, clients, selectedYear]
+    () => prepareMonthlyRevenueData(yearEntries, clients, selectedYear, 5, yearInvoices),
+    [yearEntries, clients, selectedYear, yearInvoices]
   )
 
   const weeklyActivityData = useMemo(
@@ -193,7 +199,7 @@ export default function DashboardPage() {
         <h2 className="text-3xl md:text-4xl font-bold">
           Dashboard
         </h2>
-        <YearSelector value={selectedYear} onChange={setSelectedYear} />
+        <YearSelector value={selectedYear} onChange={setSelectedYear} additionalYears={invoiceYears} />
       </div>
 
       {/* Quick Add Form */}
@@ -226,6 +232,12 @@ export default function DashboardPage() {
         )}
       </Card>
 
+      <p className="text-sm text-gray-600">
+        Částky zahrnují hodnotu časových záznamů a nestornovaných samostatných faktur včetně konceptů, bez DPH.
+        Samostatné faktury se počítají podle data vystavení. Hodiny a počet záznamů vycházejí z odpracované doby.
+      </p>
+      {financialError && <p role="alert" className="text-red-600">Finanční přehled se nepodařilo načíst. Obnovte stránku a zkuste to znovu.</p>}
+
       {/* Stats Cards */}
       <div className="grid gap-8 md:grid-cols-4">
         {isCurrentYear && (
@@ -239,10 +251,10 @@ export default function DashboardPage() {
                   {formatTime(todayStats.totalMinutes)}
                 </div>
                 <p className="text-lg text-gray-700 mt-2">
-                  {formatCurrency(todayStats.amount)}
+                  {showAmount(todayStats.amount)}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {todayStats.count} záznamů
+                  {todayStats.count} záznamů • {todayStats.invoiceCount} samostatných faktur
                 </p>
               </CardContent>
             </Card>
@@ -256,10 +268,10 @@ export default function DashboardPage() {
                   {formatTime(weekStats.totalMinutes)}
                 </div>
                 <p className="text-lg text-gray-700 mt-2">
-                  {formatCurrency(weekStats.amount)}
+                  {showAmount(weekStats.amount)}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {weekStats.count} záznamů
+                  {weekStats.count} záznamů • {weekStats.invoiceCount} samostatných faktur
                 </p>
               </CardContent>
             </Card>
@@ -273,10 +285,10 @@ export default function DashboardPage() {
                   {formatTime(monthStats.totalMinutes)}
                 </div>
                 <p className="text-lg text-gray-700 mt-2">
-                  {formatCurrency(monthStats.amount)}
+                  {showAmount(monthStats.amount)}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {monthStats.count} záznamů
+                  {monthStats.count} záznamů • {monthStats.invoiceCount} samostatných faktur
                 </p>
               </CardContent>
             </Card>
@@ -292,10 +304,10 @@ export default function DashboardPage() {
               {formatTime(yearStats.totalMinutes)}
             </div>
             <p className="text-lg text-gray-700 mt-2">
-              {formatCurrency(yearStats.amount)}
+              {showAmount(yearStats.amount)}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              {yearStats.count} záznamů
+              {yearStats.count} záznamů • {yearStats.invoiceCount} samostatných faktur
             </p>
           </CardContent>
         </Card>
@@ -304,21 +316,21 @@ export default function DashboardPage() {
       {/* Charts Section - New Layout */}
       <div className="space-y-8">
         {/* Billing Status - Full Width */}
-        <BillingStatusChart data={billingStatusData} />
+        {!financialLoading && !financialError && <BillingStatusChart data={billingStatusData} />}
 
         {/* Monthly Hours + Top Clients - 2 columns */}
         <div className="grid gap-8 md:grid-cols-2">
           <MonthlyHoursChart data={monthlyHoursData} year={selectedYear} />
-          <TopClientsChart data={topClientsData} year={selectedYear} />
+          {!financialLoading && !financialError && <TopClientsChart data={topClientsData} year={selectedYear} />}
         </div>
 
         {/* Monthly Revenue + Weekly Activity - 2 columns */}
         <div className="grid gap-8 md:grid-cols-2">
-          <MonthlyRevenueChart
+          {!financialLoading && !financialError && <MonthlyRevenueChart
             data={monthlyRevenueData.data}
             clientKeys={monthlyRevenueData.clientKeys}
             year={selectedYear}
-          />
+          />}
           <WeeklyActivityChart data={weeklyActivityData} />
         </div>
 
@@ -509,7 +521,7 @@ export default function DashboardPage() {
         )}
       </Card>
 
-      <ArchiveSection onYearSelect={setSelectedYear} />
+      <ArchiveSection onYearSelect={setSelectedYear} invoices={dashboardInvoices} financialUnavailable={financialLoading || !!financialError} />
     </div>
   )
 }

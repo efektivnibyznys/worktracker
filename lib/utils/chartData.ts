@@ -15,6 +15,8 @@ import {
 } from 'date-fns'
 import { cs } from 'date-fns/locale'
 import { Database } from '@/types/database'
+import { getDashboardFinancialRecords } from '@/features/billing/lib/dashboardIncome'
+import type { DashboardInvoice, DashboardFinancialRecord } from '@/features/billing/lib/dashboardIncome'
 
 type Entry = Database['public']['Tables']['entries']['Row']
 
@@ -276,6 +278,7 @@ export interface BillingStatusDataPoint {
   hours: number
   count: number
   color: string
+  invoiceCount: number
 }
 
 /**
@@ -284,20 +287,10 @@ export interface BillingStatusDataPoint {
  * @returns Pole datových bodů pro billing status chart
  */
 export function prepareBillingStatusData(
-  entries: Entry[]
+  entries: Entry[],
+  invoices: DashboardInvoice[] = []
 ): BillingStatusDataPoint[] {
-  // Seskupíme podle billing_status
-  const grouped = new Map<string, Entry[]>()
-
-  entries.forEach(entry => {
-    const status = entry.billing_status || 'unbilled'
-    if (!grouped.has(status)) {
-      grouped.set(status, [])
-    }
-    grouped.get(status)!.push(entry)
-  })
-
-  // Připravíme data pro každý status
+  const records = getDashboardFinancialRecords(entries, invoices)
   const statuses: Array<{ status: 'paid' | 'billed' | 'unbilled'; label: string }> = [
     { status: 'paid', label: 'Zaplaceno' },
     { status: 'billed', label: 'Fakturováno' },
@@ -305,20 +298,14 @@ export function prepareBillingStatusData(
   ]
 
   return statuses.map(({ status, label }) => {
-    const statusEntries = grouped.get(status) || []
-    const totalMinutes = statusEntries.reduce((sum, e) => sum + e.duration_minutes, 0)
-    const hours = totalMinutes / 60
-    const amount = statusEntries.reduce((sum, e) => {
-      const entryHours = e.duration_minutes / 60
-      return sum + (entryHours * e.hourly_rate)
-    }, 0)
-
+    const matching = records.filter(record => record.status === status)
     return {
       status,
       label,
-      amount: Math.round(amount),
-      hours: Math.round(hours * 100) / 100,
-      count: statusEntries.length,
+      amount: Math.round(matching.reduce((sum, record) => sum + record.amount, 0)),
+      hours: Math.round(matching.reduce((sum, record) => sum + record.totalMinutes, 0) / 60 * 100) / 100,
+      count: matching.reduce((sum, record) => sum + record.entryCount, 0),
+      invoiceCount: matching.reduce((sum, record) => sum + record.invoiceCount, 0),
       color: BILLING_STATUS_COLORS[status]
     }
   })
@@ -371,6 +358,7 @@ export function prepareMonthlyHoursData(
 }
 
 export interface TopClientDataPoint {
+  invoiceCount: number
   id: string
   name: string
   hours: number
@@ -389,50 +377,27 @@ export interface TopClientDataPoint {
 export function prepareTopClientsData(
   entries: Entry[],
   clients: { id: string; name: string }[],
-  topN: number = 8
+  topN: number = 8,
+  invoices: DashboardInvoice[] = []
 ): TopClientDataPoint[] {
-  if (entries.length === 0) return []
-
-  // Vytvoříme mapu pro jména klientů
-  const clientNameMap = new Map<string, string>()
-  clients.forEach(client => clientNameMap.set(client.id, client.name))
-
-  // Seskupíme podle client_id
-  const grouped = new Map<string, Entry[]>()
-
-  entries.forEach(entry => {
-    if (!grouped.has(entry.client_id)) {
-      grouped.set(entry.client_id, [])
-    }
-    grouped.get(entry.client_id)!.push(entry)
+  const clientNameMap = new Map(clients.map(client => [client.id, client.name]))
+  const grouped = new Map<string, DashboardFinancialRecord[]>()
+  getDashboardFinancialRecords(entries, invoices).forEach(record => {
+    const group = grouped.get(record.clientId) || []
+    group.push(record)
+    grouped.set(record.clientId, group)
   })
 
-  // Počítáme statistiky pro každého klienta
-  const clientStats = Array.from(grouped.entries()).map(([clientId, clientEntries]) => {
-    const totalMinutes = clientEntries.reduce((sum, e) => sum + e.duration_minutes, 0)
-    const hours = totalMinutes / 60
-    const amount = clientEntries.reduce((sum, e) => {
-      const entryHours = e.duration_minutes / 60
-      return sum + (entryHours * e.hourly_rate)
-    }, 0)
-
-    return {
-      id: clientId,
-      name: clientNameMap.get(clientId) || 'Neznámý klient',
-      hours: Math.round(hours * 100) / 100,
-      amount: Math.round(amount),
-      count: clientEntries.length
-    }
-  })
-
-  // Seřadíme podle výnosů sestupně a vezmeme top N
-  clientStats.sort((a, b) => b.amount - a.amount)
-  const topClients = clientStats.slice(0, topN)
-
-  // Přiřadíme barvy
-  return topClients.map((client, index) => ({
+  return Array.from(grouped.entries()).map(([clientId, records]) => ({
+    id: clientId,
+    name: clientNameMap.get(clientId) || records.find(record => record.clientName)?.clientName || 'Neznámý klient',
+    hours: Math.round(records.reduce((sum, record) => sum + record.totalMinutes, 0) / 60 * 100) / 100,
+    amount: Math.round(records.reduce((sum, record) => sum + record.amount, 0)),
+    count: records.reduce((sum, record) => sum + record.entryCount, 0),
+    invoiceCount: records.reduce((sum, record) => sum + record.invoiceCount, 0),
+  })).sort((a, b) => b.amount - a.amount).slice(0, topN).map((client, index) => ({
     ...client,
-    color: index < CHART_COLORS.length ? CHART_COLORS[index] : '#94a3b8'
+    color: CHART_COLORS[index] || '#94a3b8'
   }))
 }
 
@@ -454,19 +419,23 @@ export function prepareMonthlyRevenueData(
   entries: Entry[],
   clients: { id: string; name: string }[],
   year: number,
-  topN: number = 5
+  topN: number = 5,
+  invoices: DashboardInvoice[] = []
 ): {
   data: MonthlyRevenueDataPoint[]
   clientKeys: Array<{ id: string; name: string; color: string }>
 } {
+  const records = getDashboardFinancialRecords(entries, invoices)
+    .filter(record => record.date.startsWith(`${year}-`))
+
   // Nejprve zjistíme top klienty podle celkových výnosů
   const clientRevenues = new Map<string, number>()
 
-  entries.forEach(entry => {
-    const revenue = (entry.duration_minutes / 60) * entry.hourly_rate
+  records.forEach(entry => {
+    const revenue = entry.amount
     clientRevenues.set(
-      entry.client_id,
-      (clientRevenues.get(entry.client_id) || 0) + revenue
+      entry.clientId,
+      (clientRevenues.get(entry.clientId) || 0) + revenue
     )
   })
 
@@ -479,6 +448,9 @@ export function prepareMonthlyRevenueData(
 
   // Vytvoříme mapu pro jména klientů
   const clientNameMap = new Map<string, string>()
+  records.forEach(record => {
+    if (record.clientName) clientNameMap.set(record.clientId, record.clientName)
+  })
   clients.forEach(client => clientNameMap.set(client.id, client.name))
 
   // Připravíme client keys s barvami
@@ -523,7 +495,7 @@ export function prepareMonthlyRevenueData(
     })
 
     // Filtrujeme entries pro tento měsíc
-    const monthEntries = entries.filter(entry => {
+    const monthEntries = records.filter(entry => {
       const entryDate = parseISO(entry.date)
       return isSameMonth(entryDate, date)
     })
@@ -531,11 +503,11 @@ export function prepareMonthlyRevenueData(
     // Agregujeme výnosy pro každého klienta
     monthEntries.forEach(entry => {
       // Nezaokrouhlujeme jednotlivé záznamy, zaokrouhlíme až celkovou sumu za měsíc
-      const revenue = (entry.duration_minutes / 60) * entry.hourly_rate
+      const revenue = entry.amount
 
-      if (topClientIds.has(entry.client_id)) {
+      if (topClientIds.has(entry.clientId)) {
         // Top klient
-        dataPoint[entry.client_id] = (dataPoint[entry.client_id] as number || 0) + revenue
+        dataPoint[entry.clientId] = (dataPoint[entry.clientId] as number || 0) + revenue
       } else {
         // Ostatní
         dataPoint['others'] = (dataPoint['others'] as number || 0) + revenue

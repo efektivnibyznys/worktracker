@@ -8,13 +8,17 @@ import { useArchiveStats } from '../hooks/useYearlyEntries'
 import { formatTime } from '@/lib/utils/time'
 import { formatCurrency } from '@/lib/utils/currency'
 
+import type { DashboardInvoice } from '@/features/billing/lib/dashboardIncome'
+
 interface ArchiveSectionProps {
     onYearSelect: (year: number) => void
+    invoices?: DashboardInvoice[]
+    financialUnavailable?: boolean
 }
 
-export function ArchiveSection({ onYearSelect }: ArchiveSectionProps) {
+export function ArchiveSection({ onYearSelect, invoices, financialUnavailable }: ArchiveSectionProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const { archiveStats, hasArchive, isLoading } = useArchiveStats()
+    const { archiveStats, yearCount, hasArchive, isLoading, error } = useArchiveStats(invoices)
 
     if (!hasArchive) return null
 
@@ -29,7 +33,7 @@ export function ArchiveSection({ onYearSelect }: ArchiveSectionProps) {
                         <Archive className="h-5 w-5 text-gray-500" />
                         <CardTitle className="text-xl font-bold">Archiv</CardTitle>
                         <span className="text-sm text-gray-500">
-                            ({archiveStats.length} {archiveStats.length === 1 ? 'rok' : 'let'})
+                            ({yearCount} {yearCount === 1 ? 'rok' : 'let'})
                         </span>
                     </div>
                     {isOpen ? (
@@ -42,7 +46,9 @@ export function ArchiveSection({ onYearSelect }: ArchiveSectionProps) {
 
             {isOpen && (
                 <CardContent>
-                    {isLoading ? (
+                    {error ? (
+                        <p role="alert" className="text-red-600">Archiv se nepodařilo načíst. Obnovte stránku a zkuste to znovu.</p>
+                    ) : isLoading ? (
                         <div className="text-center py-4 text-gray-500">Načítání...</div>
                     ) : (
                         <div className="space-y-3">
@@ -54,13 +60,13 @@ export function ArchiveSection({ onYearSelect }: ArchiveSectionProps) {
                                     <div>
                                         <span className="font-semibold text-lg">{stat.year}</span>
                                         <span className="text-gray-500 ml-2">
-                                            ({stat.entryCount} záznamů)
+                                            ({stat.entryCount} záznamů • {stat.invoiceCount} samostatných faktur)
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-6">
                                         <div className="text-right">
                                             <div className="font-medium">{formatTime(stat.totalMinutes)}</div>
-                                            <div className="text-sm text-gray-500">{formatCurrency(stat.totalAmount)}</div>
+                                            <div className="text-sm text-gray-500">{financialUnavailable ? 'Nedostupné' : formatCurrency(stat.totalAmount)}</div>
                                         </div>
                                         <Button
                                             variant="outline"

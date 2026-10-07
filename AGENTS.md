@@ -178,6 +178,7 @@ When creating entry: `entry.hourly_rate > phase.hourly_rate > client.hourly_rate
 | `['phases', clientId]` | usePhases | phase mutations |
 | `['invoices']` | useInvoices | invoice mutations |
 | `['invoices', 'stats']` | useInvoices (stats) | invoice mutations |
+| `['invoices', 'dashboard']` | useDashboardInvoices | invoice mutations |
 | `['settings', userId]` | useSettings | updateSettings |
 
 ## Common Debugging
@@ -246,6 +247,14 @@ An initialized Supabase PostgreSQL database already has managed schemas such as 
 ### Backup restore rehearsal loses the database connection during initialization
 
 The Supabase PostgreSQL image starts a temporary socket-only server and stops it before starting the final server. A socket-based `pg_isready` can succeed too early, causing the restore rehearsal to fail with `the database system is shutting down`. Wait for `pg_isready -h 127.0.0.1` and fail explicitly on timeout before restoring. The workflow also rehearses the custom invoice description migration against the restored snapshot.
+
+### Standalone invoices are missing from dashboard income
+
+Dashboard financial summaries must combine time-entry value with standalone invoice subtotals (without VAT) by `issue_date`. Include every non-cancelled standalone invoice, including drafts; map drafts to `unbilled`, paid invoices to `paid`, and issued/sent/overdue invoices to `billed`. Never add linked invoices again because their entries already contribute. `getDashboardFinancialRecords` supplies summaries and financial charts while preserving entry-only hours/counts. `useDashboardInvoices` uses the `['invoices', 'dashboard']` cache key so existing invoice mutation invalidations refresh it, and its service paginates financial fields. Include invoice-only years in the dashboard selector/archive; entry-list totals and hourly-rate charts remain based on work entries. Failed invoice or archive queries must display an unavailable financial overview rather than misleading partial amounts. The first week of January loads prior-year entries and includes all invoices in the weekly interval, while annual charts stay scoped to the selected year.
+
+### A hook test reports no QueryClient despite using QueryClientProvider
+
+This repository compiles TypeScript hooks through TSX's CommonJS path, while `.test.mjs` imports can load React Query's ESM build. The builds have separate context objects. When testing a hook from an MJS file, load the provider/client via `createRequire(import.meta.url)('@tanstack/react-query')` so they use the same context as the hook. Set `retryOnMount: false` when asserting a preseeded initial error so the query observer does not reset it to a fresh pending state.
 
 ## Environment Variables
 
